@@ -30,13 +30,44 @@ function $makeslider(container_selector, toggle_selector, class_name, effect) {
 	}).appendTo(toggle_selector);
 };
 
+function $splash_anim(i, splash_frames) {
+	if (i == splash_frames.length) {
+		$('#splash').fadeOut(566, function () {
+			$('#splash_version_string, .splash_anim').hide();
+			$('#splash').addClass('folded');
+			$('#splash').css({'background-image': 'url(' + imgs.pop().src + ')',
+							  'display': 'block',
+							  'width': '760px', 'height': '575px', 'top': '42px'});
+			setTimeout(function () {
+				$('#splash').addClass('unfold');
+				if ($(window).height() <= $('#header').outerHeight(true) + 64 && 
+					$(window).scrollTop() < ($('#header').outerHeight(true) + 64) - $(window).height()) setTimeout(function () {
+					$('#splash').css({'top': '344px'})
+					$('#intro').css({'z-index': 9999}).animate({'top': '-876px', 'margin-bottom': '-306px'}, 500, function() {
+						$('#splash').addClass('down');
+					});
+				}, 1000);
+			}, 100);
+		});
+		return;
+	}
+	splash_frames[i].css('left', '0');
+	if (i && i != 16)
+		splash_frames[i - 1].hide();
+	setTimeout(function () {
+		$splash_anim(i + 1, splash_frames);
+	}, 1000 / 30);
+};
+
+var img, imgs = [], imgpaths = ['theme/splash.png', 'theme/splash_version.png', 'theme/splash_anim.png'];
+
 jQuery(function ($) {
 	/* Infobox slider */
 	$('<div id="info-link-box"><a href="#info">i</a></div>').prependTo('#infobox');
 	$makeslider('#infobox', '#info', 'fixed-top');
 	
 	/* Donation box slider */
-	$makeslider('#donation-box', '#donate', 'fixed-center', 'fadeToggle');
+	if (location.protocol == 'file:') $makeslider('#donation-box', '#donate', 'fixed-center', 'fadeToggle');
 	
 	/* TOC toggles */
 	$maketoggle('#toc li:has(ul) > a', 'ul', false);
@@ -101,18 +132,91 @@ jQuery(function ($) {
 	
 	/* Indent after br */
 	$('#content p > br').after('<span class="indent"></span>')
+
+	/* Intro */
+	if ($(window).width() >= 760 &&
+		(location.protocol != 'file:' ||
+		 (location.search || '').indexOf('debug') > -1 ||
+		 (document.cookie || '').indexOf('debug') > -1) &&
+		!navigator.userAgent.match(/MSIE\s*[678]\./)) {
+		$('#header').addClass('intro');
+		function splash_onload() {
+			this._loaded = true;
+			for (var i = 0; i < imgpaths.length; i ++) if (!imgs[i] || !imgs[i]._loaded || !imgs[i].complete || !imgs[i].height) return;
+			var splash_wrapper = $('<div id="splash-wrapper"></div>'),
+				splash = $('<div id="splash"><p id="splash_version_string"></p></div>'),
+				splash_anim, splash_frames = [],
+				splash_version_alpha = [0, .2, .4, .6, .8, 1, .95, .9, .85, .8, .75];
+			splash.hide();
+			splash.css('background-image', 'url(' + imgs[0].src + ')');
+			/* Splash animation */
+			for (var i = 0; i < 16; i ++) {
+				splash_anim = $('<div id="splash_anim_' + splash_frames.length + '" class="splash_anim">');
+				if (i) splash_anim.css('left', '-9999px');
+				splash_anim.css({'background-image': 'url(' + imgs[2].src + ')',
+								 'background-position': - (444 * i) + 'px 0'});
+				splash.append(splash_anim);
+				splash_frames.push(splash_anim);
+			}
+			/* Major version animation */
+			for (var i = 0; i < splash_version_alpha.length; i ++) {
+				splash_anim = $('<div id="splash_anim_' + splash_frames.length + '" class="splash_anim">');
+				splash_anim.css('left', '-9999px');
+				splash_anim.css('background-image', 'url(' + imgs[1].src + ')');
+				splash_anim.css('opacity', splash_version_alpha[i]);
+				splash.append(splash_anim);
+				splash_frames.push(splash_anim);
+			}
+			splash_wrapper.append(splash);
+			$('#header').append(splash_wrapper);
+			$('#splash_version_string').html($('#version').text());
+			setTimeout(function () {
+				$('#splash').fadeIn(566, function() {
+					$splash_anim(0, splash_frames);
+				});
+			}, 500);
+		}
+		imgpaths.push('img/DisplayCAL-main_window-shadow-720.png');
+		/* Load images */
+		var protocol = location.protocol;
+		if (protocol == 'file:') protocol = 'http:';
+		for (var i = 0; i < imgpaths.length; i ++) {
+			img = new Image();
+			imgs.push(img);
+			img.onload = splash_onload;
+			img.src = protocol + '//displaycal.net/' + imgpaths[i];
+		}
+	}
 	
 	/* Teaser */
 	var interval = setInterval(function () {
 		jQuery('#teaser img').fadeOut(750, function () {
 			var src;
-			if (jQuery('#teaser img').attr('src').indexOf('theme/dispcalGUI-adjust-reflection.png') > -1)
-				src = 'theme/dispcalGUI-main_window-reflection.png';
+			if (jQuery('#teaser img').attr('src').indexOf('theme/DisplayCAL-adjust-reflection.png') > -1)
+				src = 'theme/DisplayCAL-main_window-reflection.png';
 			else
-				src = 'theme/dispcalGUI-adjust-reflection.png';
+				src = 'theme/DisplayCAL-adjust-reflection.png';
 			jQuery('#teaser img').attr('src', src).fadeIn(750);
 		});
 	}, 10000);
+	
+	/* Insert facebook page link into shariff bar */
+	$('.shariff > ul').removeClass('col-5');
+	$('.shariff > ul').addClass('col-6');
+	$('.shariff > ul').prepend('<li class="shariff-button facebook info"><a title="Visit DisplayCAL on Facebook" target="_blank" href="https://www.facebook.com/DisplayCAL/"><span class="fa fa-facebook" style="width: 23px"></span></a></li>');
+
+	/* Only show 'to top' link if scroll position > ToC offset top */
+	var totop_isshown = false;
+	$(window).scroll(function () {
+		if (totop_isshown && $(window).scrollTop() < $('#toc').offset().top) {
+			$('#totop').slideUp();
+			totop_isshown = false;
+		}
+		else if (!totop_isshown && $(window).scrollTop() > $('#toc').offset().top) {
+			$('#totop').slideDown();
+			totop_isshown = true;
+		}
+	});
 });
 
 jQuery(window).load(function () {
@@ -123,8 +227,8 @@ jQuery(window).load(function () {
 	
 	/* Teaser */
 	setTimeout(function () {
-		var src = ['theme/dispcalGUI-main_window-reflection.png',
-				   'theme/dispcalGUI-adjust-reflection.png'][Math.round(Math.random())];
+		var src = ['theme/DisplayCAL-main_window-reflection.png',
+				   'theme/DisplayCAL-adjust-reflection.png'][Math.round(Math.random())];
 		jQuery('#teaser img').attr('src', src).fadeIn(750);
 	}, 500);
 });

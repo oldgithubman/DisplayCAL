@@ -10,8 +10,16 @@ import re
 import sys
 
 
-appname = "dispcalGUI"
-feeduri = "http://dispcalgui.hoech.net/0install/%s.xml" % appname
+appname = "DisplayCAL"
+feeduri = "http://displaycal.net/0install/%s.xml" % appname
+
+
+def script2pywname(script):
+	""" Convert all-lowercase script name to mixed-case pyw name """
+	a2b = {name + "-3dlut-maker": name + "-3DLUT-maker",
+		   name + "-vrml-to-x3d-converter": name + "-VRML-to-X3D-converter"}
+	pyw = name + script[len(name):]
+	return a2b.get(pyw, pyw)
 
 
 def installer(action="install"):
@@ -23,7 +31,7 @@ def installer(action="install"):
 	tmpfilenames = []
 	try:
 		for desktopfilename in glob(os.path.join(root, "misc", "%s-*.desktop" %
-															   appname)):
+															   appname.lower())):
 			desktopbasename = os.path.basename(desktopfilename)
 			scriptname = re.sub("\.desktop$", "", desktopbasename)
 			if action == "install":
@@ -39,7 +47,8 @@ def installer(action="install"):
 					raise exception
 				with open(desktopfilename) as desktopfile:
 					contents = desktopfile.read()
-				cmd = re.sub("^%s-" % appname, "run-", scriptname)
+				cmdname = script2pywname(scriptname)
+				cmd = re.sub("^%s-" % appname, "run-", cmdname)
 				for pattern, repl in [("Exec=.+",
 									   "Exec=0launch --command=%s -- %s %%f" %
 									   (cmd, feeduri))]:
@@ -78,7 +87,14 @@ def installer(action="install"):
 			except Exception, exception:
 				import warnings
 				warnings.warn(exception, Warning)
-	call(["touch", "--no-create", prefix + "/share/icons/hicolor"])
+	if os.geteuid() == 0:
+		data_dirs = os.getenv("XDG_DATA_DIRS", 
+							  "/usr/local/share:/usr/share").split(os.pathsep)
+	else:
+		data_dirs = os.getenv("XDG_DATA_HOME",
+							  os.path.expandvars("$HOME/.local/share")).split(os.pathsep)
+	for data_dir in data_dirs:
+		call(["touch", "--no-create", data_dir.rstrip("/") + "/icons/hicolor"])
 	call(["xdg-icon-resource", "forceupdate"])
 	call(["xdg-desktop-menu", "forceupdate"])
 

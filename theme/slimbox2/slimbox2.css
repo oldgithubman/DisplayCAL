@@ -9,10 +9,12 @@
 	height: 100%;
 	background-color: #fff;
 	cursor: pointer;
+	padding: 0;
 }
 
 #lbCenter,
 #lbBottomContainer {
+	padding: 0;
 	position: fixed;
 	z-index: 10000;
 }
@@ -51,9 +53,6 @@
 	left: 0;
 	top: 0;
 	background-repeat: no-repeat;
-	-moz-box-shadow: 0 1px 5px rgba(0, 0, 0, .5);
-	-webkit-box-shadow: 0 1px 5px rgba(0, 0, 0, .5);
-	box-shadow: 0 1px 5px rgba(0, 0, 0, .5);
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	border-radius: 5px;
@@ -67,8 +66,9 @@
 }
 
 #lbPrevLink,
-#lbNextLink {
-	color: #069;
+#lbNextLink,
+#lbCloseLink {
+	color: rgba(255, 255, 255, .9);
 	display: block;
 	position: absolute;
 	top: 7px;
@@ -77,7 +77,8 @@
 }
 
 #lbPrevLink:before,
-#lbNextLink:after {
+#lbNextLink:after,
+#lbCloseLink:before {
     font-size: 22px;
 }
 
@@ -89,11 +90,15 @@
     content: ' →';
 }
 
+#lbCloseLink:before {
+    content: '';
+}
+
 #lbPrevLink:hover,
 #lbNextLink:hover {
-	color: #6c0;
+	color: #fff;
 	text-decoration: none;
-	text-shadow: 0 1px 3px rgba(102, 204, 0, .75);
+	text-shadow: 0 1px 3px rgba(255, 255, 255, .75);
 }
 
 #lbPrevLink {
@@ -101,13 +106,13 @@
 }
 
 #lbNextLink {
-	right: 65px;
+	right: 55px;
 }
 
 #lbBottom {
 	font-family: Arial, sans-serif;
 	font-size: 12px;
-	color: #000;
+	color: rgba(255, 255, 255, .9);
 	line-height: 18px;
 	text-align: left;
 	padding-top: 10px;
@@ -116,9 +121,7 @@
 }
 
 #lbCloseLink {
-	display: block;
-	float: right;
-	text-transform: uppercase;
+	right: 0;
 }
 
 #lbCloseLink:hover {
@@ -140,4 +143,19 @@
 
 #lbCaption {
 	font-weight: normal;
+}
+
+@media screen and (max-width: 479px) {
+	#lbCaption {
+		display: none;
+	}
+	#lbNumber {
+		margin: 0 auto;
+		position: static;
+		right: auto;
+	}
+	#lbPrevLink {
+		left: 55px;
+		right: auto;
+	}
 }

@@ -1,15 +1,15 @@
+Standards-Version: 3.9.6.1
 Source: ${DEBPACKAGE}
 Section: graphics
 Priority: extra
 Maintainer: ${MAINTAINER} <${MAINTAINER_EMAIL}>
-Build-Depends: debhelper (>= 5.0.38), doc-base, gcc, python-dev, libxinerama-dev, libxrandr-dev, libxxf86vm-dev
+Build-Depends: debhelper (>= 5.0.38), doc-base, python-dev, libxinerama-dev, libxrandr-dev, libxxf86vm-dev
 XS-Python-Version: >= ${PY_MINVERSION}, << 3.0
 
 Package: ${DEBPACKAGE}
 Architecture: any
-Depends: ${shlibs:Depends}, ${python:Depends}, python-wxgtk2.8 (>= ${WX_MINVERSION}), python-numpy (>= 1.0), python-pygame, p7zip
-Conflicts: ${DEBPACKAGE}-0install
-Replaces: ${DEBPACKAGE}-0install
-Recommends: argyll
+Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, python-wxgtk3.0 (>= 3.0) | python-wxgtk2.8 (>= ${WX_MINVERSION}), python-numpy (>= 1.0), python-pygame, argyll, p7zip
+Conflicts: dispcalgui, dispcalgui-0install, ${DEBPACKAGE}-0install
+Replaces: dispcalgui, dispcalgui-0install, ${DEBPACKAGE}-0install
 Description: ${SUMMARY}
 ${DESC}

@@ -1,3 +1,4 @@
+Standards-Version: 3.9.6.1
 Source: ${DEBPACKAGE}-0install
 Section: graphics
 Priority: extra
@@ -7,9 +8,9 @@ XS-Python-Version: >= ${PY_MINVERSION}, << 3.0
 
 Package: ${DEBPACKAGE}-0install
 Architecture: all
-Depends: ${shlibs:Depends}, ${python:Depends}, python-wxgtk2.8 (>= ${WX_MINVERSION}), python-numpy (>= 1.0), libxss1, p7zip, zeroinstall-injector
-Conflicts: ${DEBPACKAGE}
-Replaces: ${DEBPACKAGE}
+Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, python-wxgtk3.0 (>= 3.0) | python-wxgtk2.8 (>= ${WX_MINVERSION}), python-numpy (>= 1.0), python-pygame, libxss1, p7zip, zeroinstall-injector
+Conflicts: dispcalgui, dispcalgui-0install, ${DEBPACKAGE}
+Replaces: dispcalgui, dispcalgui-0install, ${DEBPACKAGE}
 Recommends: argyll
 Description: ${SUMMARY}
 ${DESC}

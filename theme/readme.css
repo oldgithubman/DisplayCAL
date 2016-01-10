@@ -90,16 +90,49 @@ sup a:hover {
 /* Basic Layout */
 
 html {
-	border-top: 12px solid #6c0;
 }
 
 body {
 	background: #fff url(bg.png) repeat-x 0 0 fixed;
 	color: black;
-	font: normal 14px/22px Arial, sans-serif;
+	font: normal 14px/22px Lato, sans-serif;
+	padding: 0 0 48px;
+	word-wrap: break-word;
+}
+body > div,
+#title,
+#copyright {
 	margin: 0 auto;
-	padding: 48px 0;
-	width: 720px;
+	padding: 0 10px;
+	width: auto;
+}
+#site-navigation {
+	padding: 0;
+}
+#site-navigation ul {
+	margin: 0 auto;
+	text-align: center;
+}
+@media screen and (min-width: 600px) {
+	body > div,
+	#title,
+	#copyright {
+		padding: 0 20px;
+	}
+	#site-navigation {
+		padding: 0;
+	}
+}
+@media screen and (min-width: 760px) {
+	body > div,
+	#title,
+	#copyright,
+	#site-navigation ul {
+		width: 720px;
+	}
+	#site-navigation ul {
+		text-align: right;
+	}
 }
 h1 {
 /*
@@ -111,34 +144,52 @@ h1 {
 	text-shadow: 0 1px 3px rgba(0, 0, 0, .25);
 }
 h1 img {
-	left: 0;
+	left: -2px;  /* Adjust for icon margin */
 	position: absolute;
-	top: 5px;
+	top: 3px;
 }
 h1 > a {
 	display: inline-block;
-	font-family: Arial, sans-serif;
-	font-size: 48px;
-	line-height: 58px;
-	letter-spacing: -1px;
+	font-size: 28px;
+	line-height: 34px;
 }
 h1 > a:hover {
 	border: none;
 }
-h1 span {
+h1 > span {
 	display: block;
-	font-family: Georgia, "Times New Roman", serif;
-	font-size: 18px;
+	font-family: Lato, serif;
+	font-size: 14px;
 	font-style: oblique;
-	line-height: 24px;
+	line-height: 18px;
 	padding: .1em .2em;
+}
+@media screen and (min-width: 400px) {
+	h1 > a {
+		font-size: 36px;
+		line-height: 44px;
+	}
+	h1 > span {
+		font-size: 16px;
+		line-height: 21px;
+	}
+}
+@media screen and (min-width: 760px) {
+	h1 > a {
+		font-size: 48px;
+		line-height: 58px;
+	}
+	h1 > span {
+		font-size: 18px;
+		line-height: 24px;
+	}
 }
 h1 .dash {
 	display: none;
 }
 h2, h3, h4, h5, .h {
 	color: #333;
-	font-family: Georgia, "Times New Roman", serif;
+	font-family: Lato, serif;
 	font-style: oblique;
 	margin: 1.4em 0 1em;
 	text-shadow: 0 1px 3px rgba(0, 0, 0, .25);
@@ -157,11 +208,11 @@ h5 {
 	font-size: 16px;
 	line-height: 20px;
 }
-acronym[title], span[title] {
+abbr[title], acronym[title], span[title] {
 	border-bottom: 1px dotted #ccc;
 	cursor: help;
 }
-acronym a {
+abbr a, acronym a {
 	display: none;
 }
 code {
@@ -174,10 +225,23 @@ samp {
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	border-radius: 5px;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+    box-sizing: border-box;
 	display: inline-block;
+	max-width: 100%;
 	padding: 0 .5em;
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, .125);
+}
+pre > code {
 	white-space: nowrap;
+}
+@media screen and (max-width: 759px) {
+	pre > code,
+	samp {
+		display: block;
+		overflow: auto;
+	}
 }
 @media handheld, projection, screen, tv {
 	samp {
@@ -224,7 +288,7 @@ del {
 dt {
 	border-bottom: 2px dotted rgba(0, 0, 0, .125);
 	color: #333;
-	font: oblique 16px/24px Georgia, "Times New Roman", serif;
+	font: oblique 16px/24px Lato, serif;
 	margin-bottom: .1em;
 	text-shadow: 0 1px 3px rgba(0, 0, 0, .25);
 }
@@ -243,7 +307,7 @@ p {
 }
 h6,
 strong {
-	font-weight: 600;
+	font-weight: 700;
 }
 sup {
 	font-size: 9px;
@@ -251,12 +315,16 @@ sup {
 	vertical-align: super;
 }
 @media handheld, projection, screen, tv {
+.collapsed,
+.expanded {
+	padding-left: 1em;
+}
 #issues .collapsed,
 #issues .expanded {
 	padding-left: 1.5em;
 }
-#issues .collapsed:before,
-#issues .expanded:before {
+.collapsed:before,
+.expanded:before {
 	margin-left: -.95em;
 }
 .collapsed:before {
@@ -283,10 +351,16 @@ sup {
 	position: relative;
 }
 #teaser {
+	display: none;
 	height: 292px;
-	margin: 0;
+	margin: 0 -6px 0 0;
 	text-align: right;
 	vertical-align: bottom;
+}
+@media screen and (min-width: 760px) {
+	#teaser {
+		display: block;
+	}
 }
 #teaser img {
 	display: none;
@@ -297,23 +371,257 @@ sup {
 	margin-top: 5em;
 }
 
+.appname {
+	font-family: Lato, sans-serif;
+}
+.appname > span {
+	font-weight: 700;
+}
+
+#site-navigation {
+	font-size: 11px;
+	overflow: hidden;
+	position: absolute;
+	top: 10px;
+	width: 100%;
+}
+#site-navigation li {
+	display: inline-block;
+	text-transform: uppercase;
+}
+#site-navigation li a {
+	display: inline-block;
+	height: 48px;
+	line-height: 48px;
+	padding: 0 12px;
+}
+#site-navigation li a:focus,
+#site-navigation li a:hover {
+	background: #6C0;
+	color: #fff;
+}
+
+/* Header */
+
+#header {
+	padding: 70px 0 0;
+	width: 100%;
+}
+
+#header:before,
+#header.intro #header-inner-overlay:after {
+	border-top: 12px solid #6c0;
+	content: '';
+	display: block;
+	position: absolute;
+	top: 0;
+	width: 100%;
+}
+#header.intro #header-inner-overlay:after {
+	position: absolute;
+	top: 24px;
+}
+
+#header.intro,
+#lbOverlay {
+	background: #030ef8; /* Old browsers */
+	background: -moz-radial-gradient(center, ellipse cover, rgba(9,10,11,0) 0%, rgba(9,10,11,0.8) 100%), -moz-linear-gradient(top,  #030ef8 0%, #0752f5 50%, #ffb1dd 100%); /* FF3.6+ */
+	background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(9,10,11,0)), color-stop(100%,rgba(9,10,11,0.8))), -webkit-gradient(linear, left top, left bottom, color-stop(0%,#030ef8), color-stop(50%,#0752f5), color-stop(100%,#ffb1dd)); /* Chrome,Safari4+ */
+	background: -webkit-radial-gradient(center, ellipse cover, rgba(9,10,11,0) 0%,rgba(9,10,11,0.8) 100%), -webkit-linear-gradient(top,  #030ef8 0%,#0752f5 50%,#ffb1dd 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-radial-gradient(center, ellipse cover, rgba(9,10,11,0) 0%,rgba(9,10,11,0.8) 100%), -o-linear-gradient(top,  #030ef8 0%,#0752f5 50%,#ffb1dd 100%); /* Opera 11.10+ */
+	background: -ms-radial-gradient(center, ellipse cover, rgba(9,10,11,0) 0%,rgba(9,10,11,0.8) 100%), -ms-linear-gradient(top,  #030ef8 0%,#0752f5 50%,#ffb1dd 100%); /* IE10+ */
+	background: radial-gradient(ellipse at center, rgba(9,10,11,0) 0%,rgba(9,10,11,0.8) 100%), linear-gradient(to bottom,  #030ef8 0%,#0752f5 50%,#ffb1dd 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#110d86', endColorstr='#916787',GradientType=0 ); /* IE6-9 */
+}
+
+#header.intro {
+	background-attachment: fixed;
+	background-position: center top;
+	background-size: auto 100%;
+	color: rgba(255, 255, 255, .9);
+	margin: 0 0 48px;
+	overflow: hidden;
+	padding-bottom: 24px;
+	position: relative;
+}
+
+#splash-wrapper {
+	display: none;
+}
+
+@media screen and (min-width: 760px) {
+	#splash-wrapper {
+		display: block;
+	}
+	#header.intro {
+		height: 1032px;
+		padding-bottom: 0;
+	}
+}
+
+#header.intro #header-inner-overlay {
+	background: -moz-linear-gradient(top,  rgba(9,10,11,0) 0%, rgba(9,10,11,0.05) 50%, rgba(9,10,11,0.25) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(9,10,11,0)), color-stop(50%,rgba(9,10,11,0.05)), color-stop(100%,rgba(9,10,11,0.25))); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  rgba(9,10,11,0) 0%,rgba(9,10,11,0.05) 50%,rgba(9,10,11,0.25) 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  rgba(9,10,11,0) 0%,rgba(9,10,11,0.05) 50%,rgba(9,10,11,0.25) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  rgba(9,10,11,0) 0%,rgba(9,10,11,0.05) 50%,rgba(9,10,11,0.25) 100%); /* IE10+ */
+	background: linear-gradient(to bottom,  rgba(9,10,11,0) 0%,rgba(9,10,11,0.05) 50%,rgba(9,10,11,0.25) 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00090a0b', endColorstr='#40090a0b',GradientType=0 ); /* IE6-9 */
+
+	bottom: 12px;
+	height: 24px;
+	position: absolute;
+	width: 100%;
+	z-index: 99;
+}
+
+#header.intro a:link, 
+#header.intro a:active,
+#header.intro a:visited {
+	color: rgba(255, 255, 255, .9);
+}
+
+#header.intro a:hover {
+	color: #fff;
+}
+
+.shariff .orientation-horizontal li {
+	margin-right: 14px;
+}
+
+.shariff .theme-white .shariff-button .share_count {
+	background: none;
+}
+
+.shariff .facebook.info .share_count {
+	display: none;
+}
+
+#header.intro .shariff .theme-white .shariff-button {
+	border: 1px solid rgba(255, 255, 255, .25);
+}
+
+#header.intro .shariff .theme-white .shariff-button a,
+#header.intro .shariff .theme-white .shariff-button .share_count {
+	background: none;
+	color: rgba(255, 255, 255, .75);
+}
+
+#header.intro .shariff .theme-white .shariff-button:hover {
+	border-color: rgba(255, 255, 255, .5);
+}
+
+#header.intro .shariff .theme-white .shariff-button a:hover {
+	background: rgba(255, 255, 255, .25);
+	color: #fff;
+}
+
+#title-wrapper,
+#splash-wrapper {
+	width: 100%;
+}
+
+#splash {
+	margin: 0 auto;
+	position: relative;
+	top: 128px;
+}
+
+#splash.down:hover {
+	top: 272px !important;
+}
+
+#splash, .splash_anim {
+	height: 397px;
+	width: 444px;
+}
+
+.splash_anim {
+	position: absolute;
+}
+
+#splash,
+#splash * {
+	background-position: center top;
+	background-repeat: no-repeat;
+}
+
+#splash_version_string {
+	font-size: 12px;
+	line-height: 16px;
+	position: absolute;
+	text-align: center;
+	text-shadow: 0 -1px 2px #000;
+	top: 110px;
+	width: 444px;
+}
+
+#splash_version_string:after {
+	content: 'Welcome!\aStarting up...';
+	left: 0;
+	position: absolute;
+	text-shadow: 0 1px 2px #000;
+	top: 188px;
+	white-space: pre-wrap;
+	width: 444px;
+}
+
+#splash-wrapper {
+	-moz-perspective: 600px;
+	-ms-perspective: 600px;
+	-webkit-perspective: 600px;
+	perspective: 600px;
+
+	-moz-transform-style: preserve-3d;
+	-ms-transform-style: preserve-3d;
+	-webkit-transform-style: preserve-3d;
+	transform-style: preserve-3d;
+}
+
+#splash.folded {
+	opacity: 0;
+	transform: rotateX(-22.5deg) scale(.5);
+	transition: all 0.5s ease-out;
+}
+
+#splash.folded.unfold {
+	opacity: 1;
+
+	-moz-transform: rotateX(0deg) scale(1);
+	-ms-transform: rotateX(0deg) scale(1);
+	-webkit-transform: rotateX(0deg) scale(1);
+	transform: rotateX(0deg) scale(1);
+
+	-moz-transition: all 0.5s ease-out;
+	-ms-transition: all 0.5s ease-out;
+	-webkit-transition: all 0.5s ease-out;
+	transition: all 0.5s ease-out;
+}
 
 
 /* Friendlybox */
 
 #friendlybox {
-	border: 5px solid #d1efb2;
+	border: 5px solid #bbe68c;
 	-moz-border-radius: 16px;
 	-webkit-border-radius: 16px;
 	border-radius: 16px;
+	box-shadow: 0 0 15px #d1efb2;
 
 	overflow: hidden;
-	bottom: 30px;
-	left: 0;
+	bottom: 38px;
+	left: 10px;
 	max-width: 420px;
 	padding: 12px;
 	position: absolute;
 	text-shadow: 1px 1px 1px #360;
+	z-index: 999;
+}
+
+@media screen and (min-width: 600px) {
+	#friendlybox {
+		left: 20px;
+	}
 }
 
 #friendlybox,
@@ -323,7 +631,7 @@ sup {
 }
 
 #friendlybox h2 {
-	font-family: Arial, sans-serif;
+	font-family: Lato, sans-serif;
 	font-size: 24px;
 	font-style: normal;
 	line-height: 24px;
@@ -413,6 +721,36 @@ sup {
 	padding: 12px 24px;
 }
 
+@media screen and (max-width: 759px) {
+	#intro {
+		margin-bottom: 0 !important;
+		position: static !important;
+		top: 0 !important;
+	}
+	#friendlybox {
+		max-width: 426px;
+		position: static;
+	}
+}
+
+@media screen and (max-width: 399px) {
+	#friendlybox {
+		margin: 0 auto;
+		text-align: center;
+		width: 200px;
+	}
+	#get {
+		float: none;
+	}
+	#friendlybox .complementary {
+		border-left: 0;
+		border-top: 1px dotted #d1efb2;
+		float: none;
+		margin: 12px 0 0;
+		padding: 12px 0 0;
+	}
+}
+
 #friendlybox .complementary li {
 	font-size: 16px;
 	line-height: 26px;
@@ -491,10 +829,10 @@ sup {
 	margin-left: 0;
 }
 #toc li ul li a {
-	padding-left: 18px;
+	padding-left: 2.3em;
 }
 #toc li ul li ul li a {
-	padding-left: 36px;
+	padding-left: 3.3em;
 }
 #toc li a {
 	display: block;
@@ -503,6 +841,7 @@ sup {
 #toc li a:before {
 	color: transparent;
 	content: '+ ';
+	margin-left: -.85em;
 }
 #toc li a.collapsed:before {
 	color: #069;
@@ -525,7 +864,7 @@ sup {
 	border-top: 1px solid rgba(0, 0, 0, .03125);
 }
 #toc li a {
-	padding: .3em .5em;
+	padding: .3em .5em .3em 1.3em;
 }
 #toc > ul > li:nth-child(odd) > a {
 	background: rgba(0, 0, 0, .03125);
@@ -584,6 +923,7 @@ sup {
 #install-windows-driver h5,
 #requirements-source > div,
 #install > div,
+#non-ui-functionality > div,
 #scripting > div,
 #issues dt.collapsed,
 #issues dt.collapsed + dd {
@@ -607,6 +947,7 @@ sup {
 .ie_lte_8 #install-windows-driver h5,
 .ie_lte_8 #requirements-source > div,
 .ie_lte_8 #install > div,
+.ie_lte_8 #non-ui-functionality > div,
 .ie_lte_8 #scripting > div,
 .ie_lte_8 #issues dt.collapsed,
 .ie_lte_8 #issues dt.collapsed + dd {
@@ -617,6 +958,7 @@ sup {
 #quickstart > ol > li,
 #requirements-source > div,
 #install > div,
+#non-ui-functionality > div,
 #scripting > div,
 #issues dt,
 #issues dd {
@@ -635,11 +977,13 @@ sup {
 }
 #requirements-source > div h3,
 #install > div h3,
+#non-ui-functionality > div h3,
 #scripting > div h3 {
 	margin: 0;
 }
-#quickstart > ol > li p.info,
-.info {
+p.info,
+div.info,
+#quickstart > ol > li p.info {
 	background: rgba(255, 255, 255, .75);
 	-moz-border-radius: 8px;
 	-webkit-border-radius: 8px;
@@ -694,7 +1038,7 @@ sup {
 #install-windows-driver h4,
 #install-windows-driver h5 {
 	display: inline-block;
-	font-family: Arial, sans-serif;
+	font-family: Lato, sans-serif;
 	font-size: 14px;
 	font-style: normal;
 	font-weight: normal;
@@ -725,17 +1069,9 @@ sup {
 	-webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .125);
 	box-shadow: 0 1px 3px rgba(0, 0, 0, .125);
 
-	-moz-column-count: 2;
-	-moz-column-gap: 0;
-	-webkit-column-count: 2;
-	-webkit-column-gap: 0;
-	column-count: 2;
-	column-gap: 0;
-
 	color: #000;
 	margin-top: 0;
 	padding: 0;
-	min-width: 580px;
 }
 #download div ul.packages > li {
 	height: 22px;
@@ -743,7 +1079,6 @@ sup {
 	padding: .1em .3em;
 	white-space: nowrap;
 	max-width: 290px;
-	min-width: 290px;
 }
 #download div ul.packages > li:nth-child(odd) {
 	background: rgba(255, 255, 255, .25);
@@ -752,8 +1087,26 @@ sup {
 }
 #download div ul.packages > li span:first-child {
 	float: right;
-	min-width: 200px;
+	min-width: 175px;
+	padding-left: .5em;
 	text-align: left;
+}
+@media screen and (min-width: 648px) {
+	#download div ul.packages {
+		-moz-column-count: 2;
+		-moz-column-gap: 0;
+		-webkit-column-count: 2;
+		-webkit-column-gap: 0;
+		column-count: 2;
+		column-gap: 0;
+		min-width: 580px;
+	}
+	#download div ul.packages > li {
+		min-width: 290px;
+	}
+	#download div ul.packages > li span:first-child {
+		min-width: 200px;
+	}
 }
 #quickstart > ol > li > div > ul > li > p {
 	margin: 0 0 1em;
@@ -765,13 +1118,14 @@ sup {
 /* Install */
 
 #install-src dt,
+#non-ui-functionality dt,
 #scripting dt {
-	font: normal 14px/22px Arial, sans-serif;
+	font: normal 14px/22px Lato, sans-serif;
 	font-style: normal;
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, .25);
-	white-space: nowrap;
 }
 #install-src dt code,
+#non-ui-functionality dt code,
 #scripting dt code {
 	background: transparent none;
 	padding: 0;
@@ -785,7 +1139,7 @@ sup {
 
 #issues dt {
 	border: none;
-	font: 14px/22px Arial, sans-serif;
+	font: 14px/22px Lato, sans-serif;
 	margin: 0;
 	padding: .3em .5em;
 }
@@ -851,8 +1205,7 @@ sup {
 
 /* Screenshots */
 
-#screenshots img,
-#lbSlide {
+#screenshots img {
 	/* IE9 SVG, needs conditional override of 'filter' to 'none' */
 	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzAwMDAwMCIgc3RvcC1vcGFjaXR5PSIwLjMzIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMDAwMDAiIHN0b3Atb3BhY2l0eT0iMCIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
 	background: -moz-linear-gradient(top, rgba(0,0,0,0.33) 0%, rgba(0,0,0,0) 100%); /* FF3.6+ */
@@ -865,8 +1218,7 @@ sup {
 	background-color: rgb(224, 224, 224);
 }
 
-.ie_lte_8 #screenshots img,
-.ie_lte_8 #lbSlide {
+.ie_lte_8 #screenshots img {
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#54000000', endColorstr='#00000000',GradientType=0 ); /* IE6-9 */
 }
 
@@ -889,7 +1241,7 @@ sup {
 }
 
 #screenshots a:hover img {
-	background-color: rgb(128, 204, 0);
+	background-color: rgb(0, 153, 204);
 	border: 0;
 	opacity: 1;
 
@@ -901,19 +1253,17 @@ sup {
 }
 #screenshots span {
 	color: #666;
-	display: block;
-	float: left;
+	display: inline-block;
 	font-size: 11px;
-	margin-bottom: .5em;
-	margin-right: 48px;
+	margin: 0 14px .5em;
 	padding: 3px;
 }
 #screenshots p span:last-child {
-	margin-right: 0;
 }
 #screenshots p {
 	margin: 1em auto;
 	overflow: auto;
+	text-align: center;
 }
 
 
@@ -924,6 +1274,7 @@ sup {
 	clear: both;
 }
 #install-src dd,
+#non-ui-functionality dd,
 #scripting dd,
 #usage dd,
 #menu dd {
@@ -940,7 +1291,7 @@ sup {
 	margin-bottom: .5em;
 }
 #changelog h3 {
-	font: normal 24px/24px Arial, sans-serif;
+	font: normal 24px/24px Lato, sans-serif;
 	margin-top: 1em;
 }
 #definitions dl {
@@ -955,6 +1306,7 @@ sup {
 #definitions dd {
 	display: block;
 	margin: 0;
+	overflow: hidden;
 }
 #definitions dd span {
 	display: block;
@@ -964,7 +1316,7 @@ sup {
 #definitions dt {
 	border-bottom: none;
 	color: #666;
-	font: normal 14px/22px Arial, sans-serif;
+	font: normal 14px/22px Lato, sans-serif;
 	margin: 0;
 }
 #changelog dt {
@@ -985,6 +1337,7 @@ sup {
 #footer-container {
 	bottom: 0;
 	left: 0;
+	padding: 0;
 	position: fixed;
 	width: 100%;
 }
@@ -994,9 +1347,17 @@ sup {
 
 .fixed-top {
 	left: 0;
+	padding: 0;
 	position: absolute;
 	top: 0;
 	width: 100%;
+}
+
+@media screen and (max-width: 759px) {
+	.fixed-top {
+		padding: 0 10px;
+		width: auto;
+	}
 }
 
 #donate,
@@ -1020,9 +1381,9 @@ sup {
 
 	margin: 0 auto;
 	padding: 1em;
-	max-width: 692px;
+	max-width: 696px;
 	position: relative;
-	text-shadow: 1px 1px 0 rgba(255, 255, 255, 1);
+	text-shadow: 1px 1px 1px rgba(255, 255, 255, 1);
 }
 
 .ie_lte_8 #donate,
@@ -1073,7 +1434,7 @@ sup {
 
 #info:before {
 	content: 'i ';
-	font-family: Georgia, "Times New Roman", serif;
+	font-family: Lato, serif;
 	font-size: 46px;
 }
 
@@ -1101,7 +1462,7 @@ sup {
 #info-link-box {
 	margin: 0 auto;
 	position: relative;
-	width: 880px;
+	max-width: 880px;
 }
 
 #info-link-box a {
@@ -1113,11 +1474,18 @@ sup {
 
 	color: #fff;
 	display: block;
-	font-family: Georgia, "Times New Roman", serif;
-	left: 0;
+	font-family: Lato, serif;
+	left: 10px;
 	padding: 0 1em;
 	position: absolute;
 	top: 0;
+}
+
+@media screen and (max-width: 759px) {
+	#info-link-box {
+		position: static;
+		width: auto;
+	}
 }
 
 .close-button {
@@ -1210,13 +1578,13 @@ sup {
 
 	bottom: -6px;
 	color: #fff;
-	display: block;
+	display: none;
 	padding: 6px 6px 12px;
 	position: absolute;
 	right: 10px;
 	text-shadow: 1px 1px 1px #360;
+	z-index: 9999;
 }
-
 
 
 /* Print Styles */
