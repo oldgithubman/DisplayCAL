@@ -1,34 +1,35 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import math
 import os
 import sys
 
-from ICCProfile import ICCProfile
-from argyll_cgats import extract_device_gray_primaries
-from config import (enc, get_data_path, get_verified_path, getcfg, hascfg,
+from .ICCProfile import ICCProfile
+from .argyll_cgats import extract_device_gray_primaries
+from .config import (enc, get_data_path, get_verified_path, getcfg, hascfg,
 					profile_ext, setcfg)
-from debughelpers import Error
-from log import log, safe_print
-from meta import name as appname
-from options import debug
-from ordereddict import OrderedDict
-from util_io import Files
-from util_os import waccess
-from util_str import safe_str
-from worker import Error, FilteredStream, LineBufferedStream, show_result_dialog
-import CGATS
-import ICCProfile as ICCP
-import colormath
-import config
-import localization as lang
-import worker
-from wxwindows import BaseApp, BaseFrame, ConfirmDialog, FileDrop, InfoDialog, wx
-from wxfixes import TempXmlResource
-from wxLUT3DFrame import LUT3DFrame
-import floatspin
-import xh_floatspin
-import xh_bitmapctrls
+from .debughelpers import Error
+from .log import log, safe_print
+from .meta import name as appname
+from .options import debug
+from .ordereddict import OrderedDict
+from .util_io import Files
+from .util_os import waccess
+from .util_str import safe_str
+from .worker import Error, FilteredStream, LineBufferedStream, show_result_dialog
+from . import CGATS
+from . import ICCProfile as ICCP
+from . import colormath
+from . import config
+from . import localization as lang
+from . import worker
+from .wxwindows import BaseApp, BaseFrame, ConfirmDialog, FileDrop, InfoDialog, wx
+from .wxfixes import TempXmlResource
+from .wxLUT3DFrame import LUT3DFrame
+from . import floatspin
+from . import xh_floatspin
+from . import xh_bitmapctrls
 
 from wx import xrc
 
@@ -376,7 +377,7 @@ class SynthICCFrame(BaseFrame):
 		""" ICC profile dropped """
 		try:
 			profile = ICCP.ICCProfile(path)
-		except (IOError, ICCP.ICCProfileInvalidError), exception:
+		except (IOError, ICCP.ICCProfileInvalidError) as exception:
 			show_result_dialog(Error(lang.getstr("profile.invalid") + "\n" +
 									 path), self)
 		else:
@@ -397,7 +398,7 @@ class SynthICCFrame(BaseFrame):
 				rgb.append((1.0 / 255 * i, 1.0 / 255 * i, 1.0 / 255 * i))
 			try:
 				colors = self.worker.xicclu(profile, rgb, intent="a", pcs="x")
-			except Exception, exception:
+			except Exception as exception:
 				show_result_dialog(exception, self)
 			else:
 				if "lumi" in profile.tags:
@@ -458,7 +459,7 @@ class SynthICCFrame(BaseFrame):
 		""" TI3 file dropped """
 		try:
 			ti3 = CGATS.CGATS(path)
-		except (IOError, CGATS.CGATSInvalidError), exception:
+		except (IOError, CGATS.CGATSInvalidError) as exception:
 			show_result_dialog(Error(lang.getstr("error.measurement.file_invalid",
 												 path)), self)
 		else:
@@ -480,7 +481,7 @@ class SynthICCFrame(BaseFrame):
 				(ti3_extracted,
 				 RGB_XYZ_extracted,
 				 RGB_XYZ_remaining) = extract_device_gray_primaries(ti3)
-			except Error, exception:
+			except Error as exception:
 				show_result_dialog(exception, self)
 			else:
 				RGB_XYZ_extracted.sort()
@@ -849,7 +850,7 @@ class SynthICCFrame(BaseFrame):
 					# Grayscale profile
 					profile.tags.kTRC.set_dicom_trc(self.getcfg("synthprofile.black_luminance"),
 													self.getcfg("synthprofile.luminance"))
-			except ValueError, exception:
+			except ValueError as exception:
 				return exception
 		elif trc > -1 and black != [0, 0, 0]:
 			# Gamma with output offset or Rec. 1886-like
@@ -988,7 +989,7 @@ class SynthICCFrame(BaseFrame):
 		profile.calculateID()
 		try:
 			profile.write(path)
-		except Exception, exception:
+		except Exception as exception:
 			return exception
 	
 	def setup_language(self):

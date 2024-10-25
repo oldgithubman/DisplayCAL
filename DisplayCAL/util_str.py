@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+from __future__ import absolute_import
 import codecs
 import exceptions
 import locale
@@ -18,12 +20,12 @@ if sys.platform == "win32":
 	import pywintypes
 	env_errors = env_errors + (pywintypes.error, pywintypes.com_error)
 
-from encoding import get_encodings
+from .encoding import get_encodings
 
 fs_enc = get_encodings()[1]
 
-ascii_printable = "".join([getattr(string, name) for name in "digits", 
-						   "ascii_letters", "punctuation", "whitespace"])
+ascii_printable = "".join([getattr(string, name) for name in ("digits", 
+						   "ascii_letters", "punctuation", "whitespace")])
 
 # Control chars are defined as charcodes in the decimal range 0-31 (inclusive) 
 # except whitespace characters, plus charcode 127 (DEL)
@@ -584,7 +586,7 @@ def wrap(text, width = 70):
 
 def test():
 	for k, v in subst.iteritems():
-		print k, v
+		print(k, v)
 
 if __name__ == "__main__":
 	test()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import absolute_import
 import exceptions
 import os
 import re
@@ -10,32 +11,32 @@ import sys
 if sys.platform == "win32":
 	import win32api
 
-from argyll_cgats import cal_to_fake_profile
-from argyll_names import video_encodings
-from config import (defaults, get_data_path, get_verified_path, getcfg,
+from .argyll_cgats import cal_to_fake_profile
+from .argyll_names import video_encodings
+from .config import (defaults, get_data_path, get_verified_path, getcfg,
 					geticon, hascfg, profile_ext, setcfg)
-from log import safe_print
-from meta import name as appname, version
-from options import debug
-from util_decimal import stripzeros
-from util_os import islink, readlink, safe_glob, waccess
-from util_str import safe_unicode, strtr
-from worker import (Error, Info, UnloggedInfo, get_current_profile_path,
+from .log import safe_print
+from .meta import name as appname, version
+from .options import debug
+from .util_decimal import stripzeros
+from .util_os import islink, readlink, safe_glob, waccess
+from .util_str import safe_unicode, strtr
+from .worker import (Error, Info, UnloggedInfo, get_current_profile_path,
 					show_result_dialog)
-import ICCProfile as ICCP
-import colormath
-import config
-import localization as lang
-import madvr
-import worker
-from worker import UnloggedWarning, check_set_argyll_bin, get_options_from_profile
-from wxwindows import (BaseApp, BaseFrame, ConfirmDialog, FileDrop, InfoDialog,
+from . import ICCProfile as ICCP
+from . import colormath
+from . import config
+from . import localization as lang
+from . import madvr
+from . import worker
+from .worker import UnloggedWarning, check_set_argyll_bin, get_options_from_profile
+from .wxwindows import (BaseApp, BaseFrame, ConfirmDialog, FileDrop, InfoDialog,
 					   wx)
-from wxfixes import TempXmlResource
-import floatspin
-import xh_filebrowsebutton
-import xh_floatspin
-import xh_bitmapctrls
+from .wxfixes import TempXmlResource
+from . import floatspin
+from . import xh_filebrowsebutton
+from . import xh_floatspin
+from . import xh_bitmapctrls
 
 from wx import xrc
 
@@ -594,7 +595,7 @@ class LUT3DFrame(BaseFrame):
 				
 			try:
 				profile_in = ICCP.ICCProfile(profile_in_path)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				show_result_dialog(Error(lang.getstr("profile.invalid") + "\n" +
 										 profile_in_path), parent=self)
 				return
@@ -917,7 +918,7 @@ class LUT3DFrame(BaseFrame):
 									 content_rgb_space=content_rgb_space,
 									 hdr_display=self.getcfg("3dlut.hdr_display"),
 									 XYZwp=XYZwp)
-		except Exception, exception:
+		except Exception as exception:
 			if exception.__class__.__name__ in dir(exceptions):
 				raise
 			return exception
@@ -1100,7 +1101,7 @@ class LUT3DFrame(BaseFrame):
 					show_result_dialog(Error(lang.getstr("profile.invalid") +
 											 "\n" + path),
 									   parent=self)
-			except IOError, exception:
+			except IOError as exception:
 				if not silent:
 					show_result_dialog(exception, parent=self)
 			else:
@@ -1159,7 +1160,7 @@ class LUT3DFrame(BaseFrame):
 								try:
 									odata = self.worker.xicclu(profile, (0, 0, 0),
 															   pcs="x")
-								except Exception, exception:
+								except Exception as exception:
 									show_result_dialog(exception, self)
 									self.set_profile_ctrl_path(which)
 									return
@@ -1202,7 +1203,7 @@ class LUT3DFrame(BaseFrame):
 								try:
 									odata = self.worker.xicclu(profile, (0, 0, 0),
 															   pcs="x")
-								except Exception, exception:
+								except Exception as exception:
 									show_result_dialog(exception, self)
 									self.set_profile_ctrl_path(which)
 									return

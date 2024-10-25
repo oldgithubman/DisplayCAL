@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import os
 
 from PIL import Image
@@ -15,7 +16,7 @@ def find_iCCP_pngs():
 				filepath = os.path.join(dirpath, filename)
 				png = Image.open(filepath)
 				if 'icc_profile' in png.info:
-					print filepath
+					print(filepath)
 
 
 if __name__ == "__main__":

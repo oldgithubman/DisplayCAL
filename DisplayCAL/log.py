@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import absolute_import
 from codecs import EncodedFile
 from hashlib import md5
 import atexit
@@ -12,13 +13,13 @@ import sys
 import warnings
 from time import localtime, strftime, time
 
-from meta import name as appname, script2pywname
-from multiprocess import mp
-from options import debug
-from safe_print import SafePrinter, safe_print as _safe_print
-from util_io import StringIOu as StringIO
-from util_os import safe_glob
-from util_str import safe_str, safe_unicode
+from .meta import name as appname, script2pywname
+from .multiprocess import mp
+from .options import debug
+from .safe_print import SafePrinter, safe_print as _safe_print
+from .util_io import StringIOu as StringIO
+from .util_os import safe_glob
+from .util_str import safe_str, safe_unicode
 
 logging.raiseExceptions = 0
 
@@ -234,7 +235,7 @@ def get_file_logger(name, level=loglevel, when="midnight", backupCount=5,
 								continue
 							try:
 								logstat = os.stat(logfile)
-							except Exception, exception:
+							except Exception as exception:
 								safe_print(u"Warning - os.stat('%s') failed: %s" % 
 										   tuple(safe_unicode(s) for s in (logfile,
 																		   exception)))
@@ -280,13 +281,13 @@ def get_file_logger(name, level=loglevel, when="midnight", backupCount=5,
 	if not os.path.exists(logdir):
 		try:
 			os.makedirs(logdir)
-		except Exception, exception:
+		except Exception as exception:
 			safe_print(u"Warning - log directory '%s' could not be created: %s" 
 					   % tuple(safe_unicode(s) for s in (logdir, exception)))
 	elif when != "never" and os.path.exists(logfile):
 		try:
 			logstat = os.stat(logfile)
-		except Exception, exception:
+		except Exception as exception:
 			safe_print(u"Warning - os.stat('%s') failed: %s" % 
 					   tuple(safe_unicode(s) for s in (logfile, exception)))
 		else:
@@ -294,7 +295,7 @@ def get_file_logger(name, level=loglevel, when="midnight", backupCount=5,
 			t = logstat.st_mtime
 			try:
 				mtime = localtime(t)
-			except ValueError, exception:
+			except ValueError as exception:
 				# This can happen on Windows because localtime() is buggy on
 				# that platform. See:
 				# http://stackoverflow.com/questions/4434629/zipfile-module-in-python-runtime-problems
@@ -319,14 +320,14 @@ def get_file_logger(name, level=loglevel, when="midnight", backupCount=5,
 				if os.path.exists(logbackup):
 					try:
 						os.remove(logbackup)
-					except Exception, exception:
+					except Exception as exception:
 						safe_print(u"Warning - logfile backup '%s' could not "
 								   u"be removed during rollover: %s" % 
 								   tuple(safe_unicode(s) for s in (logbackup, 
 																   exception)))
 				try:
 					os.rename(logfile, logbackup)
-				except Exception, exception:
+				except Exception as exception:
 					safe_print(u"Warning - logfile '%s' could not be renamed "
 							   u"to '%s' during rollover: %s" % 
 							   tuple(safe_unicode(s) for s in 
@@ -338,7 +339,7 @@ def get_file_logger(name, level=loglevel, when="midnight", backupCount=5,
 				baseName = os.path.basename(logfile)
 				try:
 					fileNames = os.listdir(logdir)
-				except Exception, exception:
+				except Exception as exception:
 					safe_print(u"Warning - log directory '%s' listing failed "
 							   u"during rollover: %s" % 
 							   tuple(safe_unicode(s) for s in (logdir, 
@@ -357,7 +358,7 @@ def get_file_logger(name, level=loglevel, when="midnight", backupCount=5,
 						for logbackup in result[:len(result) - backupCount]:
 							try:
 								os.remove(logbackup)
-							except Exception, exception:
+							except Exception as exception:
 								safe_print(u"Warning - logfile backup '%s' "
 										   u"could not be removed during "
 										   u"rollover: %s" % 
@@ -374,7 +375,7 @@ def get_file_logger(name, level=loglevel, when="midnight", backupCount=5,
 			fileformatter = logging.Formatter("%(asctime)s %(message)s")
 			filehandler.setFormatter(fileformatter)
 			logger.addHandler(filehandler)
-		except Exception, exception:
+		except Exception as exception:
 			safe_print(u"Warning - logging to file '%s' not possible: %s" % 
 					   tuple(safe_unicode(s) for s in (logfile, exception)))
 	return logger

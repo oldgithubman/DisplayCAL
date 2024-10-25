@@ -5,6 +5,8 @@
 Interactive display calibration UI
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import math
 import os
@@ -12,21 +14,21 @@ import re
 import sys
 import time
 
-from wxaddons import wx
+from .wxaddons import wx
 
-from config import (getbitmap, getcfg, geticon, get_data_path, get_icon_bundle,
+from .config import (getbitmap, getcfg, geticon, get_data_path, get_icon_bundle,
 					setcfg)
-from log import get_file_logger, safe_print
-from meta import name as appname
-from options import debug, test, verbose
-from wxwindows import (BaseApp, BaseFrame, BitmapBackgroundPanel, CustomCheckBox,
+from .log import get_file_logger, safe_print
+from .meta import name as appname
+from .options import debug, test, verbose
+from .wxwindows import (BaseApp, BaseFrame, BitmapBackgroundPanel, CustomCheckBox,
 					   CustomGrid, FlatShadedButton, numpad_keycodes,
 					   nav_keycodes, processing_keycodes, wx_Panel)
-import CGATS
-import audio
-import colormath
-import config
-import localization as lang
+from . import CGATS
+from . import audio
+from . import colormath
+from . import config
+from . import localization as lang
 
 BGCOLOUR = wx.Colour(0x33, 0x33, 0x33)
 FGCOLOUR = wx.Colour(0x99, 0x99, 0x99)
@@ -238,7 +240,7 @@ class UntetheredFrame(BaseFrame):
 				if id < 0:
 					try:
 						wx.Window.UnreserveControlId(id)
-					except wx.wxAssertionError, exception:
+					except wx.wxAssertionError as exception:
 						safe_print(exception)
 		
 	def OnMove(self, event):
@@ -702,9 +704,9 @@ if __name__ == "__main__":
 	from thread import start_new_thread
 	from time import sleep
 	import random
-	from util_io import Files
-	import ICCProfile as ICCP
-	import worker
+	from .util_io import Files
+	from . import ICCProfile as ICCP
+	from . import worker
 	class Subprocess():
 		def send(self, bytes):
 			start_new_thread(test, (bytes,))
@@ -721,13 +723,13 @@ if __name__ == "__main__":
 		def abort_subprocess(self):
 			self.safe_send("Q")
 		def safe_send(self, bytes):
-			print "*** Sending %r" % bytes
+			print("*** Sending %r" % bytes)
 			self.subprocess.send(bytes)
 			return True
 	config.initcfg()
-	print "untethered.min_delta", getcfg("untethered.min_delta")
-	print "untethered.min_delta.lightness", getcfg("untethered.min_delta.lightness")
-	print "untethered.max_delta.chroma", getcfg("untethered.max_delta.chroma")
+	print("untethered.min_delta", getcfg("untethered.min_delta"))
+	print("untethered.min_delta.lightness", getcfg("untethered.min_delta.lightness"))
+	print("untethered.max_delta.chroma", getcfg("untethered.max_delta.chroma"))
 	lang.init()
 	lang.update_defaults()
 	app = BaseApp(0)
@@ -754,7 +756,7 @@ END_DATA
 	app.TopWindow.Show()
 	files = Files([app.TopWindow.worker, app.TopWindow])
 	def test(bytes=None):
-		print "*** Received %r" % bytes
+		print("*** Received %r" % bytes)
 		menu = r"""Place instrument on spot to be measured,
 and hit [A-Z] to read white and setup FWA compensation (keyed to letter)
 [a-z] to read and make FWA compensated reading from keyed reference
@@ -796,6 +798,6 @@ or place on the white calibration reference,
 			sleep(.03125)
 			if app.TopWindow:
 				wx.CallAfter(files.write, line)
-				print line
+				print(line)
 	start_new_thread(test, tuple())
 	app.MainLoop()

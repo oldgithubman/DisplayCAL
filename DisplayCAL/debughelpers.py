@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import sys
 import traceback
 
-import config
-from config import fs_enc
-from log import logbuffer, safe_print
-from meta import name as appname, wx_recversion
-from options import debug
-from util_str import box, safe_unicode
+from . import config
+from .config import fs_enc
+from .log import logbuffer, safe_print
+from .meta import name as appname, wx_recversion
+from .options import debug
+from .util_str import box, safe_unicode
 
 wxEventTypes = {}
 
@@ -20,21 +21,21 @@ def getevtobjname(event, window=None):
 			event_object = window.FindWindowById(event.GetId())
 		if event_object and hasattr(event_object, "GetName"):
 			return event_object.GetName()
-	except Exception, exception:
+	except Exception as exception:
 		pass
 
 
 def getevttype(event):
 	""" Get and return the event object's type. """
 	if not wxEventTypes:
-		from wxaddons import wx
+		from .wxaddons import wx
 		try:
 			for name in dir(wx):
 				if name.find("EVT_") == 0:
 					attr = getattr(wx, name)
 					if hasattr(attr, "evtType"):
 						wxEventTypes[attr.evtType[0]] = name
-		except Exception, exception:
+		except Exception as exception:
 			pass
 	typeId = event.GetEventType()
 	if typeId in wxEventTypes:
@@ -65,7 +66,7 @@ def handle_error(error, parent=None, silent=False, tb=True):
 		safe_print(box(msg))
 	if not silent:
 		try:
-			from wxaddons import wx
+			from .wxaddons import wx
 			if wx.VERSION < wx_recversion:
 				msg += ("\n\nWARNING: Your version of wxPython (%s) is outdated "
 						"and no longer supported. You should consider updating "
@@ -105,7 +106,7 @@ def handle_error(error, parent=None, silent=False, tb=True):
 			else:
 				dlg.ShowModal()
 				dlg.Destroy()
-		except Exception, exception:
+		except Exception as exception:
 			safe_print("Warning: handle_error():", safe_unicode(exception))
 
 

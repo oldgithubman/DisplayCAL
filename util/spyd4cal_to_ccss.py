@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 from glob import glob
 from time import strftime
 import math
@@ -58,7 +59,7 @@ def readcals(filename):
 		if sum(cal.spec) != len(cal.spec):
 			cals.append(cal)
 		else:
-			print 'Skipping identity cal', i
+			print('Skipping identity cal', i)
 	return cals
 
 

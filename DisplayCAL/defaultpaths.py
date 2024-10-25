@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import absolute_import
 import os
 import sys
 if sys.platform not in ("darwin", "win32"):
@@ -37,7 +38,7 @@ elif sys.platform == "win32":
 														  create)
 			return buffer.value
 
-from util_os import expanduseru, expandvarsu, getenvu, waccess
+from .util_os import expanduseru, expandvarsu, getenvu, waccess
 
 
 def get_known_folder_path(folderid, user=True):
@@ -58,13 +59,13 @@ def get_known_folder_path(folderid, user=True):
 	folder_path = os.path.join(home, folderid)
 	if sys.platform == "win32" and sys.getwindowsversion() >= (6, ):
 		# Windows Vista or newer
-		import win_knownpaths
+		from . import win_knownpaths
 		try:
 			folder_path = win_knownpaths.get_path(getattr(win_knownpaths.FOLDERID, folderid),
 												  getattr(win_knownpaths.UserHandle,
 														  "current" if user else "common"))
-		except Exception, exception:
-			from log import safe_print
+		except Exception as exception:
+			from .log import safe_print
 			safe_print("Warning: Could not get known folder %r" % folderid)
 	elif sys.platform not in ("darwin", "win32"):
 		# Linux
@@ -91,12 +92,12 @@ if sys.platform == "win32":
 	# exception if the folder does not yet exist
 	try:
 		library_home = appdata = SHGetSpecialFolderPath(0, CSIDL_APPDATA, 1)
-	except Exception, exception:
+	except Exception as exception:
 		raise Exception("FATAL - Could not get/create user application data folder: %s"
 						% exception)
 	try:
 		localappdata = SHGetSpecialFolderPath(0, CSIDL_LOCAL_APPDATA, 1)
-	except Exception, exception:
+	except Exception as exception:
 		localappdata = os.path.join(appdata, "Local")
 	cache = localappdata
 	# Argyll CMS uses ALLUSERSPROFILE for local system wide app related data
@@ -110,37 +111,37 @@ if sys.platform == "win32":
 	else:
 		try:
 			commonappdata = [SHGetSpecialFolderPath(0, CSIDL_COMMON_APPDATA, 1)]
-		except Exception, exception:
+		except Exception as exception:
 			raise Exception("FATAL - Could not get/create common application data folder: %s"
 							% exception)
 	library = commonappdata[0]
 	try:
 		commonprogramfiles = SHGetSpecialFolderPath(0, CSIDL_PROGRAM_FILES_COMMON, 1)
-	except Exception, exception:
+	except Exception as exception:
 		raise Exception("FATAL - Could not get/create common program files folder: %s"
 						% exception)
 	try:
 		autostart = SHGetSpecialFolderPath(0, CSIDL_COMMON_STARTUP, 1)
-	except Exception, exception:
+	except Exception as exception:
 		autostart = None
 	try:
 		autostart_home = SHGetSpecialFolderPath(0, CSIDL_STARTUP, 1)
-	except Exception, exception:
+	except Exception as exception:
 		autostart_home = None
 	try:
 		iccprofiles = [os.path.join(SHGetSpecialFolderPath(0, CSIDL_SYSTEM), 
 									"spool", "drivers", "color")]
-	except Exception, exception:
+	except Exception as exception:
 		raise Exception("FATAL - Could not get system folder: %s"
 						% exception)
 	iccprofiles_home = iccprofiles
 	try:
 		programs = SHGetSpecialFolderPath(0, CSIDL_PROGRAMS, 1)
-	except Exception, exception:
+	except Exception as exception:
 		programs = None
 	try:
 		commonprograms = [SHGetSpecialFolderPath(0, CSIDL_COMMON_PROGRAMS, 1)]
-	except Exception, exception:
+	except Exception as exception:
 		commonprograms = []
 elif sys.platform == "darwin":
 	library_home = os.path.join(home, "Library")
@@ -197,8 +198,8 @@ else:
 				obj.translation = gettext.translation(obj.GETTEXT_PACKAGE,
 													  locale_dir,
 													  codeset="UTF-8")
-			except IOError, exception:
-				from log import safe_print
+			except IOError as exception:
+				from .log import safe_print
 				safe_print("XDG:", exception)
 				obj.translation = gettext.NullTranslations()
 				return False
@@ -242,8 +243,8 @@ else:
 				with open(path, "r") as f:
 					for key, value in XDG.config_file_parser(f):
 						fn(key, value)
-			except EnvironmentError, exception:
-				from log import safe_print
+			except EnvironmentError as exception:
+				from .log import safe_print
 				safe_print("XDG: Couldn't read '%s':" % path, exception)
 				return False
 			return True
@@ -288,7 +289,7 @@ else:
 			def load_default_dirs(self):
 				paths = XDG.get_config_files("user-dirs.defaults")
 				if not paths:
-					from log import safe_print
+					from .log import safe_print
 					safe_print("XDG.UserDirs: No default user directories")
 					return False
 
@@ -341,7 +342,7 @@ else:
 				try:
 					codecs.lookup(self.filename_encoding)
 				except LookupError:
-					from log import safe_print
+					from .log import safe_print
 					safe_print("XDG.UserDirs: Can't convert from UTF-8 to",
 							   self.filename_encoding)
 					return False

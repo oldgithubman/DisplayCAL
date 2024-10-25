@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from time import sleep
 import os
 import sys
 import threading
 import types
 
-from colormath import specialpow
-from wxfixes import wx, GenButton, PlateButton, get_dialogs
+from .colormath import specialpow
+from .wxfixes import wx, GenButton, PlateButton, get_dialogs
 
 import wx.grid
-from lib.agw.gradientbutton import GradientButton
-import floatspin
+from .lib.agw.gradientbutton import GradientButton
+from . import floatspin
 
 
 def AdjustMinMax(self, minvalue=0.0, maxvalue=1.0):
@@ -464,7 +465,7 @@ class ThreadedTimer(object):
 		if hasattr(wx.Window, "UnreserveControlId") and self.Id < 0:
 			try:
 				wx.Window.UnreserveControlId(self.Id)
-			except wx.wxAssertionError, exception:
+			except wx.wxAssertionError as exception:
 				pass
 
 	def GetId(self):

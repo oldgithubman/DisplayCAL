@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from time import strftime
 import codecs
 import os
@@ -7,12 +8,12 @@ import re
 import shutil
 import sys
 
-from config import get_data_path, initcfg
-from meta import version_short
-from safe_print import safe_print
-from util_str import safe_unicode
-import jspacker
-import localization as lang
+from .config import get_data_path, initcfg
+from .meta import version_short
+from .safe_print import safe_print
+from .util_str import safe_unicode
+from . import jspacker
+from . import localization as lang
 
 
 def create(report_path, placeholders2data, pack=True, templatename="report"):
@@ -26,7 +27,7 @@ def create(report_path, placeholders2data, pack=True, templatename="report"):
 	try:
 		report_html_template = codecs.open(report_html_template_path, "r", 
 										   "UTF-8")
-	except (IOError, OSError), exception:
+	except (IOError, OSError) as exception:
 		raise exception.__class__(lang.getstr("error.file.open", 
 											  report_html_template_path))
 	report_html = report_html_template.read()
@@ -46,7 +47,7 @@ def create(report_path, placeholders2data, pack=True, templatename="report"):
 			raise IOError(lang.getstr("file.missing", include))
 		try:
 			f = codecs.open(path, "r", "UTF-8")
-		except (IOError, OSError), exception:
+		except (IOError, OSError) as exception:
 			raise exception.__class__(lang.getstr("error.file.open", path))
 		if include.endswith(".js"):
 			js = f.read()
@@ -65,7 +66,7 @@ def create(report_path, placeholders2data, pack=True, templatename="report"):
 	# write report
 	try:
 		report_html_file = codecs.open(report_path, "w", "UTF-8")
-	except (IOError, OSError), exception:
+	except (IOError, OSError) as exception:
 		raise exception.__class__(lang.getstr("error.file.create", report_path) +
 								  "\n\n" + safe_unicode(exception))
 	report_html_file.write(report_html)
@@ -81,7 +82,7 @@ def update(report_path, pack=True):
 	# read original report
 	try:
 		orig_report = codecs.open(report_path, "r", "UTF-8")
-	except (IOError, OSError), exception:
+	except (IOError, OSError) as exception:
 		raise exception.__class__(lang.getstr("error.file.open", report_path))
 	orig_report_html = orig_report.read()
 	orig_report.close()
@@ -181,5 +182,5 @@ if __name__ == "__main__":
 		for arg in sys.argv[1:]:
 			try:
 				update(arg)
-			except (IOError, OSError), exception:
+			except (IOError, OSError) as exception:
 				safe_print(exception)

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import os
 import re
 import shutil
 import sys
-import tempfile
+from . import tempfile
 
-from meta import name as appname, wx_minversion
+from .meta import name as appname, wx_minversion
 
 if os.getenv("GTK_CSD", "0") != "0":
 	# Work-around double window decorations, see
@@ -15,7 +16,7 @@ if os.getenv("GTK_CSD", "0") != "0":
 
 # wxversion will be removed in Phoenix
 try:
-	import wxversion
+	from . import wxversion
 except ImportError:
 	pass
 else:
@@ -45,8 +46,8 @@ from wx.lib.buttons import GenBitmapTextButton as _GenBitmapTextButton
 from wx.lib import platebtn
 from wx import xrc
 
-from colormath import convert_range
-from util_str import safe_str
+from .colormath import convert_range
+from .util_str import safe_str
 
 
 if not hasattr(wx.Window, "HasFocus"):
@@ -638,7 +639,7 @@ wx.Window.SetToolTipString = SetToolTipString
 
 
 def _adjust_sizer_args_scaling_for_appdpi(*args, **kwargs):
-	from config import get_default_dpi, getcfg
+	from .config import get_default_dpi, getcfg
 	scale = getcfg("app.dpi") / get_default_dpi()
 	if scale > 1:
 		args = list(args)
@@ -694,7 +695,7 @@ class GridSizer(wx._GridSizer):
 
 	def __init__(self, rows=0, cols=0, vgap=0, hgap=0):
 		if vgap or hgap:
-			from config import get_default_dpi, getcfg
+			from .config import get_default_dpi, getcfg
 			scale = getcfg("app.dpi") / get_default_dpi()
 			if scale > 1:
 				##print vgap, hgap, '->',
@@ -714,7 +715,7 @@ class FlexGridSizer(wx._FlexGridSizer):
 
 	def __init__(self, rows=0, cols=0, vgap=0, hgap=0):
 		if vgap or hgap:
-			from config import get_default_dpi, getcfg
+			from .config import get_default_dpi, getcfg
 			scale = getcfg("app.dpi") / get_default_dpi()
 			if scale > 1:
 				##print vgap, hgap, '->',
@@ -776,7 +777,7 @@ def get_dc_font_scale(dc):
 	else:
 		# On Linux, we need to correct the font size by a certain factor if
 		# wx.GCDC is used, to make text the same size as if wx.GCDC weren't used
-		from config import get_default_dpi, getcfg, set_default_app_dpi
+		from .config import get_default_dpi, getcfg, set_default_app_dpi
 		set_default_app_dpi()
 		scale = getcfg("app.dpi") / get_default_dpi()
 	if wx.VERSION < (2, 9):
@@ -1363,13 +1364,13 @@ class PlateButton(platebtn.PlateButton):
 	_reallyenabled = True
 
 	def __init__(self, *args, **kwargs):
-		from config import get_default_dpi, getcfg
+		from .config import get_default_dpi, getcfg
 		self.dpiscale = getcfg("app.dpi") / get_default_dpi()
 		platebtn.PlateButton.__init__(self, *args, **kwargs)
 		self._bmp["hilite"] = None
 		if sys.platform == "darwin":
 			# Use Sierra-like color scheme
-			from wxaddons import gamma_encode
+			from .wxaddons import gamma_encode
 			color = wx.Colour(*gamma_encode(0, 105, 217))
 		else:
 			color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
@@ -1574,7 +1575,7 @@ class TempXmlResource(object):
 	_temp = None
 
 	def __init__(self, xmlpath):
-		from config import get_default_dpi, getcfg
+		from .config import get_default_dpi, getcfg
 		scale = max(getcfg("app.dpi") / get_default_dpi(), 1)
 		if scale > 1 or "gtk3" in wx.PlatformInfo:
 			if not TempXmlResource._temp:
@@ -1614,7 +1615,7 @@ class TempXmlResource(object):
 									   os.path.basename(xmlpath))
 				with open(xmlpath, "wb") as xmlfile:
 					xmlfile.write(xml)
-				from wxwindows import BaseApp
+				from .wxwindows import BaseApp
 				BaseApp.register_exitfunc(self._cleanup)
 		self.xmlpath = xmlpath
 		self.res = xrc.XmlResource(xmlpath)

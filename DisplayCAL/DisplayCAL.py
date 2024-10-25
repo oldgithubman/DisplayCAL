@@ -20,6 +20,7 @@ with this program; if not, see <http://www.gnu.org/licenses/>
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
 import sys
 
 # Standard modules
@@ -37,7 +38,7 @@ if sys.platform == "darwin":
 import re
 import shutil
 import socket
-import subprocess as sp
+from . import subprocess as sp
 import threading
 import traceback
 import urllib2
@@ -55,8 +56,8 @@ import webbrowser
 webbrowser.PROCESS_CREATION_DELAY = 0
 
 # Config
-import config
-from config import (appbasename, autostart, autostart_home, build, 
+from . import config
+from .config import (appbasename, autostart, autostart_home, build, 
 					script_ext, defaults, enc, 
 					exe, exe_ext, fs_enc, getbitmap, geticon, 
 					get_ccxx_testchart, get_current_profile,
@@ -69,52 +70,52 @@ from config import (appbasename, autostart, autostart_home, build,
 
 # Custom modules
 
-import CGATS
-import ICCProfile as ICCP
-import audio
-import ccmx
-import colord
-import colormath
-import localization as lang
-import madvr
-import pyi_md5pickuphelper
-import report
+from . import CGATS
+from . import ICCProfile as ICCP
+from . import audio
+from . import ccmx
+from . import colord
+from . import colormath
+from . import localization as lang
+from . import madvr
+from . import pyi_md5pickuphelper
+from . import report
 if sys.platform == "win32":
-	import util_win
+	from . import util_win
 elif sys.platform == "darwin":
-	import util_mac
-import wexpect
-from argyll_cgats import (cal_to_fake_profile, can_update_cal, 
+	from . import util_mac
+from . import wexpect
+from .argyll_cgats import (cal_to_fake_profile, can_update_cal, 
 						  ti3_to_ti1, extract_cal_from_profile,
 						  verify_ti1_rgb_xyz)
-from argyll_instruments import (get_canonical_instrument_name, instruments)
-from argyll_names import viewconds
-from colormath import (CIEDCCT2xyY, planckianCT2xyY, xyY2CCT, XYZ2CCT, XYZ2Lab, 
+from .argyll_instruments import (get_canonical_instrument_name, instruments)
+from .argyll_names import viewconds
+from .colormath import (CIEDCCT2xyY, planckianCT2xyY, xyY2CCT, XYZ2CCT, XYZ2Lab, 
 					   XYZ2xyY)
-from debughelpers import ResourceError, getevtobjname, getevttype, handle_error
-from edid import pnpidcache, get_manufacturer_name
-from log import log, logbuffer, safe_print
-from meta import (VERSION, VERSION_BASE, author, name as appname, domain,
+from .debughelpers import ResourceError, getevtobjname, getevttype, handle_error
+from .edid import pnpidcache, get_manufacturer_name
+from .log import log, logbuffer, safe_print
+from .meta import (VERSION, VERSION_BASE, author, name as appname, domain,
 				  version, version_short, get_latest_chglog_entry)
-from options import (debug, force_skip_initial_instrument_detection, test,
+from .options import (debug, force_skip_initial_instrument_detection, test,
 					 test_update, verbose)
-from ordereddict import OrderedDict
-from patterngenerators import WebWinHTTPPatternGeneratorServer
+from .ordereddict import OrderedDict
+from .patterngenerators import WebWinHTTPPatternGeneratorServer
 try:
-	from chromecast_patterngenerator import ChromeCastPatternGenerator as CCPG
+	from .chromecast_patterngenerator import ChromeCastPatternGenerator as CCPG
 except ImportError:
 	CCPG = None.__class__
-from trash import trash, TrashAborted, TrashcanUnavailableError
-from util_decimal import float2dec, stripzeros
-from util_io import LineCache, StringIOu, TarFileProper
-from util_list import index_fallback_ignorecase, intlist, natsort
-from util_os import (dlopen, expanduseru, get_program_file, getenvu,
+from .trash import trash, TrashAborted, TrashcanUnavailableError
+from .util_decimal import float2dec, stripzeros
+from .util_io import LineCache, StringIOu, TarFileProper
+from .util_list import index_fallback_ignorecase, intlist, natsort
+from .util_os import (dlopen, expanduseru, get_program_file, getenvu,
 					 is_superuser, launch_file, listdir_re, safe_glob, waccess,
 					 which)
-from util_str import (ellipsis, make_filename_safe, safe_str, safe_unicode,
+from .util_str import (ellipsis, make_filename_safe, safe_str, safe_unicode,
 					  strtr, universal_newlines, wrap)
-import util_x
-from worker import (Error, Info, UnloggedError, UnloggedInfo, UnloggedWarning,
+from . import util_x
+from .worker import (Error, Info, UnloggedError, UnloggedInfo, UnloggedWarning,
 					Warn, Worker, check_create_dir, check_file_isfile,
 					check_set_argyll_bin, check_ti3, check_ti3_criteria1,
 					check_ti3_criteria2, get_arg, get_argyll_util,
@@ -125,32 +126,32 @@ from worker import (Error, Info, UnloggedError, UnloggedInfo, UnloggedWarning,
 					parse_argument_string, set_argyll_bin, show_result_dialog,
 					check_argyll_bin, http_request, FilteredStream,
 					_applycal_bug_workaround)
-from wxLUT3DFrame import LUT3DFrame
+from .wxLUT3DFrame import LUT3DFrame
 try:
-	from wxLUTViewer import LUTFrame
+	from .wxLUTViewer import LUTFrame
 except ImportError:
 	LUTFrame = None
-from wxMeasureFrame import MeasureFrame
+from .wxMeasureFrame import MeasureFrame
 try:
-	from wxCCXXPlot import CCXXPlot
+	from .wxCCXXPlot import CCXXPlot
 except ImportError:
 	CCXXPlot = None
-from wxDisplayUniformityFrame import DisplayUniformityFrame
-from wxMeasureFrame import get_default_size
+from .wxDisplayUniformityFrame import DisplayUniformityFrame
+from .wxMeasureFrame import get_default_size
 try:
-	from wxProfileInfo import ProfileInfoFrame
+	from .wxProfileInfo import ProfileInfoFrame
 except ImportError:
 	ProfileInfoFrame = None
-from wxReportFrame import ReportFrame
-from wxSynthICCFrame import SynthICCFrame
-from wxTestchartEditor import TestchartEditor
-from wxVisualWhitepointEditor import VisualWhitepointEditor
-from wxaddons import (wx, BetterWindowDisabler, CustomEvent,
+from .wxReportFrame import ReportFrame
+from .wxSynthICCFrame import SynthICCFrame
+from .wxTestchartEditor import TestchartEditor
+from .wxVisualWhitepointEditor import VisualWhitepointEditor
+from .wxaddons import (wx, BetterWindowDisabler, CustomEvent,
 					  CustomGridCellEvent, IdFactory, PopupMenu)
-from wxfixes import (ThemedGenButton, BitmapWithThemedButton,
+from .wxfixes import (ThemedGenButton, BitmapWithThemedButton,
 					 set_bitmap_labels, TempXmlResource, wx_Panel,
 					 PlateButton, get_bitmap_disabled, set_maxsize)
-from wxwindows import (AboutDialog, AuiBetterTabArt, BaseApp, BaseFrame,
+from .wxwindows import (AboutDialog, AuiBetterTabArt, BaseApp, BaseFrame,
 					   BetterStaticFancyText, BorderGradientButton,
 					   BitmapBackgroundPanel, BitmapBackgroundPanelText,
 					   ConfirmDialog, CustomGrid, CustomCellBoolRenderer,
@@ -158,13 +159,13 @@ from wxwindows import (AboutDialog, AuiBetterTabArt, BaseApp, BaseFrame,
 					   FlatShadedButton, HtmlWindow, HyperLinkCtrl, InfoDialog,
 					   LogWindow, ProgressDialog, TabButton, TooltipWindow,
 					   get_gradient_panel, get_dialogs, AutocompleteComboBox)
-import floatspin
-import wxenhancedplot as plot
-import xh_fancytext
-import xh_filebrowsebutton
-import xh_floatspin
-import xh_hstretchstatbmp
-import xh_bitmapctrls
+from . import floatspin
+from . import wxenhancedplot as plot
+from . import xh_fancytext
+from . import xh_filebrowsebutton
+from . import xh_floatspin
+from . import xh_hstretchstatbmp
+from . import xh_bitmapctrls
 
 # wxPython
 try:
@@ -555,7 +556,7 @@ def colorimeter_correction_web_check_choose(resp, parent=None):
 			json = json_module.load(resp)
 			if not json:
 				raise ValueError()
-		except (UnicodeDecodeError, ValueError), exception:
+		except (UnicodeDecodeError, ValueError) as exception:
 			InfoDialog(parent, 
 						 msg=lang.getstr("colorimeter_correction.web_check.failure"),
 						 ok=lang.getstr("ok"), 
@@ -618,7 +619,7 @@ def colorimeter_correction_web_check_choose(resp, parent=None):
 		cgats[i] = safe_str(item.get("cgats", ""), "UTF-8")
 		try:
 			ccxx = CGATS.CGATS(cgats[i])
-		except CGATS.CGATSError, exception:
+		except CGATS.CGATSError as exception:
 			safe_print(exception)
 			cgats[i] = ""
 			ccxx = CGATS.CGATS()
@@ -782,7 +783,7 @@ def colorimeter_correction_check_overwrite(parent=None, cgats=None,
 		cgatsfile = open(path, 'wb')
 		cgatsfile.write(cgats.rstrip("\n") + "\n")
 		cgatsfile.close()
-	except EnvironmentError, exception:
+	except EnvironmentError as exception:
 		show_result_dialog(exception, parent)
 		return False
 	if getcfg("colorimeter_correction_matrix_file").split(":")[0] != "AUTO":
@@ -936,7 +937,7 @@ def webbrowser_open(url, new=False):
 	try:
 		webbrowser.open(url, new=new)
 		return True
-	except Exception, exception:
+	except Exception as exception:
 		show_result_dialog(exception)
 		return False
 
@@ -1152,7 +1153,7 @@ class GamapFrame(BaseFrame):
 		if p and c:
 			try:
 				profile = ICCP.ICCProfile(v)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				p = False
 				InfoDialog(self, msg=lang.getstr("profile.invalid") + "\n" + v, 
 						   ok=lang.getstr("ok"), 
@@ -3092,7 +3093,7 @@ class MainFrame(ReportFrame, BaseFrame):
 						safe_print("Warning - couldn't update profile loader "
 								   "notification text:", response)
 				del conn
-			except Exception, exception:
+			except Exception as exception:
 				safe_print("Warning - error while trying to set language for",
 						   name, "(%s)" % ip_port, exception)
 	
@@ -3670,7 +3671,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			elif os.path.isfile(path):
 				try:
 					cgats = CGATS.CGATS(path, strict=True)
-				except (IOError, CGATS.CGATSError), exception:
+				except (IOError, CGATS.CGATSError) as exception:
 					safe_print(exception)
 					if isinstance(exception, CGATS.CGATSInvalidError):
 						malformed_ccxx.append(path)
@@ -3739,14 +3740,14 @@ class MainFrame(ReportFrame, BaseFrame):
 					try:
 						ccxx = CGATS.CGATS(path)
 						ccxx[0].DATA.vmaxlen = 5  # Allow margin of error
-					except Exception, exception:
+					except Exception as exception:
 						safe_print(exception)
 						break
 					try:
 						cgats = CGATS.CGATS(ccmx[1], strict=True)
 						vmaxlen = cgats[0].DATA.vmaxlen
 						cgats[0].DATA.vmaxlen = 5  # Allow margin of error
-					except Exception, exception:
+					except Exception as exception:
 						show_ccxx_error_dialog(exception, ccmx[1], self)
 						add_cfg_ccxx = False
 						ccmx = [""]
@@ -3769,7 +3770,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				try:
 					if not cgats:
 						cgats = CGATS.CGATS(ccmx[1], strict=True)
-				except (IOError, CGATS.CGATSError), exception:
+				except (IOError, CGATS.CGATSError) as exception:
 					if (isinstance(exception, CGATS.CGATSInvalidError) and
 						ccmx[1] in
 						self.get_argyll_data_files("lu", "*" +
@@ -3859,7 +3860,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			try:
 				if not cgats:
 					cgats = CGATS.CGATS(ccmx[1], strict=True)
-			except (IOError, CGATS.CGATSError), exception:
+			except (IOError, CGATS.CGATSError) as exception:
 				show_ccxx_error_dialog(exception, ccmx[1], self)
 				ccmx = ["", ""]
 				index = 0
@@ -3921,13 +3922,13 @@ class MainFrame(ReportFrame, BaseFrame):
 				trashcan = lang.getstr("trashcan.linux")
 			try:
 				trash(malformed_ccxx)
-			except TrashAborted, exception:
+			except TrashAborted as exception:
 				if exception.args[0] == -1:
 					# Trash operation was aborted
 					pass
-			except TrashcanUnavailableError, exception:
+			except TrashcanUnavailableError as exception:
 				msg = lang.getstr("error.trashcan_unavailable", trashcan)
-			except Exception, exception:
+			except Exception as exception:
 				msg = (lang.getstr("error.deletion", trashcan) + "\n\n" +
 					   safe_unicode(exception))
 			else:
@@ -4969,7 +4970,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			if profile_filename:
 				try:
 					profile = ICCP.ICCProfile(profile_filename)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					safe_print("%s:" % profile_filename, exception)
 				else:
 					if profile_filename not in self.input_profiles.values():
@@ -5096,7 +5097,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			else:
 				try:
 					profile = ICCP.ICCProfile(lut3d_input_profile)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					safe_print("%s:" % lut3d_input_profile, exception)
 				else:
 					desc = profile.getDescription()
@@ -5383,7 +5384,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			# Disable 3D LUT
 			try:
 				self.worker.patterngenerator.disable_processing()
-			except socket.error, exception:
+			except socket.error as exception:
 				show_result_dialog(exception)
 				return
 		pos = self.GetDisplay().ClientArea[:2]
@@ -5397,7 +5398,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			display_no = config.get_display_number(getcfg("display.number") - 1)
 			try:
 				display = wx.Display(display_no)
-			except Exception, exception:
+			except Exception as exception:
 				safe_print("wx.Display(%s):" % display_no, exception)
 			else:
 				pos = display.ClientArea[:2]
@@ -5422,7 +5423,7 @@ class MainFrame(ReportFrame, BaseFrame):
 	def patterngenerator_disconnect(self, event):
 		try:
 			self.worker.patterngenerator.disconnect_client()
-		except Exception, exception:
+		except Exception as exception:
 			safe_print(exception)
 		event.Skip()
 
@@ -5657,7 +5658,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			self.ambient_viewcond_adjust_textctrl.Enable()
 			v = self.ambient_viewcond_adjust_textctrl.GetValue()
 			if v:
-				if v < 0.000001 or v > sys.maxint:
+				if v < 0.000001 or v > sys.maxsize:
 					wx.Bell()
 					self.ambient_viewcond_adjust_textctrl.SetValue(
 						getcfg("calibration.ambient_viewcond_adjust.lux"))
@@ -6364,7 +6365,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				if sys.platform == "win32":
 					art.SetDefaultColours(aui.StepColour(dlg.BackgroundColour, 96))
 				display_settings_tabs.SetArtProvider(art)
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(exception)
 				pass
 		dlg.display_settings = display_settings_tabs
@@ -6526,7 +6527,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		# Save profile
 		try:
 			profile.write()
-		except EnvironmentError, exception:
+		except EnvironmentError as exception:
 			show_result_dialog(exception, self)
 		if result != wx.ID_OK:
 			return
@@ -6720,7 +6721,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		if not isinstance(result, Exception) and result:
 			try:
 				profile = ICCP.ICCProfile(profile_path)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				InfoDialog(self, msg=lang.getstr("profile.invalid") + 
 									 "\n" + profile_path, 
 						   ok=lang.getstr("ok"), 
@@ -6788,7 +6789,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			if os.path.splitext(path)[1].lower() in (".icc", ".icm"):
 				try:
 					profile = ICCP.ICCProfile(path)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					if verbose >= 1: safe_print(lang.getstr("failure"))
 					InfoDialog(self, msg=lang.getstr("profile.invalid") + 
 										 "\n" + path, 
@@ -6844,7 +6845,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				 cal.lower().endswith(".icm"):
 				try:
 					profile = ICCP.ICCProfile(cal)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					show_result_dialog(exception, self)
 					profile = None
 			else:
@@ -6927,7 +6928,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			# Enable calibration management under Windows 7
 			try:
 				util_win.enable_calibration_management(self.profile_load_by_os.GetValue())
-			except Exception, exception:
+			except Exception as exception:
 				safe_print("util_win.enable_calibration_management(True): %s" %
 						   safe_unicode(exception))
 			else:
@@ -6999,7 +7000,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			return
 		try:
 			report.update(path, pack=getcfg("report.pack_js"))
-		except (IOError, OSError), exception:
+		except (IOError, OSError) as exception:
 			show_result_dialog(exception)
 		else:
 			# show report
@@ -7066,7 +7067,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				return
 			try:
 				profile = ICCP.ICCProfile(path)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				InfoDialog(parent, msg=lang.getstr("profile.invalid") + 
 								 "\n" + path, 
 						   ok=lang.getstr("ok"), 
@@ -7107,7 +7108,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		
 		try:
 			chart = CGATS.CGATS(chart, True)
-		except (IOError, CGATS.CGATSError), exception:
+		except (IOError, CGATS.CGATSError) as exception:
 			show_result_dialog(exception, getattr(self, "reportframe", self))
 			return
 
@@ -7141,7 +7142,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		for i, profilepath in enumerate(paths):
 			try:
 				profile = ICCP.ICCProfile(profilepath)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				if isinstance(exception, ICCP.ICCProfileInvalidError):
 					msg = lang.getstr("profile.invalid") + "\n" + profilepath
 				else:
@@ -7208,7 +7209,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				odata = self.worker.xicclu(oprof, (0, 0, 0), pcs="x")
 				if len(odata) != 1 or len(odata[0]) != 3:
 					raise ValueError("Blackpoint is invalid: %s" % odata)
-			except Exception, exception:
+			except Exception as exception:
 				show_result_dialog(exception, getattr(self, "reportframe", self))
 				return
 			if odata[0][1]:
@@ -7424,7 +7425,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			# write ti3 to temp dir
 			try:
 				ti3_file = open(ti3_path, "w")
-			except EnvironmentError, exception:
+			except EnvironmentError as exception:
 				InfoDialog(getattr(self, "reportframe", self),
 						   msg=lang.getstr("error.file.create", ti3_path), 
 						   ok=lang.getstr("ok"), 
@@ -7472,7 +7473,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		# write ti1 to temp dir
 		try:
 			ti1_file = open(ti1_path, "w")
-		except EnvironmentError, exception:
+		except EnvironmentError as exception:
 			InfoDialog(getattr(self, "reportframe", self),
 					   msg=lang.getstr("error.file.create", ti1_path), 
 					   ok=lang.getstr("ok"), 
@@ -7497,7 +7498,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		try:
 			# Extract calibration from profile
 			cal = extract_cal_from_profile(calprof, cal_path, False)
-		except Exception, exception:
+		except Exception as exception:
 			wx.CallAfter(show_result_dialog,
 						 Error(lang.getstr("cal_extraction_failed")),
 						 getattr(self, "reportframe", self))
@@ -7534,7 +7535,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				ti3_measured = CGATS.CGATS(ti3_path)[0]
 			except (IOError, CGATS.CGATSInvalidError, 
 					CGATS.CGATSInvalidOperationError, CGATS.CGATSKeyError, 
-					CGATS.CGATSTypeError, CGATS.CGATSValueError), exc:
+					CGATS.CGATSTypeError, CGATS.CGATSValueError) as exc:
 				result = exc
 			else:
 				safe_print(lang.getstr("success"))
@@ -7815,7 +7816,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				ccmx = os.path.basename(ccmx[1])
 				try:
 					cgats = CGATS.CGATS(ccmxpath)
-				except (IOError, CGATS.CGATSError), exception:
+				except (IOError, CGATS.CGATSError) as exception:
 					safe_print("%s:" % ccmxpath, exception)
 				else:
 					filename, ext = os.path.splitext(ccmx)
@@ -7908,7 +7909,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		# create report
 		try:
 			report.create(save_path, placeholders2data, getcfg("report.pack_js"))
-		except (IOError, OSError), exception:
+		except (IOError, OSError) as exception:
 			show_result_dialog(exception, self)
 		else:
 			# show report
@@ -7933,7 +7934,7 @@ class MainFrame(ReportFrame, BaseFrame):
 						cal.lower().endswith(".icm")):
 						try:
 							profile = ICCP.ICCProfile(cal)
-						except (IOError, ICCP.ICCProfileInvalidError), exception:
+						except (IOError, ICCP.ICCProfileInvalidError) as exception:
 							safe_print(exception)
 							profile = None
 					else:
@@ -8239,7 +8240,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					ip = socket.gethostbyname(host)
 					self.worker.patterngenerator.host = ip
 					self.worker.patterngenerator.connect()
-				except socket.error, exception:
+				except socket.error as exception:
 					result = exception
 				else:
 					result = ip
@@ -8332,7 +8333,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				try:
 					if not self.worker.madtpg_connect():
 						raise Error(lang.getstr("madtpg.launch.failure"))
-				except Exception, exception:
+				except Exception as exception:
 					action = wx.ID_CLOSE
 				else:
 					action = wx.ID_OK
@@ -8371,7 +8372,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			logfile = LineCache(3)
 			try:
 				self.worker.setup_patterngenerator(logfile)
-			except Exception, exception:
+			except Exception as exception:
 				show_result_dialog(exception, parent)
 				return
 			if not hasattr(self.worker.patterngenerator, "conn"):
@@ -8444,8 +8445,8 @@ class MainFrame(ReportFrame, BaseFrame):
 				x_hostname, x_display, x_screen = util_x.get_display()
 				x_screen = display_no
 				try:
-					import RealDisplaySizeMM as RDSMM
-				except ImportError, exception:
+					from . import RealDisplaySizeMM as RDSMM
+				except ImportError as exception:
 					InfoDialog(self, msg=safe_unicode(exception), 
 							   ok=lang.getstr("ok"), 
 							   bitmap=geticon(32, "dialog-warning"))
@@ -8465,7 +8466,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			p = sp.Popen(args.encode(fs_enc), 
 						 shell=True, 
 						 stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
-		except Exception, exception:
+		except Exception as exception:
 			stderr = safe_str(exception)
 		else:
 			self._measureframe_subprocess = p
@@ -8740,7 +8741,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				self.worker.options_dispcal = []
 				try:
 					profile = ICCP.ICCProfile(cal)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					InfoDialog(self, msg=lang.getstr("profile.invalid") + 
 									 "\n" + path, 
 							   ok=lang.getstr("ok"), 
@@ -8884,7 +8885,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			profile = ICCP.ICCProfile.from_edid(edid)
 			try:
 				profile.write(profile_path)
-			except Exception, exception:
+			except Exception as exception:
 				self.measure_auto_finish(exception)
 				return
 			luminance = None
@@ -8907,7 +8908,7 @@ class MainFrame(ReportFrame, BaseFrame):
 								   calibration)
 							try:
 								response = urllib2.urlopen(url)
-							except Exception, exception:
+							except Exception as exception:
 								self.measure_auto_finish(exception)
 								return
 							body = response.read()
@@ -8917,7 +8918,7 @@ class MainFrame(ReportFrame, BaseFrame):
 								try:
 									with open(path, "wb") as calibrationfile:
 										calibrationfile.write(body)
-								except Exception, exception:
+								except Exception as exception:
 									safe_print(exception)
 							else:
 								safe_print("Got unexpected answer from %s:" %
@@ -8927,7 +8928,7 @@ class MainFrame(ReportFrame, BaseFrame):
 							safe_print("Using factory calibration", path)
 							try:
 								cgats = CGATS.CGATS(path)
-							except (IOError, CGATS.CGATSError), exception:
+							except (IOError, CGATS.CGATSError) as exception:
 								safe_print(exception)
 							else:
 								white = cgats.queryi1({"RGB_R": 1,
@@ -9031,7 +9032,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				cgats = CGATS.CGATS(os.path.join(getcfg("measurement.save_path"),
 												 getcfg("measurement.name.expanded"),
 												 getcfg("measurement.name.expanded")) + ".ti3")
-			except Exception, exception:
+			except Exception as exception:
 				wx.CallAfter(show_result_dialog, exception, self)
 			else:
 				if cgats.queryv1("INSTRUMENT_TYPE_SPECTRAL") == "YES":
@@ -9133,7 +9134,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			has_cal = False
 			try:
 				profile = ICCP.ICCProfile(profile_path)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				InfoDialog(self, msg=lang.getstr("profile.invalid") + 
 									 "\n" + profile_path, 
 						   ok=lang.getstr("ok"), 
@@ -9481,7 +9482,7 @@ class MainFrame(ReportFrame, BaseFrame):
 																 "madtpg"):
 				try:
 					self.worker.madtpg_init()
-				except Exception, exception:
+				except Exception as exception:
 					safe_print("Could not initialize madTPG:", exception)
 		madtpg = getattr(self.worker, "madtpg", None)
 		# Note: madVR HDR 3D LUT install API was added September 2017,
@@ -9735,7 +9736,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					return "fail"
 				try:
 					profile = ICCP.ICCProfile(path)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					return "fail"
 			wx.CallAfter(self.init_lut_viewer, profile=profile, show=True)
 		elif data[0] == "profile-info" and len(data) < 3:
@@ -9749,7 +9750,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					return "fail"
 				try:
 					profile = ICCP.ICCProfile(path)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					return "fail"
 			wx.CallAfter(self.profile_info_handler, profile=profile)
 		elif data[0] == "synthprofile" and len(data) < 3:
@@ -9923,7 +9924,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					if ext.lower() in (".icc", ".icm"):
 						try:
 							profile = ICCP.ICCProfile(path)
-						except (IOError, ICCP.ICCProfileInvalidError), \
+						except (IOError, ICCP.ICCProfileInvalidError) as \
 							   exception:
 							msg = lang.getstr("profile.invalid") + "\n" + path
 							if event or not lut_viewer:
@@ -10228,7 +10229,7 @@ class MainFrame(ReportFrame, BaseFrame):
 
 		try:
 			cgats = CGATS.CGATS(ccxx)
-		except Exception, exception:
+		except Exception as exception:
 			show_result_dialog(exception, self)
 			return
 
@@ -10402,7 +10403,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					if os.path.isfile(ti3):
 						try:
 							cgats = CGATS.CGATS(ti3)
-						except (IOError, CGATS.CGATSError), exception:
+						except (IOError, CGATS.CGATSError) as exception:
 							show_result_dialog(exception, dlg)
 							cgats = CGATS.CGATS()
 						cgats_instrument = cgats.queryv1("TARGET_INSTRUMENT")
@@ -10781,7 +10782,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			ccxx = CGATS.CGATS(ccxx_testchart)
 		except (Error, IOError, CGATS.CGATSInvalidError, 
 				CGATS.CGATSInvalidOperationError, CGATS.CGATSKeyError, 
-				CGATS.CGATSTypeError, CGATS.CGATSValueError), exception:
+				CGATS.CGATSTypeError, CGATS.CGATSValueError) as exception:
 			show_result_dialog(exception, self)
 			return
 		cgats_list = []
@@ -10864,7 +10865,7 @@ class MainFrame(ReportFrame, BaseFrame):
 						cgats = CGATS.CGATS(path)
 					if not cgats.queryv1("DATA"):
 						raise CGATS.CGATSError("Missing DATA")
-				except Exception, exception:
+				except Exception as exception:
 					safe_print(exception)
 					InfoDialog(self,
 							   title=lang.getstr("colorimeter_correction.create"),
@@ -11315,7 +11316,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			# different than raw data so MD5 will be different
 			try:
 				cgatsfile = open(source, "rb")
-			except Exception, exception:
+			except Exception as exception:
 				show_result_dialog(exception, self)
 				self.worker.wrapup(False)
 				return
@@ -11934,12 +11935,12 @@ class MainFrame(ReportFrame, BaseFrame):
 						imported, skipped = ccmx.convert_devicecorrections_to_ccmx(path, ccmx_dir)
 						if imported == 0:
 							raise Info()
-					except (UnicodeDecodeError, ValueError), exception:
+					except (UnicodeDecodeError, ValueError) as exception:
 						result = Error(lang.getstr("file.invalid") + "\n" +
 									   safe_unicode(exception))
 					except Info:
 						result = False
-					except Exception, exception:
+					except Exception as exception:
 						result = exception
 					else:
 						result = icd = True
@@ -12252,7 +12253,7 @@ class MainFrame(ReportFrame, BaseFrame):
 						with open(os.path.join(temp, os.path.basename(outname)),
 								  "wb") as outfile:
 							outfile.write(archive.read(name))
-			except Exception, exception:
+			except Exception as exception:
 				from traceback import format_exc
 				safe_print(traceback.format_exc())
 				return exception
@@ -12725,7 +12726,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			if ext.lower() != ".ti3":
 				try:
 					profile = ICCP.ICCProfile(path)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					show_result_dialog(Error(lang.getstr("profile.invalid") + 
 											 "\n" + path), self)
 					return
@@ -12740,7 +12741,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				profile = None
 				try:
 					ti3 = open(path, "rU")
-				except Exception, exception:
+				except Exception as exception:
 					show_result_dialog(Error(lang.getstr("error.file.open", path)),
 									   self)
 					return
@@ -12790,7 +12791,7 @@ class MainFrame(ReportFrame, BaseFrame):
 								return
 							try:
 								ti3.write(path)
-							except EnvironmentError, exception:
+							except EnvironmentError as exception:
 								show_result_dialog(exception, self)
 				else:
 					show_result_dialog(UnloggedInfo(lang.getstr("errors.none_found")),
@@ -12815,7 +12816,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			if not isinstance(ti3, CGATS.CGATS):
 				ti3 = CGATS.CGATS(ti3)
 			ti3_1 = verify_ti1_rgb_xyz(ti3)
-		except (IOError, CGATS.CGATSError), exception:
+		except (IOError, CGATS.CGATSError) as exception:
 			show_result_dialog(exception, self)
 			return False
 		suspicious = check_ti3(ti3_1)
@@ -12853,7 +12854,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				if ti3.filename and os.path.exists(ti3.filename) and not force:
 					try:
 						ti3.write()
-					except EnvironmentError, exception:
+					except EnvironmentError as exception:
 						show_result_dialog(exception, self)
 						return False
 					safe_print("Written updated TI3 to", ti3.filename)
@@ -13004,7 +13005,7 @@ class MainFrame(ReportFrame, BaseFrame):
 						writefile(filename,
 								  os.path.join(dirbasename,
 											   os.path.basename(filename)))
-			except Exception, exception:
+			except Exception as exception:
 				return exception
 			else:
 				return True
@@ -13219,7 +13220,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			if source_ext.lower() != ".ti3":
 				try:
 					profile = ICCP.ICCProfile(path)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					InfoDialog(self, msg=lang.getstr("profile.invalid") + 
 										 "\n" + path, 
 							   ok=lang.getstr("ok"), 
@@ -13242,7 +13243,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			else:
 				try:
 					ti3 = open(path, "rU")
-				except Exception, exception:
+				except Exception as exception:
 					InfoDialog(self, msg=lang.getstr("error.file.open", path), 
 							   ok=lang.getstr("ok"), 
 							   bitmap=geticon(32, "dialog-error"))
@@ -13390,7 +13391,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					if ti3.queryv1("COLOR_REP") and \
 					   ti3.queryv1("COLOR_REP")[:3] == "RGB":
 						self.worker.options_targen = ["-d3"]
-				except Exception, exception:
+				except Exception as exception:
 					handle_error(Error(u"Error - temporary .ti3 file could not "
 									   u"be created: " + safe_unicode(exception)),
 								 parent=self)
@@ -13444,7 +13445,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			profile = ICCP.ICCProfile.from_edid(edid)
 			try:
 				profile.write(profile_save_path)
-			except Exception, exception:
+			except Exception as exception:
 				InfoDialog(self, msg=safe_unicode(exception), 
 						   ok=lang.getstr("ok"), 
 						   bitmap=geticon(32, "dialog-error"))
@@ -13481,7 +13482,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				safe_print("-" * 80)
 			try:
 				profile.write()
-			except Exception, exception:
+			except Exception as exception:
 				show_result_dialog(exception, self)
 				return
 			self.profile_finish(True, profile.fileName,
@@ -14054,7 +14055,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			if ext.lower() in (".icc", ".icm"):
 				try:
 					profile = ICCP.ICCProfile(path)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					InfoDialog(self, msg=lang.getstr("profile.invalid") + 
 										 "\n" + path, 
 							   ok=lang.getstr("ok"), 
@@ -14260,7 +14261,7 @@ class MainFrame(ReportFrame, BaseFrame):
 											 profile.tags.get("targ", "")))
 			try:
 				ti1_1 = verify_ti1_rgb_xyz(ti1)
-			except CGATS.CGATSError, exception:
+			except CGATS.CGATSError as exception:
 				msg = {CGATS.CGATSKeyError: lang.getstr("error.testchart.missing_fields", 
 														(path, 
 														 "RGB_R, RGB_G, RGB_B, "
@@ -14298,7 +14299,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			self.testchart_patches_amount.SetLabel(
 				str(ti1.queryv1("NUMBER_OF_SETS")))
 			self._current_testchart_path = path
-		except Exception, exception:
+		except Exception as exception:
 			error = traceback.format_exc() if debug else exception
 			InfoDialog(self, 
 					   msg=lang.getstr("error.testchart.read", path) + 
@@ -14336,7 +14337,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				testcharts = listdir_re(testchart_dir, 
 										re.escape(os.path.splitext(os.path.basename(path))[0]) +
 										r"\.(?:icc|icm|ti1|ti3)$")
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(u"Error - directory '%s' listing failed: %s" % 
 						   tuple(safe_unicode(s) for s in (testchart_dir, 
 														   exception)))
@@ -14455,7 +14456,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		if isinstance(result, delayedresult.DelayedResult):
 			try:
 				result.get()
-			except Exception, exception:
+			except Exception as exception:
 				if hasattr(exception, "originalTraceback"):
 					error = exception.originalTraceback
 				else:
@@ -14645,7 +14646,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			if ext.lower() in (".icc", ".icm"):
 				try:
 					profile = ICCP.ICCProfile(path)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					InfoDialog(self, msg=lang.getstr("profile.invalid") + 
 										 "\n" + path, 
 							   ok=lang.getstr("ok"), 
@@ -14665,7 +14666,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			else:
 				try:
 					cal = open(path, "rU")
-				except Exception, exception:
+				except Exception as exception:
 					InfoDialog(self, msg=lang.getstr("error.file.open", path), 
 							   ok=lang.getstr("ok"), 
 							   bitmap=geticon(32, "dialog-error"))
@@ -14759,7 +14760,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				try:
 					(options_dispcal, 
 					 options_colprof) = get_options_from_cal(path)
-				except (IOError, CGATS.CGATSError), exception:
+				except (IOError, CGATS.CGATSError) as exception:
 					InfoDialog(self, msg=lang.getstr("calibration.file.invalid") + 
 										 "\n" + path, 
 							   ok=lang.getstr("ok"), 
@@ -15377,7 +15378,7 @@ class MainFrame(ReportFrame, BaseFrame):
 								# Normalize to 0.0 - 1.0
 								XYZ[i] = float(component) / 100
 								i += 1
-						except ValueError, exception:
+						except ValueError as exception:
 							continue
 						x, y, Y = XYZ2xyY(XYZ[0], XYZ[1], XYZ[2])
 						k = XYZ2CCT(XYZ[0], XYZ[1], XYZ[2])
@@ -15482,7 +15483,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			caldir = os.path.dirname(cal)
 			try:
 				dircontents = os.listdir(caldir)
-			except Exception, exception:
+			except Exception as exception:
 				InfoDialog(self, msg=safe_unicode(exception), 
 						   ok=lang.getstr("ok"), 
 						   bitmap=geticon(32, "dialog-error"))
@@ -15568,17 +15569,17 @@ class MainFrame(ReportFrame, BaseFrame):
 												 orphan_related_files), 
 								   ok=lang.getstr("ok"), 
 								   bitmap=geticon(32, "dialog-error"))
-				except TrashAborted, exception:
+				except TrashAborted as exception:
 					if exception.args[0] == -1:
 						# Whole operation was aborted
 						return
-				except TrashcanUnavailableError, exception:
+				except TrashcanUnavailableError as exception:
 					InfoDialog(self, 
 							   msg=lang.getstr("error.trashcan_unavailable", 
 											   trashcan), 
 							   ok=lang.getstr("ok"), 
 							   bitmap=geticon(32, "dialog-error"))
-				except Exception, exception:
+				except Exception as exception:
 					InfoDialog(self, 
 							   msg=lang.getstr("error.deletion", trashcan) + 
 								   "\n\n" + safe_unicode(exception), 
@@ -16000,7 +16001,7 @@ class StartupFrame(start_cls):
 				# gamma 1.8 to get rid of visible color differences.
 				try:
 					import PIL, PIL.Image, PIL.ImageCms
-				except ImportError, exception:
+				except ImportError as exception:
 					PIL = None
 					safe_print("Info: Couldn't import PIL:", exception)
 				else:
@@ -16011,7 +16012,7 @@ class StartupFrame(start_cls):
 					rec709_gamma18_io = StringIO(rec709_gamma18_profile.data)
 					try:
 						rec709_gamma18_cms = PIL.ImageCms.getOpenProfile(rec709_gamma18_io)
-					except Exception, exception:
+					except Exception as exception:
 						rec709_gamma18_cms = None
 						safe_print("Info:", exception)
 				tif_path = os.path.join(self.worker.tempdir,
@@ -16020,7 +16021,7 @@ class StartupFrame(start_cls):
 					# Open screenshot as PIL image
 					try:
 						pim = PIL.Image.open(bmp_path)
-					except Exception, exception:
+					except Exception as exception:
 						safe_print("Info: Couldn't open image:", exception)
 					else:
 						if "icc_profile" in pim.info:
@@ -16040,7 +16041,7 @@ class StartupFrame(start_cls):
 								##img = wx.ImageFromBuffer(width, height,
 														 ##pim.tobytes())
 								pim.save(tif_path)
-							except Exception, exception:
+							except Exception as exception:
 								safe_print("Info:", exception)
 							else:
 								bmp_path = tif_path
@@ -16172,7 +16173,7 @@ class StartupFrame(start_cls):
 		self.timeout = None
 		try:
 			result.get()
-		except Exception, exception:
+		except Exception as exception:
 			if hasattr(exception, "originalTraceback"):
 				error = exception.originalTraceback
 			else:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import sys
 
 def create_cubic_grid(res=4, skip_grayscale=False, hires_outergamut=False,
@@ -65,6 +66,6 @@ if __name__ == "__main__":
 		grid = create_cubic_grid(int(sys.argv[1]), skip_grayscale, hires_outergamut,
 								 hires_inneraxis)
 		for v in grid:
-			print " ".join(str(n) for n in v)
+			print(" ".join(str(n) for n in v))
 	else:
-		print "Usage: cubicgrid.py <res> [skip grayscale 0|1 [hires_outergamut 0|1 [hires_inneraxis 0|1]]]"
+		print("Usage: cubicgrid.py <res> [skip grayscale 0|1 [hires_outergamut 0|1 [hires_inneraxis 0|1]]]")

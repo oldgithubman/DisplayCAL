@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 try:
 	from xml.etree import ElementTree as ET
 except ImportError:
 	pass
 
-from ordereddict import OrderedDict
+from .ordereddict import OrderedDict
 
 
 def dict2xml(d, elementname="element", pretty=True, allow_attributes=True,

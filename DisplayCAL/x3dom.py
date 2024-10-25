@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import absolute_import
 import httplib
 import os
 import re
@@ -8,15 +9,15 @@ import socket
 import string
 import urllib2
 
-from config import get_data_path
-from defaultpaths import cache as cachepath
-from meta import domain
-from options import verbose, debug
-from log import safe_print as _safe_print
-from util_io import GzipFileProper
-from util_str import StrList, create_replace_function, safe_unicode
-import colormath
-import localization as lang
+from .config import get_data_path
+from .defaultpaths import cache as cachepath
+from .meta import domain
+from .options import verbose, debug
+from .log import safe_print as _safe_print
+from .util_io import GzipFileProper
+from .util_str import StrList, create_replace_function, safe_unicode
+from . import colormath
+from . import localization as lang
 
 
 class VRMLParseError(Exception):
@@ -128,7 +129,7 @@ class Tag(object):
 					try:
 						response = urllib2.urlopen(url)
 					except (socket.error, urllib2.URLError,
-							httplib.HTTPException), exception:
+							httplib.HTTPException) as exception:
 						_safe_print(exception)
 					else:
 						body = response.read()
@@ -657,11 +658,11 @@ def vrmlfile2x3dfile(vrmlpath, x3dpath, html=True, embed=False, force=False,
 				htmlfile.write(html)
 	except KeyboardInterrupt:
 		x3d = False
-	except VRMLParseError, exception:
+	except VRMLParseError as exception:
 		return exception
-	except EnvironmentError, exception:
+	except EnvironmentError as exception:
 		return exception
-	except Exception, exception:
+	except Exception as exception:
 		import traceback
 		_safe_print(traceback.format_exc())
 		return exception

@@ -1517,7 +1517,7 @@ class FixedPoint(object):
             self.n = n
             return
 
-        if isinstance(value, type(42)) or isinstance(value, type(42L)):
+        if isinstance(value, type(42)) or isinstance(value, type(42)):
             self.n = long(value) * _tento(p)
             return
 
@@ -1538,7 +1538,7 @@ class FixedPoint(object):
             # up all bits in 2 iterations for all known binary double-
             # precision formats, and small enough to fit in an int.
             CHUNK = 28
-            top = 0L
+            top = 0
             # invariant: |value| = (top + f) * 2**e exactly
             while f:
                 f = math.ldexp(f, CHUNK)
@@ -1556,7 +1556,7 @@ class FixedPoint(object):
             if e >= 0:
                 n = top << e
             else:
-                n = _roundquotient(top, 1L << -e)
+                n = _roundquotient(top, 1 << -e)
             if value < 0:
                 n = -n
             self.n = n
@@ -1564,7 +1564,7 @@ class FixedPoint(object):
 
         if isinstance(value, type(42-42j)):
             raise TypeError("can't convert complex to FixedPoint: " +
-                            `value`)
+                            repr(value))
 
         # can we coerce to a float?
         yes = 1
@@ -1586,7 +1586,7 @@ class FixedPoint(object):
             self.__init__(aslong, p)
             return
 
-        raise TypeError("can't convert to FixedPoint: " + `value`)
+        raise TypeError("can't convert to FixedPoint: " + repr(value))
 
 
     def get_precision(self):
@@ -1615,9 +1615,9 @@ class FixedPoint(object):
             p = int(precision)
         except:
             raise TypeError("precision not convertable to int: " +
-                            `precision`)
+                            repr(precision))
         if p < 0:
-            raise ValueError("precision must be >= 0: " + `precision`)
+            raise ValueError("precision must be >= 0: " + repr(precision))
 
         if p > self.p:
             self.n = self.n * _tento(p - self.p)
@@ -1642,7 +1642,7 @@ class FixedPoint(object):
 
     def __repr__(self):
 
-        return "FixedPoint" + `(str(self), self.p)`
+        return "FixedPoint" + repr((str(self), self.p))
 
 
     def copy(self):
@@ -1791,7 +1791,7 @@ def _tento(n, cache={}):
     try:
         return cache[n]
     except KeyError:
-        answer = cache[n] = 10L ** n
+        answer = cache[n] = 10 ** n
         return answer
 
 # return xn, yn, p s.t.
@@ -1868,7 +1868,7 @@ del re
 def _string2exact(s):
     m = _parser(s)
     if m is None:
-        raise ValueError("can't parse as number: " + `s`)
+        raise ValueError("can't parse as number: " + repr(s))
 
     exp = m.group('exp')
     if exp is None:

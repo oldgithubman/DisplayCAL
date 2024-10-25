@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from hashlib import md5
 import codecs
 import math
@@ -26,18 +27,18 @@ if sys.platform == "win32":
 elif sys.platform == "darwin":
 	import binascii
 	import re
-	import subprocess as sp
+	from . import subprocess as sp
 
-import config
-from config import enc
-from log import log, safe_print
-from util_str import make_ascii_printable, safe_str, strtr
+from . import config
+from .config import enc
+from .log import log, safe_print
+from .util_str import make_ascii_printable, safe_str, strtr
 if sys.platform == "win32":
-	import util_win
+	from . import util_win
 elif sys.platform != "darwin":
 	try:
-		import RealDisplaySizeMM as RDSMM
-	except ImportError, exception:
+		from . import RealDisplaySizeMM as RDSMM
+	except ImportError as exception:
 		warnings.warn(safe_str(exception, enc), Warning)
 		RDSMM = None
 
@@ -111,7 +112,7 @@ def get_edid(display_no=0, display_name=None, device=None):
 			# http://msdn.microsoft.com/en-us/library/Aa392707
 			try:
 				msmonitors = wmi_connection.WmiMonitorDescriptorMethods()
-			except Exception, exception:
+			except Exception as exception:
 				if not_main_thread:
 					pythoncom.CoUninitialize()
 				raise WMIError(safe_str(exception))

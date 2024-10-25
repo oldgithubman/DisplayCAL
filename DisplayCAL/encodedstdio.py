@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+from __future__ import absolute_import
 import codecs
 import locale
 import os
 import sys
 
-from encoding import get_encoding
+from .encoding import get_encoding
 
 _codecs = {}
 _stdio = {}
@@ -155,10 +157,10 @@ codecs.register(lambda alias: _codecs.get(alias))
 if __name__ == '__main__':
     test = u'test \u00e4\u00f6\u00fc\ufffe test'
     try:
-        print test
-    except (LookupError, IOError, UnicodeError), exception:
-        print 'could not print %r:' % test, exception
-    print 'wrapping stdout/stderr via encodestdio()'
+        print(test)
+    except (LookupError, IOError, UnicodeError) as exception:
+        print('could not print %r:' % test, exception)
+    print('wrapping stdout/stderr via encodestdio()')
     encodestdio()
-    print test
-    print 'exiting normally'
+    print(test)
+    print('exiting normally')

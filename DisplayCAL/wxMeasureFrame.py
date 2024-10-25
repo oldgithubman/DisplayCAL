@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import math
 import os
 import re
@@ -7,25 +8,25 @@ import sys
 import time
 import warnings
 
-import config
-import localization as lang
-from config import (defaults, enc, getcfg, geticon, get_argyll_display_number,
+from . import config
+from . import localization as lang
+from .config import (defaults, enc, getcfg, geticon, get_argyll_display_number,
 					get_default_dpi, get_display_number, 
 					get_display_rects, scale_adjustment_factor, setcfg,
 					writecfg)
-from debughelpers import handle_error
-from log import safe_print
-from meta import name as appname
-from options import debug
-from util_list import floatlist, strlist
-from util_str import safe_str, safe_unicode
-from wxaddons import wx
-from wxwindows import (BaseApp, BitmapBackgroundPanel, ConfirmDialog, InfoDialog,
+from .debughelpers import handle_error
+from .log import safe_print
+from .meta import name as appname
+from .options import debug
+from .util_list import floatlist, strlist
+from .util_str import safe_str, safe_unicode
+from .wxaddons import wx
+from .wxwindows import (BaseApp, BitmapBackgroundPanel, ConfirmDialog, InfoDialog,
 					   InvincibleFrame)
-from wxfixes import GenBitmapButton as BitmapButton
+from .wxfixes import GenBitmapButton as BitmapButton
 try:
-	import RealDisplaySizeMM as RDSMM
-except ImportError, exception:
+	from . import RealDisplaySizeMM as RDSMM
+except ImportError as exception:
 	RDSMM = None
 	warnings.warn(safe_str(exception, enc), Warning)
 
@@ -49,7 +50,7 @@ def get_default_size():
 		if RDSMM:
 			try:
 				display_size_mm = RDSMM.RealDisplaySizeMM(display_no)
-			except Exception, exception:
+			except Exception as exception:
 				handle_error(u"Error - RealDisplaySizeMM() failed: " + 
 							 safe_unicode(exception), silent=True)
 			else:

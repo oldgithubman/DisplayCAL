@@ -49,7 +49,7 @@ if sys.frozen == "windows_exe":
             if self._file is None and self._error is None:
                 try:
                     self._file = open(fname, 'w')
-                except Exception, details:
+                except Exception as details:
                     self._error = details
             if self._file is not None:
                 self._file.write(text)

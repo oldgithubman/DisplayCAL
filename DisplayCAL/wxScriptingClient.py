@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import absolute_import
 from time import sleep
 import errno
 import os
@@ -8,16 +9,16 @@ import socket
 import sys
 import threading
 
-from config import confighome, getcfg, geticon, initcfg, setcfg, writecfg
-from meta import name as appname
-from safe_print import safe_print
-from util_str import safe_str, safe_unicode, universal_newlines
-from wexpect import split_command_line
-from wxaddons import wx
-from wxfixes import GenBitmapButton
-from wxwindows import BaseApp, SimpleTerminal, numpad_keycodes
-import config
-import localization as lang
+from .config import confighome, getcfg, geticon, initcfg, setcfg, writecfg
+from .meta import name as appname
+from .safe_print import safe_print
+from .util_str import safe_str, safe_unicode, universal_newlines
+from .wexpect import split_command_line
+from .wxaddons import wx
+from .wxfixes import GenBitmapButton
+from .wxwindows import BaseApp, SimpleTerminal, numpad_keycodes
+from . import config
+from . import localization as lang
 
 import wx.lib.delayedresult as delayedresult
 
@@ -57,7 +58,7 @@ class ScriptingClientFrame(SimpleTerminal):
 					for line in historyfile:
 						self.history.append(safe_unicode(line,
 														 "UTF-8").rstrip("\r\n"))
-			except EnvironmentError, exception:
+			except EnvironmentError as exception:
 				safe_print("Warning - couldn't read history file:", exception)
 		# Always have empty selection at bottom
 		self.history.append("")
@@ -118,7 +119,7 @@ class ScriptingClientFrame(SimpleTerminal):
 				for command in self.history:
 					if command:
 						historyfile.write(safe_str(command, "UTF-8") + os.linesep)
-		except EnvironmentError, exception:
+		except EnvironmentError as exception:
 			safe_print("Warning - couldn't write history file:", exception)
 		self.listening = False
 		# Need to use CallAfter to prevent hang under Windows if minimized
@@ -152,7 +153,7 @@ class ScriptingClientFrame(SimpleTerminal):
 					 additional_commands=None, colorize=True):
 		try:
 			result = delayedResult.get()
-		except Exception, exception:
+		except Exception as exception:
 			if hasattr(exception, "originalTraceback"):
 				self.add_text(exception.originalTraceback)
 			result = exception
@@ -223,7 +224,7 @@ class ScriptingClientFrame(SimpleTerminal):
 			try:
 				peer = self.conn.getpeername()
 				self.conn.shutdown(socket.SHUT_RDWR)
-			except socket.error, exception:
+			except socket.error as exception:
 				if exception.errno != errno.ENOTCONN:
 					self.add_text(safe_unicode(exception) + "\n")
 			else:
@@ -250,7 +251,7 @@ class ScriptingClientFrame(SimpleTerminal):
 											 self.conn.getpeername())) +
 								 "\n%s\n" %
 								 lang.getstr("scripting-client.cmdhelptext"))
-		except socket.error, exception:
+		except socket.error as exception:
 			return exception
 
 	def get_commands(self):
@@ -280,7 +281,7 @@ class ScriptingClientFrame(SimpleTerminal):
 	def get_response(self):
 		try:
 			return "< " + "\n< ".join(self.conn.get_single_response().splitlines())
-		except socket.error, exception:
+		except socket.error as exception:
 			return exception
 
 	def key_handler(self, event):
@@ -485,7 +486,7 @@ class ScriptingClientFrame(SimpleTerminal):
 	def send_command(self, command):
 		try:
 			self.conn.send_command(command)
-		except socket.error, exception:
+		except socket.error as exception:
 			return exception
 		if not wx.GetApp().IsMainLoopRunning():
 			delayedresult.AbortEvent()()

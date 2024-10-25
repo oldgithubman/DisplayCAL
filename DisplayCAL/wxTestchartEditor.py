@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import absolute_import
 import csv
 import math
 import os
@@ -12,35 +13,35 @@ import time
 if sys.platform == "win32":
 	import win32file
 
-import CGATS
-import ICCProfile as ICCP
-import colormath
-import config
-import imfile
-import localization as lang
-from argyll_RGB2XYZ import RGB2XYZ as argyll_RGB2XYZ, XYZ2RGB as argyll_XYZ2RGB
-from argyll_cgats import ti3_to_ti1, verify_cgats
-from config import (defaults, getbitmap, getcfg, geticon, get_current_profile,
+from . import CGATS
+from . import ICCProfile as ICCP
+from . import colormath
+from . import config
+from . import imfile
+from . import localization as lang
+from .argyll_RGB2XYZ import RGB2XYZ as argyll_RGB2XYZ, XYZ2RGB as argyll_XYZ2RGB
+from .argyll_cgats import ti3_to_ti1, verify_cgats
+from .config import (defaults, getbitmap, getcfg, geticon, get_current_profile,
 					get_display_name, get_data_path, get_total_patches,
 					get_verified_path, hascfg, profile_ext, setcfg, writecfg)
-from debughelpers import handle_error
-from log import safe_print
-from meta import name as appname
-from options import debug, tc_use_alternate_preview, test, verbose
-from ordereddict import OrderedDict
-from util_io import StringIOu as StringIO
-from util_os import expanduseru, is_superuser, launch_file, waccess
-from util_str import safe_str, safe_unicode
-from worker import (Error, Worker, check_file_isfile, check_set_argyll_bin, 
+from .debughelpers import handle_error
+from .log import safe_print
+from .meta import name as appname
+from .options import debug, tc_use_alternate_preview, test, verbose
+from .ordereddict import OrderedDict
+from .util_io import StringIOu as StringIO
+from .util_os import expanduseru, is_superuser, launch_file, waccess
+from .util_str import safe_str, safe_unicode
+from .worker import (Error, Worker, check_file_isfile, check_set_argyll_bin, 
 					get_argyll_util, get_current_profile_path,
 					show_result_dialog)
-from wxaddons import CustomEvent, CustomGridCellEvent, wx
-from wxwindows import (BaseApp, BaseFrame, CustomGrid, ConfirmDialog,
+from .wxaddons import CustomEvent, CustomGridCellEvent, wx
+from .wxwindows import (BaseApp, BaseFrame, CustomGrid, ConfirmDialog,
 					   FileBrowseBitmapButtonWithChoiceHistory, FileDrop,
 					   InfoDialog, get_gradient_panel)
-from wxfixes import GenBitmapButton as BitmapButton
-import floatspin
-from wxMeasureFrame import get_default_size
+from .wxfixes import GenBitmapButton as BitmapButton
+from . import floatspin
+from .wxMeasureFrame import get_default_size
 
 
 def swap_dict_keys_values(mydict):
@@ -767,7 +768,7 @@ class TestchartEditor(BaseFrame):
 						if v > maxval:
 							maxval = v
 					rows.append(row)
-		except Exception, exception:
+		except Exception as exception:
 			result = exception
 		else:
 			# Scale to 0..100 if actual value range is different
@@ -1055,7 +1056,7 @@ END_DATA""")
 				raise ValueError("RGB value %r%% is invalid" % value)
 			elif value < 0:
 				raise ValueError("Negative RGB value %r%% is invalid" % value)
-		except ValueError, exception:
+		except ValueError as exception:
 			if not self.grid.GetBatchCount():
 				wx.Bell()
 			if label in self.ti1[0]["DATA_FORMAT"].values():
@@ -1325,7 +1326,7 @@ END_DATA""")
 	def tc_add_saturation_sweeps_handler(self, event):
 		try:
 			profile = ICCP.ICCProfile(getcfg("tc_precond_profile"))
-		except (IOError, ICCP.ICCProfileInvalidError), exception:
+		except (IOError, ICCP.ICCProfileInvalidError) as exception:
 			show_result_dialog(exception, self)
 		else:
 			rgb_space = profile.get_rgb_space()
@@ -1380,7 +1381,7 @@ END_DATA""")
 	def tc_add_ti3_handler(self, event, chart=None):
 		try:
 			profile = ICCP.ICCProfile(getcfg("tc_precond_profile"))
-		except (IOError, ICCP.ICCProfileInvalidError), exception:
+		except (IOError, ICCP.ICCProfileInvalidError) as exception:
 			show_result_dialog(exception, self)
 			return
 
@@ -1411,7 +1412,7 @@ END_DATA""")
 				img = wx.Image(chart, wx.BITMAP_TYPE_ANY)
 				if not img.IsOk():
 					raise Error(lang.getstr("error.file_type_unsupported"))
-			except Exception, exception:
+			except Exception as exception:
 				show_result_dialog(exception, self)
 				return
 			finally:
@@ -1436,7 +1437,7 @@ END_DATA""")
 						not isinstance(nclprof.tags.ncl2, ICCP.NamedColor2Type) or
 						nclprof.connectionColorSpace not in ("Lab", "XYZ")):
 						raise Error(lang.getstr("profile.only_named_color"))
-				except Exception, exception:
+				except Exception as exception:
 					show_result_dialog(exception, self)
 					return
 				if nclprof.connectionColorSpace == "Lab":
@@ -1645,7 +1646,7 @@ END_DATA""")
 					img = wx.Image(chart, wx.BITMAP_TYPE_ANY)
 					if not img.IsOk():
 						raise Error(lang.getstr("error.file_type_unsupported"))
-				except Exception, exception:
+				except Exception as exception:
 					return exception
 				finally:
 					wx.Log.SetLogLevel(llevel)
@@ -1673,7 +1674,7 @@ END_DATA""")
 				raise CGATS.CGATSError(lang.getstr("error.testchart.missing_fields",
 												   (chart.filename,
 													"DATA_FORMAT")))
-		except (IOError, CGATS.CGATSError), exception:
+		except (IOError, CGATS.CGATSError) as exception:
 			return exception
 		finally:
 			path = None
@@ -1695,7 +1696,7 @@ END_DATA""")
 															   intent=intent,
 															   white_patches=False,
 															   raise_exceptions=True)
-				except Exception, exception:
+				except Exception as exception:
 					return exception
 				if ti3:
 					chart = ti3
@@ -2321,7 +2322,7 @@ END_DATA""")
 					# segfault under Arch Linux when setting the window title
 					safe_print("")
 					self.SetTitle(lang.getstr("testchart.edit").rstrip(".") + ": " + os.path.basename(path))
-			except Exception, exception:
+			except Exception as exception:
 				handle_error(Error(u"Error - testchart could not be saved: " +
 								   safe_unicode(exception)), parent=self)
 			else:
@@ -2449,7 +2450,7 @@ END_DATA""")
 										  normalize_RGB_white=getcfg("tc_vrml_use_D50"),
 										  compress=formatext == ".wrz",
 										  format=view_3d_format)
-				except Exception, exception:
+				except Exception as exception:
 					handle_error(UserWarning(u"Warning - 3D file could not be "
 											 "saved: " +
 											 safe_unicode(exception)),
@@ -2584,7 +2585,7 @@ END_DATA""")
 			ti1.fix_device_values_scaling()
 			try:
 				ti1_1 = verify_cgats(ti1, ("RGB_R", "RGB_B", "RGB_G"))
-			except CGATS.CGATSError, exception:
+			except CGATS.CGATSError as exception:
 				msg = {CGATS.CGATSKeyError: lang.getstr("error.testchart.missing_fields", 
 														(path, 
 														 "RGB_R, RGB_G, RGB_B"))}.get(exception.__class__,
@@ -2610,7 +2611,7 @@ END_DATA""")
 						ti1_1.add_keyword("ACCURATE_EXPECTED_VALUES", "true")
 				ti1.root.setmodified(False)
 				self.ti1 = ti1
-		except Exception, exception:
+		except Exception as exception:
 			return Error(lang.getstr("error.testchart.read", path) + "\n\n" +
 						 safe_unicode(exception))
 
@@ -3101,7 +3102,7 @@ END_DATA""")
 					try:
 						result = CGATS.CGATS(path)
 						safe_print(lang.getstr("success"))
-					except Exception, exception:
+					except Exception as exception:
 						result = Error(u"Error - testchart file could not be read: " + safe_unicode(exception))
 					else:
 						result.filename = None

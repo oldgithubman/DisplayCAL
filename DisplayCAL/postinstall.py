@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+from __future__ import absolute_import
 from StringIO import StringIO
-from subprocess import call
+from .subprocess import call
 from os.path import basename, splitext
 import os
 import shutil
 import sys
 import traceback
 
-from meta import name
-from util_os import relpath, safe_glob, which
+from .meta import name
+from .util_os import relpath, safe_glob, which
 
 recordfile_name = "INSTALLED_FILES"
 
@@ -120,7 +122,7 @@ def postinstall(prefix=None):
 					startmenu_common = get_special_folder_path(
 						"CSIDL_COMMON_STARTMENU")
 					startmenu = get_special_folder_path("CSIDL_STARTMENU")
-				except OSError, exception:
+				except OSError as exception:
 					traceback.print_exc()
 					return
 				else:
@@ -147,25 +149,25 @@ def postinstall(prefix=None):
 							if not os.path.exists(grppath):
 								try:
 									os.makedirs(grppath)
-								except Exception, exception:
+								except Exception as exception:
 									# maybe insufficient privileges?
 									pass
 							if os.path.exists(grppath):
-								print ("Created start menu group '%s' in "
+								print(("Created start menu group '%s' in "
 									   "%s") % (name, 
 											  (unicode(path, "MBCS", 
 													   "replace") if 
 											   type(path) != unicode else 
 											   path).encode("MBCS", 
-															   "replace"))
+															   "replace")))
 							else:
-								print ("Failed to create start menu group '%s' in "
+								print(("Failed to create start menu group '%s' in "
 									   "%s") % (name, 
 											  (unicode(path, "MBCS", 
 													   "replace") if 
 											   type(path) != unicode else 
 											   path).encode("MBCS", 
-															   "replace"))
+															   "replace")))
 								continue
 							directory_created(grppath)
 							for filename in filenames:
@@ -175,15 +177,15 @@ def postinstall(prefix=None):
 								if os.path.exists(lnkpath):
 									try:
 										os.remove(lnkpath)
-									except Exception, exception:
+									except Exception as exception:
 										# maybe insufficient privileges?
-										print ("Failed to create start menu entry '%s' in "
+										print(("Failed to create start menu entry '%s' in "
 											   "%s") % (lnkname, 
 													  (unicode(grppath, "MBCS", 
 															   "replace") if 
 													   type(grppath) != unicode else 
 													   grppath).encode("MBCS", 
-																	   "replace"))
+																	   "replace")))
 										continue
 								if not os.path.exists(lnkpath):
 									if lnkname != "Uninstall":
@@ -260,30 +262,30 @@ def postinstall(prefix=None):
 												tgtpath, 
 												lnkname, 
 												lnkpath, "", modpath)
-									except Exception, exception:
+									except Exception as exception:
 										# maybe insufficient privileges?
-										print ("Failed to create start menu entry '%s' in "
+										print(("Failed to create start menu entry '%s' in "
 											   "%s") % (lnkname, 
 													  (unicode(grppath, "MBCS", 
 															   "replace") if 
 													   type(grppath) != unicode else 
 													   grppath).encode("MBCS", 
-																	   "replace"))
+																	   "replace")))
 										continue
-									print ("Installed start menu entry '%s' to "
+									print(("Installed start menu entry '%s' to "
 										  "%s") % (lnkname, 
 												  (unicode(group, "MBCS", 
 														   "replace") if 
 												   type(group) != unicode else 
 												   group).encode("MBCS", 
-																 "replace"))
+																 "replace")))
 								file_created(lnkpath)
 								installed_shortcuts.append(filename)
 							if installed_shortcuts == filenames:
 								break
 			else:
-				print "warning - '%s' not found" % icon.encode("MBCS", 
-															   "replace")
+				print("warning - '%s' not found" % icon.encode("MBCS", 
+															   "replace"))
 			if os.path.exists(recordfile_name):
 				irecordfile_name = os.path.join(modpath, "INSTALLED_FILES")
 				irecordfile = open(irecordfile_name, "w")
@@ -291,8 +293,8 @@ def postinstall(prefix=None):
 				file_created(irecordfile_name)
 				shutil.copy2(recordfile_name, irecordfile_name)
 		else:
-			print "warning - '%s' not found" % modpath.encode("MBCS", 
-															  "replace")
+			print("warning - '%s' not found" % modpath.encode("MBCS", 
+															  "replace"))
 	else:
 		# Linux/Unix
 		if prefix is None:
@@ -350,7 +352,7 @@ def main():
 			postuninstall(prefix)
 		else:
 			postinstall(prefix)
-	except Exception, exception:
+	except Exception as exception:
 		traceback.print_exc()
 
 if __name__ == "__main__":

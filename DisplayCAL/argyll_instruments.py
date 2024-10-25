@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from itertools import izip
 import re
 
-from util_str import strtr
+from .util_str import strtr
 
 instruments = {
 	# instrument names from Argyll source spectro/insttypes.c

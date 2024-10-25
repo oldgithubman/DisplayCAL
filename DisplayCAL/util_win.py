@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+from __future__ import absolute_import
 from ctypes import wintypes
 import ctypes
 import _ctypes
@@ -19,8 +21,8 @@ from win32com.shell import shell as win32com_shell
 from ctypes import POINTER, byref, sizeof, windll
 from ctypes.wintypes import HANDLE, DWORD, LPWSTR
 
-from util_os import quote_args
-from win_structs import UNICODE_STRING
+from .util_os import quote_args
+from .win_structs import UNICODE_STRING
 
 if not hasattr(ctypes, "c_bool"):
 	# Python 2.5
@@ -376,7 +378,7 @@ def per_user_profiles_isenabled(display_no=0, devicekey=None):
 			with _get_icm_display_device_key(devicekey) as key:
 				try:
 					return bool(_winreg.QueryValueEx(key, "UsePerUserProfiles")[0])
-				except WindowsError, exception:
+				except WindowsError as exception:
 					if exception.args[0] == winerror.ERROR_FILE_NOT_FOUND:
 						return False
 					raise
@@ -456,7 +458,7 @@ def win_ver():
 		# Since Windows 10
 		release = "Version %s" % _winreg.QueryValueEx(key, "ReleaseId")[0]
 		build += ".%s" % _winreg.QueryValueEx(key, "UBR")[0]
-	except Exception, e:
+	except Exception as e:
 		pass
 	finally:
 		if key:
@@ -542,7 +544,7 @@ class MSCMS(UnloadableWinDLL):
 				# Need to free icm32 first, otherwise mscms won't unload
 				try:
 					_free_library(self._icm32_handle)
-				except WindowsError, exception:
+				except WindowsError as exception:
 					if exception.args[0] != winerror.ERROR_MOD_NOT_FOUND:
 						raise
 			UnloadableWinDLL.unload(self)
@@ -552,8 +554,8 @@ if __name__ == "__main__":
 	if "calibration" in sys.argv[1:]:
 		if "enable" in sys.argv[1:] or "disable" in sys.argv[1:]:
 			enable_calibration_management(sys.argv[1:][-1] != "disable")
-		print calibration_management_isenabled()
+		print(calibration_management_isenabled())
 	elif "per_user_profiles" in sys.argv[1:]:
 		if "enable" in sys.argv[1:] or "disable" in sys.argv[1:]:
 			enable_per_user_profiles(sys.argv[1:][-1] != "disable")
-		print per_user_profiles_isenabled()
+		print(per_user_profiles_isenabled())

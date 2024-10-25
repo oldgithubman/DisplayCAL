@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from Queue import Empty
 import atexit
 import errno
@@ -24,7 +25,7 @@ def cpu_count(limit_by_total_vmem=True):
 	Return fallback value of 1 if CPU count cannot be determined.
 	
 	"""
-	max_cpus = sys.maxint
+	max_cpus = sys.maxsize
 	if limit_by_total_vmem:
 		try:
 			import psutil
@@ -61,7 +62,7 @@ def pool_slice(func, data_in, args=(), kwds={}, num_workers=None,
 	percentage into the queue which is passed as the second argument to 'func'.
 	
 	"""
-	from config import getcfg
+	from .config import getcfg
 
 	if num_workers is None:
 		num_workers = cpu_count()
@@ -183,11 +184,11 @@ class WorkerFunc(object):
 		self.exit = exit
 
 	def __call__(self, data, thread_abort_event, progress_queue, *args, **kwds):
-		from log import safe_log, safe_print
+		from .log import safe_log, safe_print
 		try:
 			return self.func(data, thread_abort_event, progress_queue, *args,
 							 **kwds)
-		except Exception, exception:
+		except Exception as exception:
 			if (not getattr(sys, "_sigbreak", False) or
 				not isinstance(exception, IOError) or
 				exception.args[0] != errno.EPIPE):
@@ -211,7 +212,7 @@ class WorkerFunc(object):
 							safe_log("Removing lockfile", targs[0])
 							try:
 								func(*targs, **kargs)
-							except Exception, exception:
+							except Exception as exception:
 								safe_log("Could not remove lockfile:",
 										 exception)
 					# Logging is normally shutdown by atexit, as well. Do

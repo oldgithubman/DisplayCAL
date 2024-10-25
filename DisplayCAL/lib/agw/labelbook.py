@@ -124,6 +124,7 @@ Latest Revision: Andrea Gavana @ 17 Jan 2011, 15.00 GMT
 Version 0.5.
 
 """
+from __future__ import absolute_import
 
 __docformat__ = "epytext"
 
@@ -134,8 +135,8 @@ __docformat__ = "epytext"
 
 import wx
 
-from artmanager import ArtManager, DCSaver
-from fmresources import *
+from .artmanager import ArtManager, DCSaver
+from .fmresources import *
 
 # Check for the new method in 2.7 (not present in 2.6.3.3)
 if wx.VERSION_STRING < "2.7":
@@ -1885,7 +1886,7 @@ class LabelContainer(ImageContainerBase):
         :see: L{SetColour} for a list of valid colour keys.
         """
 
-        if not self._coloursMap.has_key(which):
+        if which not in self._coloursMap:
             return wx.Colour()
 
         return self._coloursMap[which]        

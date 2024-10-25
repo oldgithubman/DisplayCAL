@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -85,14 +86,14 @@ def get_interp(cal, inverse=False, smooth=False):
 	if smooth:
 		for lower, row in enumerate(cal[1:], 1):
 			v = min(row) * cal_entry_max
-			print lower / cal_entry_max * 255, "->", v / cal_entry_max * 255
+			print(lower / cal_entry_max * 255, "->", v / cal_entry_max * 255)
 			if lower + 1 >= v >= lower or lower / cal_entry_max * 255 >= 8:
 				# Use max index of 4 (+ 2 = 6 = ~2% signal)
 				if lower == 1:
 					# First value already above threshold, disable smoothing
 					lower = 0
 				else:
-					print "lower", lower
+					print("lower", lower)
 				break
 		t = num_cal_entries // 128
 		for i in xrange(3):
@@ -103,7 +104,7 @@ def get_interp(cal, inverse=False, smooth=False):
 				if lower < num_cal_entries:
 					# Smooth up to ~5% signal
 					start, end = max(lower - t * 2, 0), lower + t * 2
-					print "start, end", start, end
+					print("start, end", start, end)
 					values[start:end] = cm.smooth_avg(values[start:end], 1, (1,) * (t + 1))
 			values[:] = cm.smooth_avg(values[:], 1, (1,) * (t + 1))
 			for j, v in enumerate(values):
@@ -165,12 +166,12 @@ def main(icc_profile_filename, target_whitepoint=None, gamma=2.2, skip_cal=False
 	applycal = False
 
 	applycal_inverse = not filter(lambda tagname: tagname.startswith("A2B") or tagname.startswith("B2A"), profile.tags)
-	print "Use applycal to apply cal?", applycal
-	print "Use applycal to apply inverse cal?", applycal_inverse
-	print "Ensuring 256 entry TRC tags"
+	print("Use applycal to apply cal?", applycal)
+	print("Use applycal to apply inverse cal?", applycal_inverse)
+	print("Ensuring 256 entry TRC tags")
 	_applycal_bug_workaround(profile)
 	if (applycal or applycal_inverse) and existing_cgats:
-		print "Writing TMP profile for applycal"
+		print("Writing TMP profile for applycal")
 		profile.write(filename + ".tmp" + ext)
 	if applycal and existing_cgats:
 		# Apply cal
@@ -259,9 +260,9 @@ def main(icc_profile_filename, target_whitepoint=None, gamma=2.2, skip_cal=False
 							"rTRC", "gTRC", "bTRC"):
 				if not tagname in profile.tags:
 					continue
-				print tagname
+				print(tagname)
 				if profile.tags[tagname] in seen:
-					print "Already seen"
+					print("Already seen")
 					continue
 				seen.append(profile.tags[tagname])
 				if tagname.startswith("A2B"):
@@ -273,7 +274,7 @@ def main(icc_profile_filename, target_whitepoint=None, gamma=2.2, skip_cal=False
 					# Apply inverse calibration to output curves
 					if profile.tags[tagname].clut_grid_steps <= 9:
 						# Low quality. Skip.
-						print "Low quality, skipping"
+						print("Low quality, skipping")
 						continue
 					cal = get_cal(num_cal_entries, None, gamma, profile, intent, "b")
 					interp_i = get_interp(cal, True)
@@ -310,7 +311,7 @@ def main(icc_profile_filename, target_whitepoint=None, gamma=2.2, skip_cal=False
 
 			# Check for identical initial TRC tags, and force them identical again
 			if TRC and TRC.count(TRC[0]) == 3:
-				print "Forcing identical TRC tags"
+				print("Forcing identical TRC tags")
 				for channel in "rb":
 					profile.tags[channel + "TRC"] = profile.tags.gTRC
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import sys
 
 
@@ -21,7 +22,7 @@ def nearneutrals(res=17, step=2):
 				grid.append(v)
 	grid.sort()
 	for line in grid:
-		print "%.6f %.6f %.6f" % tuple(line)
+		print("%.6f %.6f %.6f" % tuple(line))
 
 
 if __name__ == "__main__":

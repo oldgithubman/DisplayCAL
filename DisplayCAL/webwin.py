@@ -4,6 +4,7 @@
 Re-implementation of Argyll's webwin in pure python.
 
 """
+from __future__ import absolute_import
 
 import BaseHTTPServer
 from StringIO import StringIO
@@ -12,7 +13,7 @@ import threading
 import time
 from urllib import unquote
 
-from meta import name as appname, version as appversion
+from .meta import name as appname, version as appversion
 
 
 WEBDISP_HTML = r"""<!DOCTYPE html>

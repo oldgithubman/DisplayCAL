@@ -6,6 +6,7 @@ Drop-In replacement for wx.TaskBarIcon
 This one won't stop showing updates to the icon like wx.TaskBarIcon
 
 """
+from __future__ import absolute_import
 
 import ctypes
 import os
@@ -16,9 +17,9 @@ import win32con
 import win32gui
 import winerror
 
-from log import safe_print
-from options import debug, verbose
-from wxaddons import wx, IdFactory
+from .log import safe_print
+from .options import debug, verbose
+from .wxaddons import wx, IdFactory
 
 
 class Menu(wx.EvtHandler):

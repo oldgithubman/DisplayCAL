@@ -3,6 +3,7 @@
 # See developers/interfaces/madTPG.h in the madVR package
 
 from __future__ import with_statement
+from __future__ import absolute_import
 from ConfigParser import RawConfigParser
 from StringIO import StringIO
 from binascii import unhexlify
@@ -23,17 +24,17 @@ if sys.platform == "win32":
 if sys.platform == "win32":
 	import win32api
 
-import ICCProfile as ICCP
-import colormath
-import cubeiterator as ci
-import localization as lang
-import worker_base
-from imfile import tiff_get_header
-from log import safe_print as log_safe_print
-from meta import name as appname, version
-from network import get_network_addr, get_valid_host
-from ordereddict import OrderedDict
-from util_str import safe_str, safe_unicode
+from . import ICCProfile as ICCP
+from . import colormath
+from . import cubeiterator as ci
+from . import localization as lang
+from . import worker_base
+from .imfile import tiff_get_header
+from .log import safe_print as log_safe_print
+from .meta import name as appname, version
+from .network import get_network_addr, get_valid_host
+from .ordereddict import OrderedDict
+from .util_str import safe_str, safe_unicode
 
 
 CALLBACK = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.POINTER(None),
@@ -742,7 +743,7 @@ class MadTPG_Net(MadTPGBase):
 										  args=(sock, "", port))
 				self._threads.append(thread)
 				thread.start()
-			except socket.error, exception:
+			except socket.error as exception:
 				safe_print("MadTPG_Net: TCP Port %i: %s" % (port, exception))
 		# Broadcast listen sockets
 		for port in self.broadcast_ports:
@@ -760,7 +761,7 @@ class MadTPG_Net(MadTPGBase):
 										  args=(sock, self.broadcast_ip, port))
 				self._threads.append(thread)
 				thread.start()
-			except socket.error, exception:
+			except socket.error as exception:
 				safe_print("MadTPG_Net: UDP Port %i: %s" % (port, exception))
 		# Multicast listen socket
 		for port in self.multicast_ports:
@@ -782,7 +783,7 @@ class MadTPG_Net(MadTPGBase):
 										  args=(sock, self.multicast_ip, port))
 				self._threads.append(thread)
 				thread.start()
-			except socket.error, exception:
+			except socket.error as exception:
 				safe_print("MadTPG_Net: UDP Port %i: %s" % (port, exception))
 
 	def bind(self, event_name, handler):
@@ -824,12 +825,12 @@ class MadTPG_Net(MadTPGBase):
 			try:
 				# Wait for connection
 				conn, addr = sock.accept()
-			except socket.timeout, exception:
+			except socket.timeout as exception:
 				# Should never happen for non-blocking socket
 				safe_print("MadTPG_Net: In incoming connection thread for port %i:" %
 						   port, exception)
 				continue
-			except socket.error, exception:
+			except socket.error as exception:
 				if exception.errno == errno.EWOULDBLOCK:
 					sleep(.05)
 					continue
@@ -873,12 +874,12 @@ class MadTPG_Net(MadTPGBase):
 			# Wait for incoming message
 			try:
 				incoming = conn.recv(4096)
-			except socket.timeout, exception:
+			except socket.timeout as exception:
 				# Should never happen for non-blocking socket
 				safe_print("MadTPG_Net: In receiver thread for %s:%i:" %
 						   addr[:2], exception)
 				continue
-			except socket.error, exception:
+			except socket.error as exception:
 				if exception.errno == errno.EWOULDBLOCK:
 					sleep(.001)
 					continue
@@ -904,7 +905,7 @@ class MadTPG_Net(MadTPGBase):
 					while blob and addr in self._client_sockets:
 						try:
 							record, blob = self._parse(blob)
-						except ValueError, exception:
+						except ValueError as exception:
 							safe_print("MadTPG_Net:", exception)
 							# Invalid, discard
 							blob = ""
@@ -914,7 +915,7 @@ class MadTPG_Net(MadTPGBase):
 								break
 							try:
 								self._process(record, conn)
-							except socket.error, exception:
+							except socket.error as exception:
 								safe_print("MadTPG_Net:", exception)
 		with _lock:
 			self._remove_client(addr, send_bye=addr in self._client_sockets and
@@ -957,11 +958,11 @@ class MadTPG_Net(MadTPGBase):
 		while getattr(self, "listening", False):
 			try:
 				data, addr = sock.recvfrom(4096)
-			except socket.timeout, exception:
+			except socket.timeout as exception:
 				safe_print("MadTPG_Net: In receiver thread for %s port %i:" %
 						   (cast, port), exception)
 				continue
-			except socket.error, exception:
+			except socket.error as exception:
 				if exception.errno == errno.EWOULDBLOCK:
 					sleep(.05)
 					continue
@@ -1010,7 +1011,7 @@ class MadTPG_Net(MadTPGBase):
 			# Will fail if the socket isn't connected, i.e. if there
 			# was an error during the call to connect()
 			sock.shutdown(socket.SHUT_RDWR)
-		except socket.error, exception:
+		except socket.error as exception:
 			if exception.errno != errno.ENOTCONN:
 				safe_print("MadTPG_Net: SHUT_RDWR for %s:%i failed:" %
 						   addr[:2], exception)
@@ -1130,7 +1131,7 @@ class MadTPG_Net(MadTPGBase):
 					   (host, port))
 		try:
 			sock.connect((host, port))
-		except socket.error, exception:
+		except socket.error as exception:
 			if self.debug:
 				safe_print("MadTPG_Net: Connecting to %s:%s failed:" %
 						   (host, port), exception)
@@ -1241,7 +1242,7 @@ class MadTPG_Net(MadTPGBase):
 			return (self._client_socket and
 					self.clients.get(self._client_socket.getpeername(),
 									 {}).get("mvrVersion") or False)
-		except socket.error, exception:
+		except socket.error as exception:
 			if self.debug:
 				safe_print("MadTPG_Net:", exception)
 			return False
@@ -1279,7 +1280,7 @@ class MadTPG_Net(MadTPGBase):
 			params = (params, )
 		try:
 			addr = conn.getpeername()
-		except socket.error, exception:
+		except socket.error as exception:
 			safe_print("MadTPG_Net:", exception)
 			return False
 		start = end = time()
@@ -1501,7 +1502,7 @@ class MadTPG_Net(MadTPGBase):
 			while packet:
 				try:
 					bytes_sent = conn.send(packet)
-				except socket.error, exception:
+				except socket.error as exception:
 					if exception.errno in (errno.EAGAIN, errno.EWOULDBLOCK):
 						# Resource temporarily unavailable
 						sleep(0.001)
@@ -1518,7 +1519,7 @@ class MadTPG_Net(MadTPGBase):
 							   (commandno, command, addr, port,
 							    bytes_sent_total, bytes_total,
 								bytes_sent_total / float(bytes_total) * 100))
-		except socket.error, exception:
+		except socket.error as exception:
 			safe_print("MadTPG_Net: Sending command %i %r failed" %
 					   (commandno, command), exception)
 			return False
@@ -1540,7 +1541,7 @@ class MadTPG_Net(MadTPGBase):
 	def uri(self):
 		try:
 			addr = self._client_socket and self._client_socket.getpeername()[:2]
-		except socket.error, exception:
+		except socket.error as exception:
 			safe_print("MadTPG_Net:", exception)
 			addr = None
 		return "%s:%s" % (addr or ("0.0.0.0", 0))
@@ -1616,7 +1617,7 @@ class MadTPG_Net_Sender(object):
 
 
 if __name__ == "__main__":
-	import config
+	from . import config
 	config.initcfg()
 	lang.init()
 	if sys.platform == "win32":

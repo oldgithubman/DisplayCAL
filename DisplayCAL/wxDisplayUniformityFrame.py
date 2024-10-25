@@ -7,28 +7,30 @@ Interactive display calibration UI
 """
 
 from __future__ import with_statement
+from __future__ import print_function
+from __future__ import absolute_import
 from time import sleep, strftime
 import os
 import re
 import sys
 
-from wxaddons import wx
+from .wxaddons import wx
 
-from config import (getbitmap, getcfg, get_icon_bundle,
+from .config import (getbitmap, getcfg, get_icon_bundle,
 					get_display_number, get_display_rects, get_verified_path,
 					setcfg)
-from log import get_file_logger, safe_print
-from meta import name as appname, version as appversion
-from util_os import launch_file, waccess
-from wxaddons import CustomEvent
-from wxMeasureFrame import MeasureFrame
-from wxwindows import (BaseApp, BaseFrame, FlatShadedButton,
+from .log import get_file_logger, safe_print
+from .meta import name as appname, version as appversion
+from .util_os import launch_file, waccess
+from .wxaddons import CustomEvent
+from .wxMeasureFrame import MeasureFrame
+from .wxwindows import (BaseApp, BaseFrame, FlatShadedButton,
 					   numpad_keycodes, nav_keycodes, processing_keycodes,
 					   wx_Panel)
-import colormath
-import config
-import localization as lang
-import report
+from . import colormath
+from . import config
+from . import localization as lang
+from . import report
 
 BGCOLOUR = wx.Colour(0x33, 0x33, 0x33)
 
@@ -154,7 +156,7 @@ class DisplayUniformityFrame(BaseFrame):
 				if id < 0:
 					try:
 						wx.Window.UnreserveControlId(id)
-					except wx.wxAssertionError, exception:
+					except wx.wxAssertionError as exception:
 						safe_print(exception)
 		
 	def OnMove(self, event):
@@ -335,7 +337,7 @@ class DisplayUniformityFrame(BaseFrame):
 					if result == wx.ID_OK:
 						path = dlg.GetPath()
 						if not waccess(path, os.W_OK):
-							from worker import show_result_dialog
+							from .worker import show_result_dialog
 							show_result_dialog(Error(lang.getstr("error.access_denied.write",
 																 path)),
 											   self)
@@ -356,8 +358,8 @@ class DisplayUniformityFrame(BaseFrame):
 									   "${RESULTS}": str(self.results),
 									   "${LOCUS}": locus},
 									  getcfg("report.pack_js"), "uniformity")
-					except (IOError, OSError), exception:
-						from worker import show_result_dialog
+					except (IOError, OSError) as exception:
+						from .worker import show_result_dialog
 						show_result_dialog(exception, self)
 					else:
 						launch_file(save_path)
@@ -968,6 +970,6 @@ Hit ESC or Q to exit, any other key to take a reading:"""]][app.TopWindow.index]
 		for line in txt.split("\n"):
 			sleep(.03125)
 			wx.CallAfter(app.TopWindow.write, line)
-			print line
+			print(line)
 	start_new_thread(test, tuple())
 	app.MainLoop()

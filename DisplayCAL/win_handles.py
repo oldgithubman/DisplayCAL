@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+from __future__ import absolute_import
 from ctypes import wintypes
 import ctypes
 import os
 
-from win_structs import NTSTATUS, UNICODE_STRING
+from .win_structs import NTSTATUS, UNICODE_STRING
 
 PVOID = ctypes.c_void_p
 PULONG = ctypes.POINTER(wintypes.ULONG)

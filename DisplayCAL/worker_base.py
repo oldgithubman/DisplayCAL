@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import absolute_import
 from binascii import hexlify
 import atexit
 import math
@@ -9,33 +10,33 @@ import pipes
 import re
 import shutil
 import struct
-import subprocess as sp
+from . import subprocess as sp
 import sys
-import tempfile
+from . import tempfile
 import textwrap
 import traceback
 
 if sys.platform == "win32":
 	import win32api
 
-from argyll_names import (names as argyll_names, altnames as argyll_altnames,
+from .argyll_names import (names as argyll_names, altnames as argyll_altnames,
 						  optional as argyll_optional)
-from colormath import (VidRGB_to_eeColor, VidRGB_to_cLUT65, cLUT65_to_VidRGB,
+from .colormath import (VidRGB_to_eeColor, VidRGB_to_cLUT65, cLUT65_to_VidRGB,
 					   eeColor_to_VidRGB)
-from config import exe_ext, fs_enc, get_data_path, getcfg, profile_ext
-from debughelpers import (Error, Info, UnloggedError, UnloggedInfo,
+from .config import exe_ext, fs_enc, get_data_path, getcfg, profile_ext
+from .debughelpers import (Error, Info, UnloggedError, UnloggedInfo,
 						  UnloggedWarning, Warn)
-from log import LogFile, safe_print
-from meta import name as appname
-from multiprocess import mp, pool_slice
-from options import debug, verbose
-from util_os import getenvu, quote_args, which
-from util_str import make_filename_safe, safe_basestring, safe_str, safe_unicode
-import CGATS
-import colormath
-import config
-import ICCProfile as ICCP
-import localization as lang
+from .log import LogFile, safe_print
+from .meta import name as appname
+from .multiprocess import mp, pool_slice
+from .options import debug, verbose
+from .util_os import getenvu, quote_args, which
+from .util_str import make_filename_safe, safe_basestring, safe_str, safe_unicode
+from . import CGATS
+from . import colormath
+from . import config
+from . import ICCProfile as ICCP
+from . import localization as lang
 
 
 def Property(func):
@@ -294,7 +295,7 @@ def get_argyll_version_string(name, paths=None):
 		p = sp.Popen([cmd.encode(fs_enc), "-?"], stdin=sp.PIPE,
 					 stdout=sp.PIPE, stderr=sp.STDOUT,
 					 startupinfo=startupinfo)
-	except Exception, exception:
+	except Exception as exception:
 		safe_print(exception)
 		return argyll_version_string
 	for i, line in enumerate((p.communicate()[0] or "").splitlines()):
@@ -388,7 +389,7 @@ class WorkerBase(object):
 						   "because", msg)
 			try:
 				self.tempdir = tempfile.mkdtemp(prefix=appname + u"-")
-			except Exception, exception:
+			except Exception as exception:
 				self.tempdir = None
 				return Error("Error - couldn't create temporary directory: " + 
 							 safe_str(exception))
@@ -688,7 +689,7 @@ class Xicclu(WorkerBase):
 			if self.tempdir and not os.listdir(self.tempdir):
 				try:
 					shutil.rmtree(self.tempdir, True)
-				except Exception, exception:
+				except Exception as exception:
 					safe_print(u"Warning - temporary directory '%s' could "
 							   u"not be removed: %s" % 
 							   tuple(safe_unicode(s) for s in 

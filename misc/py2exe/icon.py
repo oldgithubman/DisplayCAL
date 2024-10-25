@@ -8,6 +8,7 @@
 #-----------------------------------------------------------------------------
 
 
+from future.utils import raise_
 RT_ICON = 3
 RT_GROUP_ICON = 14
 LOAD_LIBRARY_AS_DATAFILE = 2
@@ -15,7 +16,7 @@ LOAD_LIBRARY_AS_DATAFILE = 2
 import struct
 import types
 try:
-    StringTypes = types.StringTypes
+    StringTypes = (str,)
 except AttributeError:
     StringTypes = [ type("") ]
 
@@ -44,7 +45,7 @@ class Structure:
         try:
             return self.__dict__[name]
         except KeyError:
-            raise AttributeError, name
+            raise_(AttributeError, name)
 
     def __setattr__(self, name, value):
         if name in self._names_:
@@ -54,7 +55,7 @@ class Structure:
             self.__dict__[name] = value
 
     def tostring(self):
-        return apply(struct.pack, [self._format_,] + self._fields_)
+        return struct.pack(*[self._format_,] + self._fields_)
 
     def fromfile(self, file):
         data = file.read(self._sizeInBytes)
@@ -151,9 +152,9 @@ def CopyIcons(dstpath, srcpath):
         for s in srcpath:
             e = os.path.splitext(s[0])[1]
             if e.lower() != '.ico':
-                raise ValueError, "multiple icons supported only from .ico files"
+                raise ValueError("multiple icons supported only from .ico files")
             if s[1] is not None:
-                raise ValueError, "index not allowed for .ico files"
+                raise ValueError("index not allowed for .ico files")
             srcs.append(s[0])
         return CopyIcons_FromIco(dstpath, srcs)
 

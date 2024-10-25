@@ -5,6 +5,7 @@
 Collect modules from site-packages used by DisplayCAL
 
 """
+from __future__ import print_function
 
 import glob
 import os
@@ -32,7 +33,7 @@ for pth in sys.path:
 				 base == 'wx')):
 				wxversions_candidates.append(name)
 if not wxversions_candidates:
-	print 'No wxPython versions >= %s found' % wx_minversion_str
+	print('No wxPython versions >= %s found' % wx_minversion_str)
 choice = 1
 if len(wxversions_candidates) > 1:
 	print('Several wxPython versions >= %s found.' % wx_minversion_str)
@@ -103,12 +104,12 @@ def copy(src, dst):
 				for dylib in dylibs:
 					args = ['install_name_tool', '-change', dylib,
 							'@loader_path/../../' + os.path.basename(dylib), dst]
-					print sp.list2cmdline(args)
+					print(sp.list2cmdline(args))
 					sp.call(args)
 			elif ext == '.dylib':
 				args = ['install_name_tool', '-id',
 						'@loader_path/../../' + os.path.basename(src), dst]
-				print sp.list2cmdline(args)
+				print(sp.list2cmdline(args))
 				sp.call(args)
 
 
@@ -120,8 +121,8 @@ for pkg_name, data in pkgs.iteritems():
 	fromlist = pkg_name.split(".")
 	try:
 		pkg = __import__(pkg_name, fromlist=fromlist)
-	except ImportError, exception:
-		print exception
+	except ImportError as exception:
+		print(exception)
 		continue
 	version = getattr(pkg, "__version__",
 					  getattr(pkg, "version",
@@ -147,8 +148,8 @@ for pkg_name, data in pkgs.iteritems():
 			fromlist = entry.split(".")
 			try:
 				module = __import__(entry, fromlist=fromlist)
-			except ImportError, exception:
-				print exception
+			except ImportError as exception:
+				print(exception)
 				continue
 			filename, ext = os.path.splitext(module.__file__)
 			if os.path.basename(filename) == '__init__':
@@ -156,7 +157,7 @@ for pkg_name, data in pkgs.iteritems():
 				if not os.path.isdir(pth):
 					while not os.path.isfile(pth):
 						pth = os.path.dirname(pth)
-						print '  Checking for %s' % pth
+						print('  Checking for %s' % pth)
 					if not os.path.isfile(pth):
 						print('  Warning: Module not found: %s' % entry)
 						continue

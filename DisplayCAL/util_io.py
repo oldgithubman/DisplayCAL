@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import copy
 import gzip
 import operator
@@ -9,8 +10,8 @@ import tarfile
 from StringIO import StringIO
 from time import time
 
-from safe_print import safe_print
-from util_str import universal_newlines
+from .safe_print import safe_print
+from .util_str import universal_newlines
 
 
 class EncodedWriter(object):
@@ -283,7 +284,7 @@ class TarFileProper(tarfile.TarFile):
 			if not full:
 				name = os.path.basename(name)
 			self._extract_member(tarinfo, os.path.join(path, name))
-		except EnvironmentError, e:
+		except EnvironmentError as e:
 			if self.errorlevel > 0:
 				raise
 			else:
@@ -291,7 +292,7 @@ class TarFileProper(tarfile.TarFile):
 					self._dbg(1, "tarfile: %s" % e.strerror)
 				else:
 					self._dbg(1, "tarfile: %s %r" % (e.strerror, e.filename))
-		except ExtractError, e:
+		except ExtractError as e:
 			if self.errorlevel > 1:
 				raise
 			else:
@@ -314,7 +315,7 @@ class TarFileProper(tarfile.TarFile):
 				# Extract directories with a safe mode.
 				directories.append(tarinfo)
 				tarinfo = copy.copy(tarinfo)
-				tarinfo.mode = 0700
+				tarinfo.mode = 0o700
 			self.extract(tarinfo, path, full)
 
 		# Reverse sort directories.
@@ -331,7 +332,7 @@ class TarFileProper(tarfile.TarFile):
 				self.chown(tarinfo, dirpath)
 				self.utime(tarinfo, dirpath)
 				self.chmod(tarinfo, dirpath)
-			except ExtractError, e:
+			except ExtractError as e:
 				if self.errorlevel > 1:
 					raise
 				else:

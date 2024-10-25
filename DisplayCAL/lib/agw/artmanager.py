@@ -2,12 +2,13 @@
 This module contains drawing routines and customizations for the AGW widgets
 L{LabelBook} and L{FlatMenu}.
 """
+from __future__ import absolute_import
 
 import wx
 import cStringIO
 import random
 
-from fmresources import *
+from .fmresources import *
 
 # ---------------------------------------------------------------------------- #
 # Class DCSaver
@@ -719,7 +720,7 @@ class ArtManager(wx.EvtHandler):
          Othewise, `wx.NullBitmap` is returned.
         """
 
-        if self._bitmaps.has_key(name):
+        if name in self._bitmaps:
             return self._bitmaps[name]
 
         return wx.NullBitmap
@@ -1268,9 +1269,9 @@ class ArtManager(wx.EvtHandler):
                 winxpgui.SetLayeredWindowAttributes(hwnd, 0, amount, 2)
     
             elif _libimported == "ctypes":
-                style = self._winlib.GetWindowLongA(hwnd, 0xffffffecL)
+                style = self._winlib.GetWindowLongA(hwnd, 0xffffffec)
                 style |= 0x00080000
-                self._winlib.SetWindowLongA(hwnd, 0xffffffecL, style)
+                self._winlib.SetWindowLongA(hwnd, 0xffffffec, style)
                 self._winlib.SetLayeredWindowAttributes(hwnd, 0, amount, 2)                
         else:
             if not wnd.CanSetTransparent():

@@ -38,23 +38,25 @@ Create a new task to be run under the current user account at logon:
 """
 
 from __future__ import with_statement
+from __future__ import print_function
+from __future__ import absolute_import
 from itertools import izip, imap
 import codecs
 import os
-import subprocess as sp
+from . import subprocess as sp
 import sys
-import tempfile
+from . import tempfile
 
 import pywintypes
 import winerror
 
-from log import safe_print
-from meta import name as appname
-from ordereddict import OrderedDict
-from safe_print import enc
-from util_os import getenvu
-from util_str import indent, safe_str, safe_unicode, universal_newlines
-from util_win import run_as_admin
+from .log import safe_print
+from .meta import name as appname
+from .ordereddict import OrderedDict
+from .safe_print import enc
+from .util_os import getenvu
+from .util_str import indent, safe_str, safe_unicode, universal_newlines
+from .util_win import run_as_admin
 
 
 RUNLEVEL_HIGHESTAVAILABLE = "HighestAvailable"
@@ -392,7 +394,7 @@ class TaskScheduler(object):
 			try:
 				p = run_as_admin("schtasks.exe", args, close_process=False,
 								 show=False)
-			except pywintypes.error, exception:
+			except pywintypes.error as exception:
 				if exception.args[0] == winerror.ERROR_CANCELLED:
 					self.lastreturncode = winerror.ERROR_CANCELLED
 				else:
@@ -423,22 +425,22 @@ class TaskScheduler(object):
 if __name__ == "__main__":
 
 	def print_task_attr(name, attr, *args):
-		print "%18s:" % name,
+		print("%18s:" % name, end=' ')
 		if callable(attr):
 			try:
-				print attr(*args)
-			except pywintypes.com_error, exception:
-				print WindowsError(*exception.args)
-			except TypeError, exception:
-				print exception
+				print(attr(*args))
+			except pywintypes.com_error as exception:
+				print(WindowsError(*exception.args))
+			except TypeError as exception:
+				print(exception)
 		else:
-			print attr
+			print(attr)
 
 	ts = TaskScheduler()
 
 	for taskname, task in ts.iteritems():
-		print "=" * 79
-		print "%18s:" % "Task", taskname
+		print("=" * 79)
+		print("%18s:" % "Task", taskname)
 		for name in dir(task):
 			if name == "GetRunTimes":
 				continue

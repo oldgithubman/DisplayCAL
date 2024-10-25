@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import fnmatch
 import ctypes
 import errno
@@ -9,9 +10,9 @@ import os
 import re
 import shutil
 import struct
-import subprocess as sp
+from . import subprocess as sp
 import sys
-import tempfile
+from . import tempfile
 import time
 
 if sys.platform not in ("darwin", "win32"):
@@ -60,7 +61,7 @@ FILE_ATTRIBUTE_REPARSE_POINT = 1024
 IO_REPARSE_TAG_MOUNT_POINT = 0xA0000003  # Junction
 IO_REPARSE_TAG_SYMLINK = 0xA000000C
 
-from encoding import get_encodings
+from .encoding import get_encodings
 
 fs_enc = get_encodings()[1]
 
@@ -83,7 +84,7 @@ if sys.platform == "win32":
 			while True:
 				try:
 					return fn(*args, **kwargs)
-				except WindowsError, exception:
+				except WindowsError as exception:
 					if exception.winerror == winerror.ERROR_SHARING_VIOLATION:
 						if retries < maxretries:
 							retries += 1
@@ -148,7 +149,7 @@ if sys.platform == "win32":
 
 	_mkdir = os.mkdir
 
-	def mkdir(path, mode=0777):
+	def mkdir(path, mode=0o777):
 		return _mkdir(make_win32_compatible_long_path(path, 247), mode)
 
 	os.mkdir = mkdir
@@ -156,7 +157,7 @@ if sys.platform == "win32":
 
 	_makedirs = os.makedirs
 
-	def makedirs(path, mode=0777):
+	def makedirs(path, mode=0o777):
 		return _makedirs(make_win32_compatible_long_path(path, 247), mode)
 
 	os.makedirs = makedirs
@@ -537,15 +538,15 @@ def mksfile(filename):
 		else:
 			pth = "%s(%i)%s" % (fname, seq, ext)
 		try:
-			fd = os.open(pth, flags, 0600)
+			fd = os.open(pth, flags, 0o600)
 			tempfile._set_cloexec(fd)
 			return (fd, os.path.abspath(pth))
-		except OSError, e:
+		except OSError as e:
 			if e.errno == errno.EEXIST:
 				continue  # Try again
 			raise
 
-	raise IOError, (errno.EEXIST, "No usable temporary file name found")
+	raise IOError(errno.EEXIST, "No usable temporary file name found")
 
 
 def movefile(src, dst, overwrite=True):
@@ -866,7 +867,7 @@ def which(executable, paths = None):
 				# make sure file is actually executable
 				if os.access(filename, os.X_OK):
 					return filename
-			except Exception, exception:
+			except Exception as exception:
 				pass
 	return None
 
@@ -970,7 +971,7 @@ class FileLock(object):
 	def _call(fn, args, exception_cls):
 		try:
 			fn(*args)
-		except FileLock._exception_cls, exception:
+		except FileLock._exception_cls as exception:
 			raise exception_cls(*exception.args)
 
 	class Error(Exception):

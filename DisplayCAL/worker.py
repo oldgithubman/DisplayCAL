@@ -2,6 +2,7 @@
 
 # stdlib
 from __future__ import with_statement
+from __future__ import absolute_import
 from binascii import hexlify
 import atexit
 import ctypes
@@ -19,9 +20,9 @@ import socket
 import shutil
 import string
 import struct
-import subprocess as sp
+from . import subprocess as sp
 import sys
-import tempfile
+from . import tempfile
 import textwrap
 import threading
 import traceback
@@ -55,103 +56,103 @@ if sys.platform == "win32":
 	import winerror
 
 # custom
-import CGATS
-import ICCProfile as ICCP
-import audio
-import colormath
-import config
-import defaultpaths
-import imfile
-import localization as lang
-import wexpect
-from argyll_cgats import (add_dispcal_options_to_cal, add_options_to_ti3,
+from . import CGATS
+from . import ICCProfile as ICCP
+from . import audio
+from . import colormath
+from . import config
+from . import defaultpaths
+from . import imfile
+from . import localization as lang
+from . import wexpect
+from .argyll_cgats import (add_dispcal_options_to_cal, add_options_to_ti3,
 						  cal_to_fake_profile, cal_to_vcgt,
 						  extract_cal_from_profile, extract_cal_from_ti3,
 						  extract_device_gray_primaries, extract_fix_copy_cal,
 						  ti3_to_ti1, verify_cgats, verify_ti1_rgb_xyz)
-from argyll_instruments import (get_canonical_instrument_name,
+from .argyll_instruments import (get_canonical_instrument_name,
 								instruments as all_instruments)
-from argyll_names import (names as argyll_names, altnames as argyll_altnames, 
+from .argyll_names import (names as argyll_names, altnames as argyll_altnames, 
 						  optional as argyll_optional, viewconds, intents,
 						  observers)
-from colormath import VidRGB_to_eeColor, eeColor_to_VidRGB
-from config import (autostart, autostart_home, script_ext, defaults, enc, exe,
+from .colormath import VidRGB_to_eeColor, eeColor_to_VidRGB
+from .config import (autostart, autostart_home, script_ext, defaults, enc, exe,
 					exedir, exe_ext, fs_enc, getcfg, geticon, get_data_path,
 					get_total_patches, get_verified_path, isapp, isexe,
 					is_ccxx_testchart, logdir, profile_ext, pydir, setcfg,
 					setcfg_cond, split_display_name, writecfg, appbasename)
-from debughelpers import (Error, DownloadError, Info, UnloggedError,
+from .debughelpers import (Error, DownloadError, Info, UnloggedError,
 						  UnloggedInfo, UnloggedWarning, UntracedError, Warn,
 						  handle_error)
-from defaultpaths import (cache, get_known_folder_path, iccprofiles_home,
+from .defaultpaths import (cache, get_known_folder_path, iccprofiles_home,
 						  iccprofiles_display_home, appdata)
-from edid import WMIError, get_edid
-from log import DummyLogger, LogFile, get_file_logger, log, safe_print
-import madvr
-from meta import VERSION, VERSION_BASE, domain, name as appname, version
-from multiprocess import cpu_count, pool_slice
-from options import (always_fail_download, debug, eecolor65, experimental, test,
+from .edid import WMIError, get_edid
+from .log import DummyLogger, LogFile, get_file_logger, log, safe_print
+from . import madvr
+from .meta import VERSION, VERSION_BASE, domain, name as appname, version
+from .multiprocess import cpu_count, pool_slice
+from .options import (always_fail_download, debug, eecolor65, experimental, test,
 					 test_badssl, test_require_sensor_cal, verbose)
-from ordereddict import OrderedDict
-from network import LoggingHTTPRedirectHandler, NoHTTPRedirectHandler
-from patterngenerators import (PrismaPatternGeneratorClient,
+from .ordereddict import OrderedDict
+from .network import LoggingHTTPRedirectHandler, NoHTTPRedirectHandler
+from .patterngenerators import (PrismaPatternGeneratorClient,
 							   ResolveLSPatternGeneratorServer,
 							   ResolveCMPatternGeneratorServer,
 							   WebWinHTTPPatternGeneratorServer)
-from trash import trash
-from util_decimal import stripzeros
-from util_http import encode_multipart_formdata
-from util_io import (EncodedWriter, Files, GzipFileProper, LineBufferedStream,
+from .trash import trash
+from .util_decimal import stripzeros
+from .util_http import encode_multipart_formdata
+from .util_io import (EncodedWriter, Files, GzipFileProper, LineBufferedStream,
 					 LineCache, StringIOu as StringIO, TarFileProper)
-from util_list import intlist, natsort
+from .util_list import intlist, natsort
 if sys.platform == "darwin":
-	from util_mac import (mac_app_activate, mac_terminal_do_script, 
+	from .util_mac import (mac_app_activate, mac_terminal_do_script, 
 						  mac_terminal_set_colors, osascript,
 						  get_machine_attributes, get_model_id)
 elif sys.platform == "win32":
-	import util_win
-	from util_win import run_as_admin, shell_exec, win_ver
+	from . import util_win
+	from .util_win import run_as_admin, shell_exec, win_ver
 	try:
 		import wmi
-	except Exception, exception:
+	except Exception as exception:
 		safe_print("Error - could not import WMI:", exception)
 		wmi = None
 else:
 	# Linux
-	from defaultpaths import xdg_data_home
+	from .defaultpaths import xdg_data_home
 	try:
-		from util_dbus import (DBusObject, DBusException, BUSTYPE_SESSION,
+		from .util_dbus import (DBusObject, DBusException, BUSTYPE_SESSION,
 							   dbus_session, dbus_system)
 	except ImportError:
 		dbus_session = None
 		dbus_system = None
-import colord
-from util_os import (dlopen, expanduseru, fname_ext, getenvu, is_superuser,
+from . import colord
+from .util_os import (dlopen, expanduseru, fname_ext, getenvu, is_superuser,
 					 launch_file, make_win32_compatible_long_path, mksfile,
 					 mkstemp_bypath, quote_args, safe_glob, which)
 if sys.platform not in ("darwin", "win32"):
-	from util_os import getgroups
+	from .util_os import getgroups
 if sys.platform == "win32" and sys.getwindowsversion() >= (6, ):
-	from util_os import win64_disable_file_system_redirection
-from util_str import (make_filename_safe, safe_basestring, safe_asciize,
+	from .util_os import win64_disable_file_system_redirection
+from .util_str import (make_filename_safe, safe_basestring, safe_asciize,
 					  safe_str, safe_unicode, strtr, universal_newlines)
-from worker_base import (MP_Xicclu, WorkerBase, Xicclu, _mp_generate_B2A_clut,
+from .worker_base import (MP_Xicclu, WorkerBase, Xicclu, _mp_generate_B2A_clut,
 						 _mp_xicclu,
 						 check_argyll_bin, get_argyll_util, get_argyll_utilname,
 						 get_argyll_version_string as
 						 base_get_argyll_version_string,
 						 parse_argyll_version_string, printcmdline)
-from wxaddons import BetterCallLater, BetterWindowDisabler, wx
-from wxwindows import (ConfirmDialog, HtmlInfoDialog, InfoDialog,
+from .wxaddons import BetterCallLater, BetterWindowDisabler, wx
+from .wxwindows import (ConfirmDialog, HtmlInfoDialog, InfoDialog,
 					   ProgressDialog, SimpleTerminal, show_result_dialog)
-from wxDisplayAdjustmentFrame import DisplayAdjustmentFrame
-from wxDisplayUniformityFrame import DisplayUniformityFrame
-from wxUntetheredFrame import UntetheredFrame
+from .wxDisplayAdjustmentFrame import DisplayAdjustmentFrame
+from .wxDisplayUniformityFrame import DisplayUniformityFrame
+from .wxUntetheredFrame import UntetheredFrame
 RDSMM = None
 if sys.platform not in ("darwin", "win32"):
 	try:
-		import RealDisplaySizeMM as RDSMM
-	except ImportError, exception:
+		from . import RealDisplaySizeMM as RDSMM
+	except ImportError as exception:
 		warnings.warn(safe_str(exception, enc), Warning)
 import wx.lib.delayedresult as delayedresult
 
@@ -210,7 +211,7 @@ def check_create_dir(path):
 	if not os.path.exists(path):
 		try:
 			os.makedirs(path)
-		except Exception, exception:
+		except Exception as exception:
 			return Error(lang.getstr("error.dir_creation", path) + "\n\n" + 
 						 safe_unicode(exception))
 	if not os.path.isdir(path):
@@ -924,7 +925,7 @@ def get_current_profile_path(include_display_profile=True,
 		if ext.lower() in (".icc", ".icm"):
 			try:
 				profile = ICCP.ICCProfile(profile_path)
-			except Exception, exception:
+			except Exception as exception:
 				safe_print("ICCP.ICCProfile(%r):" % profile_path, 
 						   exception)
 	elif include_display_profile:
@@ -1198,7 +1199,7 @@ def http_request(parent=None, domain=None, request_type="GET", path="",
 	try:
 		conn.request(request_type, path, params, headers)
 		resp = conn.getresponse()
-	except (socket.error, httplib.HTTPException), exception:
+	except (socket.error, httplib.HTTPException) as exception:
 		msg = " ".join([failure_msg, lang.getstr("connection.fail", 
 												 " ".join([str(arg) for 
 														   arg in exception.args]))]).strip()
@@ -1356,7 +1357,7 @@ def set_argyll_bin(parent=None, silent=False, callafter=None, callafter_args=())
 		dlg.Destroy()
 		if dlg_result == wx.ID_OK:
 			# Download Argyll CMS
-			from DisplayCAL import app_update_check
+			from .DisplayCAL import app_update_check
 			app_update_check(parent, silent, argyll=True)
 			return False
 		elif dlg_result == wx.ID_CANCEL:
@@ -1696,7 +1697,7 @@ class Sudo(object):
 		sudo_args = ["-p", "Password:", "true"]
 		try:
 			p = self.subprocess = wexpect.spawn(safe_str(self.sudo), sudo_args)
-		except Exception, exception:
+		except Exception as exception:
 				return StringWithLengthOverride("Could not run %s %s: %s" %
 												(self.sudo, " ".join(sudo_args),
 												 exception), 0), pwd
@@ -1757,7 +1758,7 @@ class Sudo(object):
 		try:
 			p = self.subprocess = wexpect.spawn(safe_str(self.sudo),
 												sudo_args)
-		except Exception, exception:
+		except Exception as exception:
 			return StringWithLengthOverride("Could not run %s %s: %s" %
 											(self.sudo, " ".join(sudo_args),
 											 exception), 0)
@@ -2069,7 +2070,7 @@ class Worker(WorkerBase):
 					return result
 				try:
 					cgats = CGATS.CGATS(ccmx)
-				except (IOError, CGATS.CGATSError), exception:
+				except (IOError, CGATS.CGATSError) as exception:
 					return exception
 				else:
 					ccxx_instrument = get_canonical_instrument_name(
@@ -2101,7 +2102,7 @@ class Worker(WorkerBase):
 							else:
 								# Copy original
 								shutil.copyfile(ccmx, ccmxcopy)
-						except Exception, exception:
+						except Exception as exception:
 							return Error(lang.getstr("error.copy_failed", 
 													 (ccmx, ccmxcopy)) + 
 													 "\n\n" + 
@@ -2660,7 +2661,7 @@ class Worker(WorkerBase):
 									   time_t_size)
 						# Read three entries black cal
 						spydx_bcal = spydx_cal.read(spydx_cal_int_bytes * 3)
-				except EnvironmentError, exception:
+				except EnvironmentError as exception:
 					self.log(appname + ": Warning - could not read SpyderX "
 							 "sensor cal:", exception)
 					self.exec_cmd_returnvalue = Error("Could not read "
@@ -2694,7 +2695,7 @@ class Worker(WorkerBase):
 							# Nuke the cal file
 							try:
 								os.remove(spydx_cal_fn)
-							except OSError, exception:
+							except OSError as exception:
 								self.log(appname + ": Warning - Could not remove "
 										 "SpyderX sensor cal file", spydx_cal_fn)
 							return False
@@ -2848,7 +2849,7 @@ BEGIN_DATA
 3 6.2500 6.2500 6.2500 0.2132 0.2241 0.2443
 END_DATA
 """)
-		except Exception, exception:
+		except Exception as exception:
 			return exception
 		setcfg("patterngenerator.use_video_levels", 0)
 		result = self.measure_ti1(ti1_path, get_data_path("linear.cal"),
@@ -2860,11 +2861,11 @@ END_DATA
 		ti3_path = os.path.join(tempdir, "0_16.ti3")
 		try:
 			ti3 = CGATS.CGATS(ti3_path)
-		except (IOError, CGATS.CGATSError),  exception:
+		except (IOError, CGATS.CGATSError) as  exception:
 			return exception
 		try:
 			verify_ti1_rgb_xyz(ti3)
-		except CGATS.CGATSError, exception:
+		except CGATS.CGATSError as exception:
 			return exception
 		luminance_XYZ_cdm2 = ti3.queryv1("LUMINANCE_XYZ_CDM2")
 		if not luminance_XYZ_cdm2:
@@ -3059,7 +3060,7 @@ END_DATA
 	def quit_terminate_consumer(self, delayedResult):
 		try:
 			result = delayedResult.get()
-		except Exception, exception:
+		except Exception as exception:
 			if hasattr(exception, "originalTraceback"):
 				self.log(exception.originalTraceback, fn=log)
 			else:
@@ -4754,7 +4755,7 @@ END_DATA
 					# EnumDisplayMonitors
 					try:
 						monitors = util_win.get_real_display_devices_info()
-					except Exception, exception:
+					except Exception as exception:
 						if not isinstance(exception, pywintypes.error):
 							safe_print(traceback.format_exc())
 						monitors = []
@@ -4798,7 +4799,7 @@ END_DATA
 						# under Mac OS X, but it doesn't hurt to always
 						# include it
 						edid = get_edid(i, display_name)
-					except Exception, exception:
+					except Exception as exception:
 						suppress_errors = (SystemError, TypeError, ValueError,
 										   WMIError)
 						if sys.platform == "win32":
@@ -4949,7 +4950,7 @@ END_DATA
 						if tmp and os.path.isfile(tmp_cal):
 							try:
 								os.remove(tmp_cal)
-							except EnvironmentError, exception:
+							except EnvironmentError as exception:
 								safe_print(exception)
 						lut_access.append(retcode == 0)
 						if verbose >= 1:
@@ -5111,7 +5112,7 @@ END_DATA
 							cookie = iface.inhibit(appname,
 												   *iface_dict.get("args",
 																   (inhibit_reason,)))
-						except DBusException, exception:
+						except DBusException as exception:
 							self.log(exception)
 						else:
 							iface_dict["iface"] = iface
@@ -5139,7 +5140,7 @@ END_DATA
 			if device_id:
 				try:
 					object_path = colord.get_object_path(device_id, "device")
-				except colord.CDError, exception:
+				except colord.CDError as exception:
 					self.log(exception)
 			else:
 				self.log(appname + ": Warning - couldn't get display device ID - "
@@ -5149,7 +5150,7 @@ END_DATA
 				try:
 					cd_device = colord.Device(object_path)
 					cd_device.profiling_inhibit()
-				except (colord.CDError, DBusException), exception:
+				except (colord.CDError, DBusException) as exception:
 					self.log(exception)
 				else:
 					profiling_inhibit = True
@@ -5164,7 +5165,7 @@ END_DATA
 				display_profile = config.get_display_profile()
 				self.srgb = srgb = ICCP.ICCProfile.from_named_rgb_space("sRGB")
 				# Date should not change so the ID stays the same.
-				srgb.dateTime = datetime.datetime(2003, 01, 23, 0, 0, 0)
+				srgb.dateTime = datetime.datetime(2003, 0o1, 23, 0, 0, 0)
 				srgb.tags.vcgt = ICCP.VideoCardGammaTableType("", "vcgt")
 				srgb.tags.vcgt.update({
 					"channels": 3,
@@ -5298,7 +5299,7 @@ BEGIN_DATA
 								try:
 									with open(args[-1], "w") as calfile:
 										calfile.write(cal)
-								except (IOError, OSError), exception:
+								except (IOError, OSError) as exception:
 									self.madtpg_disconnect(False)
 									return exception
 								cal = None
@@ -5329,14 +5330,14 @@ BEGIN_DATA
 								# .cal file
 								try:
 									cal = CGATS.CGATS(calfilename)
-								except (IOError, CGATS.CGATSError), exception:
+								except (IOError, CGATS.CGATSError) as exception:
 									self.madtpg_disconnect(False)
 									return exception
 							else:
 								# ICC profile
 								try:
 									profile = ICCP.ICCProfile(calfilename)
-								except (IOError, ICCP.ICCProfileInvalidError), exception:
+								except (IOError, ICCP.ICCProfileInvalidError) as exception:
 									self.madtpg_disconnect(False)
 									return exception
 						if profile:
@@ -5355,7 +5356,7 @@ BEGIN_DATA
 									raise CGATSError("%s: %s != 256" %
 													 (lang.getstr("calibration"),
 													  lang.getstr("number_of_entries")))
-							except CGATS.CGATSError, exception:
+							except CGATS.CGATSError as exception:
 								self.madtpg_disconnect(False)
 								return exception
 							# Convert calibration to ushort_Array_256_Array_3
@@ -5520,7 +5521,7 @@ BEGIN_DATA
 					self.log("")
 				else:
 					return Error(lang.getstr("madtpg.launch.failure"))
-			except Exception, exception:
+			except Exception as exception:
 				if (isinstance(getattr(self, "madtpg", None), madvr.MadTPG_Net) or
 					(getattr(self, "madtpg", None) and
 					 madvr_use_virtual_display)):
@@ -5590,7 +5591,7 @@ while 1:
 				with open(waitfilename, "w") as waitfile:
 					waitfile.write('#!/usr/bin/env python\n')
 					waitfile.write(pythonscript)
-				os.chmod(waitfilename, 0755)
+				os.chmod(waitfilename, 0o755)
 				args[index] += '"%s" ./%s' % (strtr(safe_str(python),
 													{'"': r'\"',
 													 "$": r"\$"}),
@@ -5732,8 +5733,8 @@ while 1:
 								   get_argyll_utilname("dispread")) and \
 					   sys.platform != "darwin":
 						cmdfiles.write('echo -e "\\033[40;2;37m" && clear\n')
-					os.chmod(cmdfilename, 0755)
-					os.chmod(allfilename, 0755)
+					os.chmod(cmdfilename, 0o755)
+					os.chmod(allfilename, 0o755)
 				cmdfiles.write(u" ".join(quote_args(cmdline)).replace(cmd, 
 					cmdname).encode(enc, "safe_asciize") + "\n")
 				if sys.platform == "win32":
@@ -5780,7 +5781,7 @@ while 1:
 						shutil.move(cmdfilename, appfilename + 
 									"/Contents/Resources/main.command")
 						os.chmod(appfilename + 
-								 "/Contents/Resources/main.command", 0755)
+								 "/Contents/Resources/main.command", 0o755)
 						# Part 2: "allfile"
 						appfilename = os.path.join(
 							working_dir,  working_basename + ".all.app")
@@ -5791,10 +5792,10 @@ while 1:
 						shutil.copyfile(allfilename, appfilename + 
 										"/Contents/Resources/main.command")
 						os.chmod(appfilename + 
-								 "/Contents/Resources/main.command", 0755)
+								 "/Contents/Resources/main.command", 0o755)
 						if last:
 							os.remove(allfilename)
-			except Exception, exception:
+			except Exception as exception:
 				self.log("Warning - error during shell script creation:", 
 						   safe_unicode(exception))
 		cmdline = [safe_str(arg, fs_enc) for arg in cmdline]
@@ -5954,7 +5955,7 @@ while 1:
 							self.subprocess = wexpect.spawn(cmdline[0],
 															cmdline[1:], 
 															**kwargs)
-						except wexpect.ExceptionPexpect, exception:
+						except wexpect.ExceptionPexpect as exception:
 							self.retcode = -1
 							raise Error(safe_unicode(exception))
 						if sys.platform == "darwin" and self.measure_cmd:
@@ -5972,7 +5973,7 @@ while 1:
 														   stdin=sp.PIPE,
 														   stdout=sp.PIPE,
 														   stderr=sp.PIPE)
-								except Exception, exception:
+								except Exception as exception:
 									self.log(appname + ": caffeinate could not "
 											 "be started - screensaver and "
 											 "display/system sleep may still "
@@ -6104,7 +6105,7 @@ while 1:
 													   shell=shell,
 													   cwd=working_dir, 
 													   startupinfo=startupinfo)
-					except Exception, exception:
+					except Exception as exception:
 						self.retcode = -1
 						raise Error(safe_unicode(exception))
 					self.retcode = self.subprocess.wait()
@@ -6154,9 +6155,9 @@ while 1:
 				if not silent and len(self.errors):
 					errstr = "".join(self.errors).strip()
 					self.log(errstr)
-		except (Error, socket.error, EnvironmentError, RuntimeError), exception:
+		except (Error, socket.error, EnvironmentError, RuntimeError) as exception:
 			return exception
-		except Exception, exception:
+		except Exception as exception:
 			if debug:
 				self.log('[D] working_dir:', working_dir)
 			errmsg = (" ".join(cmdline).decode(fs_enc) + "\n" + 
@@ -6199,7 +6200,7 @@ while 1:
 									pass
 						else:
 							self.patterngenerator.disconnect_client()
-					except Exception, exception:
+					except Exception as exception:
 						self.log(exception)
 			if hasattr(self, "madtpg") and finished:
 				self.madtpg_disconnect()
@@ -6216,7 +6217,7 @@ while 1:
 					# Use DBus interface to call ProfilingInhibit()
 					try:
 						cd_device.profiling_uninhibit()
-					except Exception, cd_exception:
+					except Exception as cd_exception:
 						self.log(cd_exception)
 						profiling_inhibit = False
 					else:
@@ -6233,7 +6234,7 @@ while 1:
 					try:
 						os.remove(os.path.join(xdg_data_home, 'icc',
 											   os.path.basename(self.srgb.fileName)))
-					except Exception, exception:
+					except Exception as exception:
 						self.log(exception)
 		if not silent:
 			self.log(cmdname, "exitcode:", self.retcode)
@@ -6288,7 +6289,7 @@ while 1:
 		exception = None
 		try:
 			result = delayedResult.get()
-		except Exception, exception:
+		except Exception as exception:
 			if (exception.__class__ is Exception and exception.args and
 				exception.args[0] == "aborted"):
 				# Special case - aborted
@@ -7501,7 +7502,7 @@ while 1:
 		arg = "-L"
 		try:
 			profile = ICCP.get_display_profile(display_no)
-		except Exception, exception:
+		except Exception as exception:
 			safe_print(exception)
 			return arg
 		else:
@@ -7538,7 +7539,7 @@ while 1:
 				ti3_options_colprof = get_options_from_ti3(ti3)[1]
 			except (IOError, CGATS.CGATSInvalidError, 
 					CGATS.CGATSInvalidOperationError, CGATS.CGATSKeyError, 
-					CGATS.CGATSTypeError, CGATS.CGATSValueError), exception:
+					CGATS.CGATSTypeError, CGATS.CGATSValueError) as exception:
 				safe_print(exception)
 				ti3_options_colprof = []
 			for option in ti3_options_colprof:
@@ -7858,7 +7859,7 @@ usage: spotread [-options] [logfile]
 					raise Info(lang.getstr("3dlut.install.success"))
 				else:
 					raise Error(lang.getstr("3dlut.install.failure"))
-			except Exception, exception:
+			except Exception as exception:
 				return exception
 		elif config.get_display_name(None, True) == "Prisma":
 			try:
@@ -7938,7 +7939,7 @@ usage: spotread [-options] [logfile]
 				self.patterngenerator.set_3dlut(filename)
 				self.log("Setting PrismaVue to zero")
 				self.patterngenerator.set_prismavue(0)
-			except Exception, exception:
+			except Exception as exception:
 				return exception
 			return Info(lang.getstr("3dlut.install.success"))
 		else:
@@ -7975,7 +7976,7 @@ usage: spotread [-options] [logfile]
 					try:
 						ICCP.set_display_profile(os.path.basename(profile_path),
 												 devicekey=active_display.DeviceKey)
-					except Exception, exception:
+					except Exception as exception:
 						# Not a critical error. Only log the exception.
 						if (isinstance(exception, EnvironmentError) and
 							not exception.filename and
@@ -7989,7 +7990,7 @@ usage: spotread [-options] [logfile]
 		profile = None
 		try:
 			profile = ICCP.ICCProfile(profile_path)
-		except (IOError, ICCP.ICCProfileInvalidError), exception:
+		except (IOError, ICCP.ICCProfileInvalidError) as exception:
 			return exception
 		device_id = self.get_device_id(quirk=False, query=True)
 		if (sys.platform not in ("darwin", "win32") and not getcfg("dry_run") and
@@ -8233,7 +8234,7 @@ usage: spotread [-options] [logfile]
 							crc != z.getinfo(installer_basename).CRC):
 							z.extract(installer_basename,
 									  os.path.dirname(installer_zip))
-				except Exception, exception:
+				except Exception as exception:
 					return exception
 
 			# Get supported instruments USB device IDs
@@ -8263,7 +8264,7 @@ usage: spotread [-options] [logfile]
 				for item in wmi_connection.query(query):
 					try:
 						device_id = item.Dependent.DeviceID
-					except wmi.x_wmi, exception:
+					except wmi.x_wmi as exception:
 						self.log(exception)
 						continue
 					for usb_id, instrument_names in usb_ids.iteritems():
@@ -8272,7 +8273,7 @@ usage: spotread [-options] [logfile]
 							# Found supported instrument
 							try:
 								self.log(item.Dependent.Caption)
-							except wmi.x_wmi, exception:
+							except wmi.x_wmi as exception:
 								self.log(", ".join(instrument_names))
 							# Install driver for specific device
 							result = self.exec_cmd(installer, ["--noprompt",
@@ -8289,7 +8290,7 @@ usage: spotread [-options] [logfile]
 								return result
 							elif not result or "Failed to install driver" in output:
 								return Error(lang.getstr("argyll.instrument.drivers.install.failure"))
-			except Exception, exception:
+			except Exception as exception:
 				self.log(exception)
 			finally:
 				if not_main_thread:
@@ -8362,7 +8363,7 @@ usage: spotread [-options] [logfile]
 						device0 = util_win.get_display_device(idx,
 															  exception_cls=None)
 						devicea = util_win.get_display_device(idx, True)
-					except Exception, exception:
+					except Exception as exception:
 						self.log("util_win.get_display_device(%s):" % idx,
 								 exception)
 					else:
@@ -8377,7 +8378,7 @@ usage: spotread [-options] [logfile]
 							try:
 								util_win.enable_per_user_profiles(per_user,
 																  devicekey=device.DeviceKey)
-							except Exception, exception:
+							except Exception as exception:
 								self.log("util_win.enable_per_user_profiles(%s, devicekey=%r): %s" %
 										 (per_user, device.DeviceKey, exception))
 				if "-Sl" in args and (sys.platform != "darwin" or 
@@ -8429,7 +8430,7 @@ usage: spotread [-options] [logfile]
 									   'end tell']
 						try:
 							retcode, output, errors = osascript(applescript)
-						except Exception, exception:
+						except Exception as exception:
 							self.log(exception)
 						else:
 							if errors.strip():
@@ -8453,7 +8454,7 @@ usage: spotread [-options] [logfile]
 									   'end tell']
 						try:
 							retcode, output, errors = osascript(applescript)
-						except Exception, exception:
+						except Exception as exception:
 							self.log(exception)
 						else:
 							if errors.strip():
@@ -8480,7 +8481,7 @@ usage: spotread [-options] [logfile]
 		self.log("%s: Trying device ID %r" % (appname, device_id))
 		try:
 			colord.install_profile(device_id, profile, logfn=self.log)
-		except Exception, exception:
+		except Exception as exception:
 			self.log(exception)
 			return exception
 		return True
@@ -8538,7 +8539,7 @@ usage: spotread [-options] [logfile]
 			except colord.CDObjectQueryError:
 				# Profile not in database
 				pass
-			except colord.CDError, exception:
+			except colord.CDError as exception:
 				self.log(exception)
 			else:
 				# Profile already in database, nothing to do
@@ -8553,7 +8554,7 @@ usage: spotread [-options] [logfile]
 			   profile_install_path != profile.fileName:
 				try:
 					trash([profile_install_path])
-				except Exception, exception:
+				except Exception as exception:
 					self.log(exception)
 				else:
 					# Give colord time to recognize that the profile was
@@ -8606,7 +8607,7 @@ usage: spotread [-options] [logfile]
 				dirname = iccprofiles_display_home[0]
 				try:
 					os.makedirs(dirname)
-				except Exception, exception:
+				except Exception as exception:
 					self.log(exception)
 					result = False
 			if result is not False:
@@ -8615,7 +8616,7 @@ usage: spotread [-options] [logfile]
 				try:
 					shutil.copyfile(profile_path, 
 									profile_install_path)
-				except Exception, exception:
+				except Exception as exception:
 					self.log(exception)
 					result = False
 		if not isinstance(result, Exception) and result is not False:
@@ -8655,7 +8656,7 @@ usage: spotread [-options] [logfile]
 				try:
 					# delete v0.1b loader
 					os.remove(loader_v01b)
-				except Exception, exception:
+				except Exception as exception:
 					self.log(u"Warning - could not remove old "
 							   u"v0.1b calibration loader '%s': %s" 
 							   % tuple(safe_unicode(s) for s in 
@@ -8666,7 +8667,7 @@ usage: spotread [-options] [logfile]
 				try:
 					# delete v02.b/v0.2.1b loader
 					os.remove(loader_v02b)
-				except Exception, exception:
+				except Exception as exception:
 					self.log(u"Warning - could not remove old "
 							   u"v0.2b calibration loader '%s': %s" 
 							   % tuple(safe_unicode(s) for s in 
@@ -8677,7 +8678,7 @@ usage: spotread [-options] [logfile]
 				try:
 					# delete v0.5.5.8 user loader
 					os.remove(loader_v0558)
-				except Exception, exception:
+				except Exception as exception:
 					self.log(u"Warning - could not remove old "
 							   u"v0.2b calibration loader '%s': %s" 
 							   % tuple(safe_unicode(s) for s in 
@@ -8689,7 +8690,7 @@ usage: spotread [-options] [logfile]
 				try:
 					# delete v0.5.5.8 system loader
 					os.remove(loader_v0558)
-				except Exception, exception:
+				except Exception as exception:
 					self.log(u"Warning - could not remove old "
 							   u"v0.2b calibration loader '%s': %s" 
 							   % tuple(safe_unicode(s) for s in 
@@ -8737,10 +8738,10 @@ usage: spotread [-options] [logfile]
 			# If running in a thread, need to call pythoncom.CoInitialize
 			pythoncom.CoInitialize()
 
-		import taskscheduler
+		from . import taskscheduler
 		try:
 			ts = taskscheduler.TaskScheduler()
-		except Exception, exception:
+		except Exception as exception:
 			safe_print("Warning - could not access task scheduler:", exception)
 			ts = None
 			task = None
@@ -8766,7 +8767,7 @@ usage: spotread [-options] [logfile]
 				shell_exec(cmd, loader_args + ["--skip"],
 						   operation="runas" if elevate else "open",
 						   wait_for_idle=True)
-			except pywintypes.error, exception:
+			except pywintypes.error as exception:
 				if exception.args[0] == winerror.ERROR_CANCELLED:
 					errmsg += " (user cancelled)"
 				else:
@@ -8798,7 +8799,7 @@ usage: spotread [-options] [logfile]
 				if autostart:
 					try:
 						scut.QueryInterface(pythoncom.IID_IPersistFile).Save(autostart_lnkname, 0)
-					except Exception, exception:
+					except Exception as exception:
 						if not silent:
 							result = Warning(lang.getstr("error.autostart_creation", 
 													     autostart) + "\n" + 
@@ -8819,7 +8820,7 @@ usage: spotread [-options] [logfile]
 						scut.QueryInterface(
 							pythoncom.IID_IPersistFile).Save(
 								autostart_home_lnkname, 0)
-					except Exception, exception:
+					except Exception as exception:
 						if not silent:
 							result = Warning(lang.getstr("error.autostart_creation", 
 													     autostart_home) + "\n" + 
@@ -8827,7 +8828,7 @@ usage: spotread [-options] [logfile]
 			else:
 				if not silent:
 					result = Warning(lang.getstr("error.autostart_user"))
-		except Exception, exception:
+		except Exception as exception:
 			if not silent:
 				result = Warning(lang.getstr("error.autostart_creation", 
 										     autostart_home) + "\n" + 
@@ -8847,7 +8848,7 @@ usage: spotread [-options] [logfile]
 			if os.path.exists(autostart_lnkname):
 				try:
 					os.remove(autostart_lnkname)
-				except Exception, exception:
+				except Exception as exception:
 					self.log(autostart_lnkname, exception)
 		if autostart_home:
 			autostart_home_lnkname = os.path.join(autostart_home, 
@@ -8855,7 +8856,7 @@ usage: spotread [-options] [logfile]
 			if os.path.exists(autostart_home_lnkname):
 				try:
 					os.remove(autostart_home_lnkname)
-				except Exception, exception:
+				except Exception as exception:
 					self.log(autostart_home_lnkname, exception)
 		return True
 	
@@ -8871,7 +8872,7 @@ usage: spotread [-options] [logfile]
 		if os.path.exists(desktopfile_path):
 			try:
 				os.remove(desktopfile_path)
-			except Exception, exception:
+			except Exception as exception:
 				result = Warning(lang.getstr("error.autostart_remove_old", 
 										     desktopfile_path))
 		# Create unified loader
@@ -8928,7 +8929,7 @@ usage: spotread [-options] [logfile]
 			desktopfile.write('Exec=%s\n' % executable.encode("UTF-8"))
 			desktopfile.write('Terminal=false\n')
 			desktopfile.close()
-		except Exception, exception:
+		except Exception as exception:
 			if not silent:
 				result = Warning(lang.getstr("error.autostart_creation", 
 											 desktopfile_path) + "\n" + 
@@ -9037,7 +9038,7 @@ usage: spotread [-options] [logfile]
 				 ti3_RGB_XYZ,
 				 ti3_remaining) = extract_device_gray_primaries(ti3,
 																logfn=self.log)
-			except Error, exception:
+			except Error as exception:
 				self.log(exception)
 			else:
 				if getcfg("profile.type") in ("X", "x", "S", "s"):
@@ -9154,7 +9155,7 @@ usage: spotread [-options] [logfile]
 				if not isinstance(result, Exception) and result:
 					try:
 						profile = ICCP.ICCProfile(profile_path)
-					except (IOError, ICCP.ICCProfileInvalidError), exception:
+					except (IOError, ICCP.ICCProfileInvalidError) as exception:
 						result = Error(lang.getstr("profile.invalid") + "\n" + profile_path)
 		if not isinstance(result, Exception) and result:
 			if getcfg("profile.type") == "X" or is_primaries_only:
@@ -9231,7 +9232,7 @@ usage: spotread [-options] [logfile]
 			try:
 				if not profile:
 					profile = ICCP.ICCProfile(profile_path)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				result = Error(lang.getstr("profile.invalid") + "\n" + profile_path)
 			else:
 				# Do we have a B2A0 table?
@@ -9260,7 +9261,7 @@ usage: spotread [-options] [logfile]
 					gamap_profile_filename = getcfg("gamap_profile")
 					try:
 						gamap_profile = ICCP.ICCProfile(gamap_profile_filename)
-					except (IOError, ICCProfileInvalidError), exception:
+					except (IOError, ICCProfileInvalidError) as exception:
 						self.log(exception)
 					else:
 						if (not "A2B0" in gamap_profile.tags and
@@ -9371,7 +9372,7 @@ usage: spotread [-options] [logfile]
 							if pcs:
 								try:
 									gamap_profile = ICCP.ICCProfile(pcs)
-								except (IOError, ICCProfileInvalidError), exception:
+								except (IOError, ICCProfileInvalidError) as exception:
 									self.log(exception)
 							else:
 								missing = lang.getstr("file.missing",
@@ -9442,7 +9443,7 @@ usage: spotread [-options] [logfile]
 							try:
 								link_profile = ICCP.ICCProfile(link_profile)
 							except (IOError,
-									ICCP.ICCProfileInvalidError), exception:
+									ICCP.ICCProfileInvalidError) as exception:
 								self.log(exception)
 								continue
 							table = "B2A%i" % tableno
@@ -9539,7 +9540,7 @@ usage: spotread [-options] [logfile]
 						# We need to write the changed profile
 						try:
 							profile.write()
-						except Exception, exception:
+						except Exception as exception:
 							return exception
 
 					if not "A2B1" in profile.tags:
@@ -9686,7 +9687,7 @@ usage: spotread [-options] [logfile]
 							# enhancing B2A resolution!
 							try:
 								profile.write()
-							except Exception, exception:
+							except Exception as exception:
 								return exception
 						result = self.update_profile_B2A(profile)
 						if not isinstance(result, Exception) and result:
@@ -9737,7 +9738,7 @@ usage: spotread [-options] [logfile]
 								# lookup through A2B/B2A table!
 								try:
 									profile.write()
-								except Exception, exception:
+								except Exception as exception:
 									return exception
 						else:
 							# Use matrix from single shaper curve profile if
@@ -9783,7 +9784,7 @@ usage: spotread [-options] [logfile]
 						if len(odata) != 1 or len(odata[0]) != 3:
 							raise ValueError("Blackpoint is invalid: %s" %
 											 odata)
-					except Exception, exception:
+					except Exception as exception:
 						self.log(exception)
 					else:
 						(profile.tags.bkpt.X,
@@ -9792,7 +9793,7 @@ usage: spotread [-options] [logfile]
 				# We need to write the changed profile
 				try:
 					profile.write()
-				except Exception, exception:
+				except Exception as exception:
 					return exception
 			if (os.path.isfile(args[-1] + ".ti3.backup") and
 				os.path.isfile(args[-1] + ".ti3")):
@@ -10153,7 +10154,7 @@ usage: spotread [-options] [logfile]
 		# Strip potential CAL from Ti3
 		try:
 			oti3 = CGATS.CGATS(outname + ".ti3")
-		except (IOError, CGATS.CGATSError), exception:
+		except (IOError, CGATS.CGATSError) as exception:
 			return exception
 		else:
 			if 0 in oti3:
@@ -10183,7 +10184,7 @@ usage: spotread [-options] [logfile]
 					direction = "f"
 				try:
 					XYZout = self.xicclu(profile, RGBin, "p", direction, pcs="x")
-				except Info, exception:
+				except Info as exception:
 					return exception
 				# Get RGB space from already added matrix column tags
 				rgb_space = colormath.get_rgb_space(profile.get_rgb_space("pcs",
@@ -10261,7 +10262,7 @@ usage: spotread [-options] [logfile]
 				fakeout = outname + "." + ti1name
 				try:
 					shutil.copyfile(ti1, fakeout + ".ti1")
-				except EnvironmentError, exception:
+				except EnvironmentError as exception:
 					return exception
 				# Lookup ti1 through ti3
 				result = self.exec_cmd(fakeread, [outname + ".0.ti3", fakeout],
@@ -10269,7 +10270,7 @@ usage: spotread [-options] [logfile]
 									   sessionlogfile=self.sessionlogfile)
 				try:
 					os.remove(fakeout + ".ti1")
-				except EnvironmentError, exception:
+				except EnvironmentError as exception:
 					self.log(exception)
 				if not result:
 					return UnloggedError("\n".join(self.errors))
@@ -10277,7 +10278,7 @@ usage: spotread [-options] [logfile]
 					return result
 				try:
 					os.remove(outname + ".0.ti3")
-				except EnvironmentError, exception:
+				except EnvironmentError as exception:
 					self.log(exception)
 			else:
 				# Use gray+primaries from existing ti3
@@ -10288,13 +10289,13 @@ usage: spotread [-options] [logfile]
 								   sessionlogfile=self.sessionlogfile)
 			try:
 				os.remove(fakeout + ".ti3")
-			except EnvironmentError, exception:
+			except EnvironmentError as exception:
 				self.log(exception)
 			if isinstance(result, Exception) or not result:
 				return result
 			try:
 				matrix_profile = ICCP.ICCProfile(fakeout + profile_ext)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				return Error(lang.getstr("profile.invalid") + "\n" + fakeout +
 							 profile_ext)
 			if profile:
@@ -10314,7 +10315,7 @@ usage: spotread [-options] [logfile]
 				profile.fileName = outname + profile_ext
 			try:
 				os.remove(fakeout + profile_ext)
-			except EnvironmentError, exception:
+			except EnvironmentError as exception:
 				self.log(exception)
 		return profile
 	
@@ -10326,7 +10327,7 @@ usage: spotread [-options] [logfile]
 			profile_path = profile
 			try:
 				profile = ICCP.ICCProfile(profile_path)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				return Error(lang.getstr("profile.invalid") + "\n" + profile_path)
 		else:
 			profile_path = profile.fileName
@@ -10452,7 +10453,7 @@ usage: spotread [-options] [logfile]
 			try:
 				cal = extract_cal_from_profile(profile, None, False,
 											   prefer_cal=True)
-			except Exception, exception:
+			except Exception as exception:
 				self.log(exception)
 			else:
 				white = False
@@ -10496,7 +10497,7 @@ usage: spotread [-options] [logfile]
 		profile.calculateID()
 		try:
 			profile.write()
-		except Exception, exception:
+		except Exception as exception:
 			return exception
 		return True
 
@@ -10562,7 +10563,7 @@ usage: spotread [-options] [logfile]
 						B2A1.clut.append([])
 						for row in block:
 							B2A1.clut[-1].append(list(row))
-			except Exception, exception:
+			except Exception as exception:
 				return exception
 		if not "A2B2" in profile.tags and generate_perceptual_table:
 			# Argyll always creates a complete set of A2B / B2A tables if
@@ -10629,9 +10630,9 @@ usage: spotread [-options] [logfile]
 																  logfiles,
 																  filename,
 																  bpc)
-				except (Error, Info), exception:
+				except (Error, Info) as exception:
 					return exception
-				except Exception, exception:
+				except Exception as exception:
 					self.log(traceback.format_exc())
 					return exception
 				else:
@@ -10910,7 +10911,7 @@ usage: spotread [-options] [logfile]
 							# Should always exist
 							os.remove(ti1)
 						os.rename(ti1_orig, ti1)
-					except Exception, exception:
+					except Exception as exception:
 						self.log("Warning - could not restore "
 								 "backup of original TI1 file %s:" %
 								 safe_unicode(ti1_orig), exception)
@@ -10949,7 +10950,7 @@ usage: spotread [-options] [logfile]
 			if not isinstance(ti1, CGATS.CGATS):
 				try:
 					ti1 = CGATS.CGATS(ti1)
-				except Exception, exception:
+				except Exception as exception:
 					self.log("Warning - could not process TI1 file %s:" %
 							 safe_unicode(ti1), exception)
 					return ti1
@@ -10972,13 +10973,13 @@ usage: spotread [-options] [logfile]
 					shutil.copyfile(ti1.filename,
 									os.path.splitext(ti1.filename)[0] +
 									".original.ti1")
-				except Exception, exception:
+				except Exception as exception:
 					self.log("Warning - could not make backup of TI1 file %s:" %
 							 safe_unicode(ti1.filename), exception)
 				# Write new TI1 to original filename
 				try:
 					ti1.write()
-				except Exception, exception:
+				except Exception as exception:
 					self.log("Warning - could not write TI1 file %s:" %
 							 safe_unicode(ti1.filename), exception)
 		return ti1
@@ -11033,7 +11034,7 @@ usage: spotread [-options] [logfile]
 				try:
 					self.patterngenerator_send((.5, ) * 3, raise_exceptions=True,
 											   increase_sent_count=False)
-				except (socket.error, httplib.HTTPException), exception:
+				except (socket.error, httplib.HTTPException) as exception:
 					self.log(exception)
 					self.patterngenerator.disconnect_client()
 		elif pgname == "Prisma":
@@ -11049,7 +11050,7 @@ usage: spotread [-options] [logfile]
 				port=getcfg("webserver.portnumber"),
 				logfile=logfile)
 		elif pgname.startswith("Chromecast "):
-			from chromecast_patterngenerator import ChromeCastPatternGenerator
+			from .chromecast_patterngenerator import ChromeCastPatternGenerator
 			self.patterngenerator = ChromeCastPatternGenerator(
 				name=self.get_display_name(),
 				logfile=logfile)
@@ -11118,7 +11119,7 @@ usage: spotread [-options] [logfile]
 		else:
 			try:
 				self.patterngenerator.send(rgb, bgrgb, x=x, y=y, w=w, h=h)
-			except Exception, exception:
+			except Exception as exception:
 				if raise_exceptions:
 					raise
 				else:
@@ -11201,11 +11202,11 @@ usage: spotread [-options] [logfile]
 				# profile, otherwise create hires CIECAM02 tables with collink
 				try:
 					gamap_profile = ICCP.ICCProfile(getcfg("gamap_profile"))
-				except ICCProfileInvalidError, exception:
+				except ICCProfileInvalidError as exception:
 					self.log(exception)
 					return Error(lang.getstr("profile.invalid") + "\n" +
 								 getcfg("gamap_profile"))
-				except IOError, exception:
+				except IOError as exception:
 					return exception
 				if (getcfg("profile.type") != "l" and
 					getcfg("profile.b2a.hires") and
@@ -11468,7 +11469,7 @@ usage: spotread [-options] [logfile]
 						try:
 							# Copy cal to profile dir
 							shutil.copyfile(cal, calcopy) 
-						except Exception, exception:
+						except Exception as exception:
 							return Error(lang.getstr("error.copy_failed", 
 													 (cal, calcopy)) + 
 													 "\n\n" + 
@@ -11503,7 +11504,7 @@ usage: spotread [-options] [logfile]
 						try:
 							# Copy profile to profile dir
 							shutil.copyfile(profile_path, profilecopy)
-						except Exception, exception:
+						except Exception as exception:
 							return Error(lang.getstr("error.copy_failed", 
 													   (profile_path, 
 													    profilecopy)) + 
@@ -11614,7 +11615,7 @@ usage: spotread [-options] [logfile]
 				if ext.lower() in (".icc", ".icm"):
 					try:
 						profile = ICCP.ICCProfile(filename + ext)
-					except (IOError, ICCP.ICCProfileInvalidError), exception:
+					except (IOError, ICCP.ICCProfileInvalidError) as exception:
 						return Error(lang.getstr("error.testchart.read", 
 												 getcfg("testchart.file"))), None
 					ti3 = StringIO(profile.tags.get("CIED", "") or 
@@ -11624,7 +11625,7 @@ usage: spotread [-options] [logfile]
 				else: # ti3
 					try:
 						ti3 = open(filename + ext, "rU")
-					except Exception, exception:
+					except Exception as exception:
 						return Error(lang.getstr("error.testchart.read", 
 												 getcfg("testchart.file"))), None
 				if ext.lower() != ".ti1":
@@ -11636,7 +11637,7 @@ usage: spotread [-options] [logfile]
 					ti1 = open(inoutfile + ".ti1", "w")
 					ti1.write(ti3_to_ti1(ti3_lines))
 					ti1.close()
-			except Exception, exception:
+			except Exception as exception:
 				return Error(lang.getstr("error.testchart.creation_failed", 
 										 inoutfile + ".ti1") + "\n\n" + 
 							 safe_unicode(exception)), None
@@ -11670,13 +11671,13 @@ usage: spotread [-options] [logfile]
 					options_dispcal = get_options_from_cal(cal)[0]
 				except (IOError, CGATS.CGATSInvalidError, 
 						CGATS.CGATSInvalidOperationError, CGATS.CGATSKeyError, 
-						CGATS.CGATSTypeError, CGATS.CGATSValueError), exception:
+						CGATS.CGATSTypeError, CGATS.CGATSValueError) as exception:
 					return exception, None
 				if not os.path.exists(calcopy):
 					try:
 						# Copy cal to temp dir
 						shutil.copyfile(cal, calcopy)
-					except Exception, exception:
+					except Exception as exception:
 						return Error(lang.getstr("error.copy_failed", 
 												 (cal, calcopy)) + "\n\n" + 
 									 safe_unicode(exception)), None
@@ -11694,7 +11695,7 @@ usage: spotread [-options] [logfile]
 					return None, None
 				try:
 					profile = ICCP.ICCProfile(filename + ext)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					profile = None
 				if profile:
 					ti3 = StringIO(profile.tags.get("CIED", "") or 
@@ -11712,7 +11713,7 @@ usage: spotread [-options] [logfile]
 					tmpcal = open(calcopy, "w")
 					tmpcal.write(extract_cal_from_ti3(ti3_lines))
 					tmpcal.close()
-				except Exception, exception:
+				except Exception as exception:
 					return Error(lang.getstr("error.cal_extraction", (cal)) + 
 								 "\n\n" + safe_unicode(exception)), None
 			cal = calcopy
@@ -11836,7 +11837,7 @@ usage: spotread [-options] [logfile]
 					return None, None
 				try:
 					profile = ICCP.ICCProfile(profile_path)
-				except (IOError, ICCP.ICCProfileInvalidError), exception:
+				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					return Error(lang.getstr("profile.invalid") + 
 											 "\n" + profile_path), None
 				if profile.profileClass != "mntr" or \
@@ -11867,7 +11868,7 @@ usage: spotread [-options] [logfile]
 						if not os.path.isdir(profile_dir):
 							try:
 								os.makedirs(profile_dir)
-							except OSError, exception:
+							except OSError as exception:
 								return exception, None
 					args.append("-I")
 					# Always copy to temp dir so if a user accidentally tries
@@ -12201,7 +12202,7 @@ usage: spotread [-options] [logfile]
 							if time() > ts + 20:
 								break
 							sleep(.5)
-					except Exception, exception:
+					except Exception as exception:
 						self.log(traceback.format_exc(), fn=logfn)
 						self.log("%s: Exception in quit_terminate_command: %s" %
 								 (appname, exception),  fn=logfn)
@@ -12210,7 +12211,7 @@ usage: spotread [-options] [logfile]
 							 fn=logfn)
 					try:
 						subprocess.sendintr()
-					except Exception, exception:
+					except Exception as exception:
 						self.log(traceback.format_exc(), fn=logfn)
 						self.log("%s: Exception in quit_terminate_command: %s" %
 								 (appname, exception),  fn=logfn)
@@ -12245,7 +12246,7 @@ usage: spotread [-options] [logfile]
 								 fn=logfn)
 					else:
 						self.log("...subprocess terminated.", fn=logfn)
-			except Exception, exception:
+			except Exception as exception:
 				self.log(traceback.format_exc(), fn=logfn)
 				self.log("%s: Exception in quit_terminate_command: %s" %
 						 (appname, exception), fn=logfn)
@@ -12318,7 +12319,7 @@ usage: spotread [-options] [logfile]
 			self.logger.info("Sending key(s) %r (%i)" % (logbytes, i + 1))
 			try:
 				wrote = self.subprocess.send(bytes)
-			except Exception, exception:
+			except Exception as exception:
 				self.logger.exception("Exception: %s" % safe_unicode(exception))
 			else:
 				if wrote == len(bytes):
@@ -12402,7 +12403,7 @@ usage: spotread [-options] [logfile]
 				cgats = CGATS.CGATS(cgats)
 			except (IOError, CGATS.CGATSInvalidError, 
 					CGATS.CGATSInvalidOperationError, CGATS.CGATSKeyError, 
-					CGATS.CGATSTypeError, CGATS.CGATSValueError), exception:
+					CGATS.CGATSTypeError, CGATS.CGATSValueError) as exception:
 				return exception
 		self.terminal.cgats = cgats
 
@@ -12697,7 +12698,7 @@ usage: spotread [-options] [logfile]
 					uninhibit = iface_dict.get("uninhibit", "un_inhibit")
 					try:
 						getattr(iface_dict["iface"], uninhibit)(cookie)
-					except DBusException, exception:
+					except DBusException as exception:
 						self.log(exception)
 					else:
 						iface_dict["cookie"] = None
@@ -12899,7 +12900,7 @@ usage: spotread [-options] [logfile]
 						if os.path.exists(filename):
 							os.remove(filename)
 						os.rename(tmpfilename, filename)
-				except Exception, exception:
+				except Exception as exception:
 					self.log(exception)
 		elif result:
 			# Exception
@@ -12928,7 +12929,7 @@ usage: spotread [-options] [logfile]
 					if match:
 						gamut_coverage[key] = float(match.groups()[0]) / 100.0
 						break
-		except Exception, exception:
+		except Exception as exception:
 			worker.log(traceback.format_exc())
 
 	def calibrate(self, remove=False):
@@ -12963,7 +12964,7 @@ usage: spotread [-options] [logfile]
 					if not isinstance(result, Exception) and result:
 						try:
 							profile = ICCP.ICCProfile(profile_path)
-						except (IOError, ICCP.ICCProfileInvalidError), exception:
+						except (IOError, ICCP.ICCProfileInvalidError) as exception:
 							result = Error(lang.getstr("profile.invalid") + "\n"
 										   + profile_path)
 					if not isinstance(result, Exception) and result:
@@ -13010,7 +13011,7 @@ usage: spotread [-options] [logfile]
 							profile.calculateID()
 							try:
 								profile.write()
-							except Exception, exception:
+							except Exception as exception:
 								self.log(exception)
 		result2 = self.wrapup(not isinstance(result, UnloggedInfo) and result,
 							  remove or isinstance(result, Exception) or
@@ -13390,7 +13391,7 @@ BEGIN_DATA
 												 (cgats.filename, ", ".join(labels))))
 				ti1, ti3_ref = self.ti3_lookup_to_ti1(cgats, profile, fields,
 													  intent, white_patches)
-		except Exception, exception:
+		except Exception as exception:
 			if raise_exceptions:
 				raise exception
 			if (not isinstance(exception, (TypeError, ValueError)) or
@@ -13720,7 +13721,7 @@ BEGIN_DATA
 		
 		try:
 			ti3v = verify_cgats(ti3, labels, True)
-		except CGATS.CGATSInvalidError, exception:
+		except CGATS.CGATSInvalidError as exception:
 			raise ValueError(lang.getstr("error.testchart.invalid", 
 										 ti3_filename) + "\n" +
 										 lang.getstr(safe_unicode(exception)))
@@ -13958,7 +13959,7 @@ BEGIN_DATA
 					hashes = noredir.open("https://%s/sha256sums.txt" %
 										  domain.lower())
 			except (socket.error, urllib2.URLError, httplib.HTTPException,
-				    CertificateError, SSLError), exception:
+				    CertificateError, SSLError) as exception:
 				if response:
 					response.close()
 				if "CERTIFICATE_VERIFY_FAILED" in safe_str(exception):
@@ -14037,7 +14038,7 @@ BEGIN_DATA
 			try:
 				fd, download_path = mksfile(download_path)
 				tmp_fd, tmp_download_path = mksfile(download_path + ".download")
-			except EnvironmentError, mksfile_exception:
+			except EnvironmentError as mksfile_exception:
 				response.close()
 				for fd, pth in [(fd, download_path),
 								(tmp_fd, tmp_download_path)]:
@@ -14045,7 +14046,7 @@ BEGIN_DATA
 						os.close(fd)
 						try:
 							os.remove(download_path)
-						except EnvironmentError, exception:
+						except EnvironmentError as exception:
 							safe_print(exception)
 				return mksfile_exception
 			safe_print(lang.getstr("downloading"), uri, u"\u2192", download_path)
@@ -14159,7 +14160,7 @@ BEGIN_DATA
 									download_file.write(chunk)
 									if hashes:
 										actualhash.update(chunk)
-						except EnvironmentError, download_file_exception:
+						except EnvironmentError as download_file_exception:
 							return download_file_exception
 						safe_print(lang.getstr("success"))
 			finally:
@@ -14169,7 +14170,7 @@ BEGIN_DATA
 					# writing destination
 					try:
 						os.remove(tmp_download_path)
-					except EnvironmentError, exception:
+					except EnvironmentError as exception:
 						safe_print(exception)
 				if self.thread_abort or download_file_exception:
 					# Remove destination file if download aborted or error
@@ -14179,7 +14180,7 @@ BEGIN_DATA
 						os.close(fd)
 					try:
 						os.remove(download_path)
-					except EnvironmentError, exception:
+					except EnvironmentError as exception:
 						safe_print(exception)
 		else:
 			# File already exists
@@ -14273,7 +14274,7 @@ BEGIN_DATA
 			# subprocesses that read the configuration will use the right
 			# executables
 			writecfg()
-			from DisplayCAL import check_donation
+			from .DisplayCAL import check_donation
 			snapshot = VERSION > VERSION_BASE
 			self.owner.set_argyll_bin_handler(None, True,
 											  self.owner.check_instrument_setup,
@@ -14387,7 +14388,7 @@ BEGIN_DATA
 		if copy:
 			try:
 				src_listdir = os.listdir(self.tempdir)
-			except Exception, exception:
+			except Exception as exception:
 				result = exception
 				remove = False
 			if not isinstance(result, Exception) and src_listdir:
@@ -14434,7 +14435,7 @@ BEGIN_DATA
 												   dst)
 									try:
 										shutil.rmtree(dst, True)
-									except Exception, exception:
+									except Exception as exception:
 										safe_print(u"Warning - directory '%s' "
 												   u"could not be removed: %s" % 
 												   tuple(safe_unicode(s) 
@@ -14447,7 +14448,7 @@ BEGIN_DATA
 												   "destination file", dst)
 									try:
 										os.remove(dst)
-									except Exception, exception:
+									except Exception as exception:
 										safe_print(u"Warning - file '%s' could "
 												   u"not be removed: %s" % 
 												   tuple(safe_unicode(s) 
@@ -14459,7 +14460,7 @@ BEGIN_DATA
 											   "object %s to %s" % (src, dst))
 								try:
 									shutil.move(src, dst)
-								except Exception, exception:
+								except Exception as exception:
 									safe_print(u"Warning - temporary object "
 											   u"'%s' could not be moved to "
 											   u"'%s': %s" % 
@@ -14467,7 +14468,7 @@ BEGIN_DATA
 													 (src, dst, exception)))
 									try:
 										shutil.copyfile(src, dst)
-									except Exception, exception:
+									except Exception as exception:
 										result2 = Error(lang.getstr("error.copy_failed",
 																	(src, dst)) +
 													    "\n" +
@@ -14488,7 +14489,7 @@ BEGIN_DATA
 												   (src, dst))
 									try:
 										shutil.copytree(src, dst)
-									except Exception, exception:
+									except Exception as exception:
 										safe_print(u"Warning - temporary "
 												   u"directory '%s' could not "
 												   u"be copied to '%s': %s" % 
@@ -14502,7 +14503,7 @@ BEGIN_DATA
 												   "file %s to %s" % (src, dst))
 									try:
 										shutil.copyfile(src, dst)
-									except Exception, exception:
+									except Exception as exception:
 										safe_print(u"Warning - temporary file "
 												   u"'%s' could not be copied "
 												   u"to '%s': %s" % 
@@ -14512,7 +14513,7 @@ BEGIN_DATA
 		if remove:
 			try:
 				src_listdir = os.listdir(self.tempdir)
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(u"Error - directory '%s' listing failed: %s" % 
 						   tuple(safe_unicode(s) for s in (self.tempdir, 
 														   exception)))
@@ -14528,7 +14529,7 @@ BEGIN_DATA
 										   "directory tree", src)
 							try:
 								shutil.rmtree(src, True)
-							except Exception, exception:
+							except Exception as exception:
 								safe_print(u"Warning - temporary directory "
 										   u"'%s' could not be removed: %s" % 
 										   tuple(safe_unicode(s) for s in 
@@ -14540,14 +14541,14 @@ BEGIN_DATA
 										   src)
 							try:
 								os.remove(src)
-							except Exception, exception:
+							except Exception as exception:
 								safe_print(u"Warning - temporary file "
 										   u"'%s' could not be removed: %s" % 
 										   tuple(safe_unicode(s) for s in 
 												 (src, exception)))
 			try:
 				src_listdir = os.listdir(self.tempdir)
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(u"Error - directory '%s' listing failed: %s" % 
 						   tuple(safe_unicode(s) for s in (self.tempdir, 
 														   exception)))
@@ -14559,7 +14560,7 @@ BEGIN_DATA
 								   self.tempdir)
 					try:
 						shutil.rmtree(self.tempdir, True)
-					except Exception, exception:
+					except Exception as exception:
 						safe_print(u"Warning - temporary directory '%s' could "
 								   u"not be removed: %s" % 
 								   tuple(safe_unicode(s) for s in 

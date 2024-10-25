@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from time import sleep
 
 # 0install: Make sure imported protobuf is from implementation to ensure
@@ -36,9 +37,9 @@ If you need support for Python 2 or Python 3.3 please use version 0.19.1
 from pychromecast import get_chromecasts
 from pychromecast.controllers import BaseController
 
-import localization as lang
-from log import safe_print
-from util_str import safe_unicode
+from . import localization as lang
+from .log import safe_print
+from .util_str import safe_unicode
 
 
 class ChromeCastPatternGeneratorController(BaseController):
@@ -124,7 +125,7 @@ class ChromeCastPatternGenerator(object):
 
 
 if __name__ == "__main__":
-	import config
+	from . import config
 
 	config.initcfg()
 	lang.init()

@@ -7,6 +7,8 @@ Note:
 In most cases, unless otherwise stated RGB is R'G'B' (gamma-compressed)
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import colorsys
 import logging
@@ -1321,7 +1323,7 @@ def Luv2XYZ(L, u, v, whitepoint=None, scale=1.0):
 	X = (d - b) / (a - c)
 	Z = X * a + b
 	
-	return tuple([v * scale for v in X, Y, Z])
+	return tuple([v * scale for v in (X, Y, Z)])
 
 
 def RGB2HSI(R, G, B, scale=1.0):
@@ -3516,7 +3518,7 @@ optimalcolors_Lab = [(52.40, 95.40, 10.58),
 
 
 def debug_caches():
-	from log import safe_print
+	from .log import safe_print
 
 	for cache in ("XYZ2RGB.interp",
 				  "wp_adaption_matrix.cache",
@@ -3565,15 +3567,15 @@ def test():
 			if i == 0:
 				XYZ = CIEDCCT2XYZ(spc[1])
 			spc = spc[0], XYZ, spc[2], spc[3], spc[4]
-			print "%s 1.0, 1.0, 1.0 = XYZ" % name, \
-				[str(round(v, 4)) for v in RGB2XYZ(1.0, 1.0, 1.0, spc)]
-			print "%s 1.0, 0.0, 0.0 = XYZ" % name, \
-				[str(round(v, 4)) for v in RGB2XYZ(1.0, 0.0, 0.0, spc)]
-			print "%s 0.0, 1.0, 0.0 = XYZ" % name, \
-				[str(round(v, 4)) for v in RGB2XYZ(0.0, 1.0, 0.0, spc)]
-			print "%s 0.0, 0.0, 1.0 = XYZ" % name, \
-				[str(round(v, 4)) for v in RGB2XYZ(0.0, 0.0, 1.0, spc)]
-		print ""
+			print("%s 1.0, 1.0, 1.0 = XYZ" % name, \
+				[str(round(v, 4)) for v in RGB2XYZ(1.0, 1.0, 1.0, spc)])
+			print("%s 1.0, 0.0, 0.0 = XYZ" % name, \
+				[str(round(v, 4)) for v in RGB2XYZ(1.0, 0.0, 0.0, spc)])
+			print("%s 0.0, 1.0, 0.0 = XYZ" % name, \
+				[str(round(v, 4)) for v in RGB2XYZ(0.0, 1.0, 0.0, spc)])
+			print("%s 0.0, 0.0, 1.0 = XYZ" % name, \
+				[str(round(v, 4)) for v in RGB2XYZ(0.0, 0.0, 1.0, spc)])
+		print("")
 
 if __name__ == '__main__':
 	test()

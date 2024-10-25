@@ -5,6 +5,8 @@
 Interactive display calibration UI
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import re
@@ -14,25 +16,25 @@ if sys.platform == "win32":
 elif sys.platform == "darwin":
 	from platform import mac_ver
 
-from wxaddons import wx
-from lib.agw import labelbook
-from lib.agw.fmresources import *
-from lib.agw.pygauge import PyGauge
+from .wxaddons import wx
+from .lib.agw import labelbook
+from .lib.agw.fmresources import *
+from .lib.agw.pygauge import PyGauge
 
-from config import (get_data_path, get_default_dpi, get_icon_bundle, getbitmap,
+from .config import (get_data_path, get_default_dpi, get_icon_bundle, getbitmap,
 					getcfg, geticon, setcfg)
-from config import enc
-from log import get_file_logger, safe_print
-from meta import name as appname
-from options import debug
-from ordereddict import OrderedDict
-from util_list import intlist
-from util_str import safe_unicode, wrap
-from wxwindows import (BaseApp, BaseFrame, FlatShadedButton, numpad_keycodes,
+from .config import enc
+from .log import get_file_logger, safe_print
+from .meta import name as appname
+from .options import debug
+from .ordereddict import OrderedDict
+from .util_list import intlist
+from .util_str import safe_unicode, wrap
+from .wxwindows import (BaseApp, BaseFrame, FlatShadedButton, numpad_keycodes,
 					   nav_keycodes, processing_keycodes, wx_Panel)
-import audio
-import config
-import localization as lang
+from . import audio
+from . import config
+from . import localization as lang
 
 BGCOLOUR = wx.Colour(0x33, 0x33, 0x33)
 BORDERCOLOUR = wx.Colour(0x22, 0x22, 0x22)
@@ -819,7 +821,7 @@ class DisplayAdjustmentFrame(windowcls):
 				if id < 0:
 					try:
 						wx.Window.UnreserveControlId(id)
-					except wx.wxAssertionError, exception:
+					except wx.wxAssertionError as exception:
 						safe_print(exception)
 		
 	def OnMove(self, event):
@@ -1686,6 +1688,6 @@ Display adjustment menu:""" + menu
 		for line in txt.split("\n"):
 			sleep(.0625)
 			wx.CallAfter(app.TopWindow.write, line)
-			print line
+			print(line)
 	start_new_thread(test, tuple())
 	app.MainLoop()

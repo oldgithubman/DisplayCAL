@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import print_function
+from __future__ import absolute_import
 from copy import copy
 from hashlib import md5
 import atexit
@@ -22,7 +24,7 @@ from weakref import WeakValueDictionary
 if sys.platform == "win32":
 	import _winreg
 else:
-	import subprocess as sp
+	from . import subprocess as sp
 	if sys.platform == "darwin":
 		from platform import mac_ver
 
@@ -34,7 +36,7 @@ if sys.platform == "win32":
 		pass
 
 try:
-	import colord
+	from . import colord
 except ImportError:
 	class Colord:
 		Colord = None
@@ -43,38 +45,38 @@ except ImportError:
 		def which(self, executable, paths=None):
 			return None
 	colord = Colord()
-import colormath
-import edid
-import imfile
-from colormath import NumberTuple
-from defaultpaths import iccprofiles, iccprofiles_home
-from encoding import get_encodings
-from options import test_input_curve_clipping
-from ordereddict import OrderedDict
+from . import colormath
+from . import edid
+from . import imfile
+from .colormath import NumberTuple
+from .defaultpaths import iccprofiles, iccprofiles_home
+from .encoding import get_encodings
+from .options import test_input_curve_clipping
+from .ordereddict import OrderedDict
 try:
-	from log import safe_print
+	from .log import safe_print
 except ImportError:
-	from safe_print import safe_print
-from util_decimal import float2dec
-from util_list import intlist
-from util_str import hexunescape, safe_str, safe_unicode
+	from .safe_print import safe_print
+from .util_decimal import float2dec
+from .util_list import intlist
+from .util_str import hexunescape, safe_str, safe_unicode
 
 if sys.platform not in ("darwin", "win32"):
-	from defaultpaths import xdg_config_dirs, xdg_config_home
-	from edid import get_edid
-	from util_x import get_display
+	from .defaultpaths import xdg_config_dirs, xdg_config_home
+	from .edid import get_edid
+	from .util_x import get_display
 	try:
-		import xrandr
+		from . import xrandr
 	except ImportError:
 		xrandr = None
-	from util_os import dlopen, which
+	from .util_os import dlopen, which
 elif sys.platform == "win32":
-	import util_win
+	from . import util_win
 	if sys.getwindowsversion() < (6, ):
 		# WCS only available under Vista and later
 		mscms = None
 	else:
-		from win_handles import (get_process_handles, get_handle_name,
+		from .win_handles import (get_process_handles, get_handle_name,
 								 get_handle_type)
 
 		mscms = util_win._get_mscms_windll()
@@ -84,7 +86,7 @@ elif sys.platform == "win32":
 					  win_ver[2] >= "Version 1903")
 
 elif sys.platform == "darwin":
-	from util_mac import osascript
+	from .util_mac import osascript
 
 
 # Gamut volumes in cubic colorspace units (L*a*b*) as reported by Argyll's 
@@ -1216,7 +1218,7 @@ def create_synthetic_hdr_clut_profile(hdr_format, rgb_space, description,
 					prevperc = perc
 
 	if hdr_format == "PQ" and tonemap:
-		from multiprocess import cpu_count, pool_slice
+		from .multiprocess import cpu_count, pool_slice
 
 		num_cpus = cpu_count()
 		num_workers = num_cpus
@@ -1854,8 +1856,8 @@ def _colord_get_display_profile(display_no=0, path_only=False, use_cache=True):
 	else:
 		# Fall back to XrandR name
 		try:
-			import RealDisplaySizeMM as RDSMM
-		except ImportError, exception:
+			from . import RealDisplaySizeMM as RDSMM
+		except ImportError as exception:
 			warnings.warn(safe_str(exception, enc), Warning)
 			return
 		display = RDSMM.get_display(display_no)
@@ -1880,9 +1882,9 @@ def _colord_get_display_profile(display_no=0, path_only=False, use_cache=True):
 				except colord.CDObjectQueryError:
 					# Device ID was not found, try next one
 					continue
-				except colord.CDError, exception:
+				except colord.CDError as exception:
 					warnings.warn(safe_str(exception, enc), Warning)
-				except colord.DBusException, exception:
+				except colord.DBusException as exception:
 					warnings.warn(safe_str(exception, enc), Warning)
 				else:
 					if profile_path:
@@ -1960,7 +1962,7 @@ def _win10_1903_take_process_handles_snapshot():
 		try:
 			for handle in get_process_handles():
 				prev_handles.append(handle.HandleValue)
-		except WindowsError, exception:
+		except WindowsError as exception:
 			safe_print("Couldn't get process handles:", exception)
 
 
@@ -1974,20 +1976,20 @@ def _win10_1903_close_leaked_regkey_handles(devicekey):
 		substr = "\\".join(devicekey.split("\\")[-4:-1])
 		try:
 			handles = get_process_handles()
-		except WindowsError, exception:
+		except WindowsError as exception:
 			safe_print("Couldn't get process handles:", exception)
 			return
 		for handle in handles:
 			try:
 				handle_name = get_handle_name(handle)
-			except WindowsError, exception:
+			except WindowsError as exception:
 				safe_print("Couldn't get name of handle 0x%x:" %
 						   handle.HandleValue, exception)
 				handle_name = None
 			if debug and not handle.HandleValue in prev_handles:
 				try:
 					handle_type = get_handle_type(handle)
-				except WindowsError, exception:
+				except WindowsError as exception:
 					safe_print("Couldn't get typestring of handle 0x%x:" %
 							   handle.HandleValue, exception)
 					handle_type = None
@@ -2000,7 +2002,7 @@ def _win10_1903_close_leaked_regkey_handles(devicekey):
 						   handle.HandleValue, handle_name)
 				try:
 					win32api.RegCloseKey(handle.HandleValue)
-				except pywintypes.error, exception:
+				except pywintypes.error as exception:
 					safe_print("Couldn't close handle 0x%x:" %
 							   handle.HandleValue, exception)
 
@@ -2057,7 +2059,7 @@ def _winreg_get_display_profiles(monkey, current_user=False):
 					value.remove("")
 				filenames.extend(value)
 		_winreg.CloseKey(key)
-	except WindowsError, exception:
+	except WindowsError as exception:
 		if exception.args[0] == 2:
 			# Key does not exist
 			pass
@@ -2150,8 +2152,8 @@ def get_display_profile(display_no=0, x_hostname=None, x_display=None,
 		else:
 			options = ["_ICC_PROFILE"]
 			try:
-				import RealDisplaySizeMM as RDSMM
-			except ImportError, exception:
+				from . import RealDisplaySizeMM as RDSMM
+			except ImportError as exception:
 				warnings.warn(safe_str(exception, enc), Warning)
 				display = get_display()
 			else:
@@ -2215,7 +2217,7 @@ def get_display_profile(display_no=0, x_hostname=None, x_display=None,
 									what = display.root_window(0)
 								try:
 									property = meth(what, atom_id)
-								except ValueError, exception:
+								except ValueError as exception:
 									warnings.warn(safe_str(exception, enc), Warning)
 								else:
 									if property:
@@ -2404,7 +2406,7 @@ def _mp_apply(blocks, thread_abort_event, progress_queue, pcs, fn, args, D50,
 	This should be spawned as a multiprocessing process
 	
 	"""
-	from debughelpers import Info
+	from .debughelpers import Info
 	for interp_tuple in (interp, rinterp):
 		if interp_tuple:
 			# Use numpy for speed
@@ -2771,7 +2773,7 @@ class LazyLoadTagAODict(AODict):
 				tag = typeSignature2Type[typeSignature](*args)
 			else:
 				tag = ICCProfileTag(tagData, tagSignature)
-		except Exception, exception:
+		except Exception as exception:
 			raise ICCProfileInvalidError("Couldn't parse tag %r (type %r, offet %i, size %i): %r" % (tagSignature,
 																									 typeSignature,
 																									 tagDataOffset,
@@ -3009,7 +3011,7 @@ class LUT16Type(ICCProfileTag):
 		if [round(v * 32768) for v in bp] != [round(v * 32768) for v in bp_out]:
 			D50 = colormath.get_whitepoint("D50")
 
-			from multiprocess import pool_slice
+			from .multiprocess import pool_slice
 
 			if len(self.clut[0]) < 33:
 				num_workers = 1
@@ -4210,7 +4212,7 @@ class DictType(ICCProfileTag, AODict):
 								else:
 									data = data.decode("UTF-16-BE",
 													   "replace").rstrip("\0")
-							except Exception, exception:
+							except Exception as exception:
 								safe_print("Error (non-critical): could not "
 										   "decode '%s', offset %s, length %s" %
 										   (tagData[:4], offset, size))
@@ -5050,7 +5052,7 @@ class VideoCardGammaTableType(VideoCardGammaType):
 			vmax = channel[-1] / maxValue
 			v = (vmin + ((floor + ceil) / 2.0) * (vmax - vmin)) / maxValue
 			gamma = (math.log(v) / math.log(.5))
-			print vmin, gamma, vmax
+			print(vmin, gamma, vmax)
 			tagData.append(u16Fixed16Number_tohex(gamma))
 			tagData.append(u16Fixed16Number_tohex(vmin))
 			tagData.append(u16Fixed16Number_tohex(vmax))
@@ -6115,7 +6117,7 @@ class ICCProfile(object):
 			if self._data and len(self._data) > 131:
 				# tag table and tagged element data
 				tagCount = uInt32Number(self._data[128:132])
-				if debug: print "tagCount:", tagCount
+				if debug: print("tagCount:", tagCount)
 				tagTable = self._data[132:132 + tagCount * 12]
 				self._tagoffsets = []
 				discard_len = 0
@@ -6125,23 +6127,23 @@ class ICCProfile(object):
 					if len(tag) < 12:
 						raise ICCProfileInvalidError("Tag table is truncated")
 					tagSignature = tag[:4]
-					if debug: print "tagSignature:", tagSignature
+					if debug: print("tagSignature:", tagSignature)
 					tagDataOffset = uInt32Number(tag[4:8])
 					self._tagoffsets.append((tagDataOffset, tagSignature))
-					if debug: print "    tagDataOffset:", tagDataOffset
+					if debug: print("    tagDataOffset:", tagDataOffset)
 					tagDataSize = uInt32Number(tag[8:12])
-					if debug: print "    tagDataSize:", tagDataSize
+					if debug: print("    tagDataSize:", tagDataSize)
 					if tagSignature in self._tags:
 						safe_print("Error (non-critical): Tag '%s' already "
 								   "encountered. Skipping..." % tagSignature)
 					else:
 						if (tagDataOffset, tagDataSize) in tags:
-							if debug: print "    tagDataOffset and tagDataSize indicate shared tag"
+							if debug: print("    tagDataOffset and tagDataSize indicate shared tag")
 						else:
 							start = tagDataOffset - discard_len
-							if debug: print "    tagData start:", start
+							if debug: print("    tagData start:", start)
 							end = tagDataOffset - discard_len + tagDataSize
-							if debug: print "    tagData end:", end
+							if debug: print("    tagData end:", end)
 							tagData = self._data[start:end]
 							if len(tagData) < tagDataSize:
 								safe_print("Warning: Tag data for tag %r "
@@ -6158,7 +6160,7 @@ class ICCProfile(object):
 														 tagDataOffset,
 														 tagDataSize))
 								typeSignature = typeSignature.ljust(4, " ")
-							if debug: print "    typeSignature:", typeSignature
+							if debug: print("    typeSignature:", typeSignature)
 							tags[(tagDataOffset, tagDataSize)] = (typeSignature,
 																  tagDataOffset,
 																  tagDataSize,
@@ -7214,7 +7216,7 @@ class ICCProfile(object):
 	def get_chardata_bkpt(self, illuminant_relative=False):
 		""" Get blackpoint from embedd characterization data ('targ' tag) """
 		if isinstance(self.tags.get("targ"), Text):
-			import CGATS
+			from . import CGATS
 			ti3 = CGATS.CGATS(self.tags.targ)
 			if 0 in ti3:
 				black = ti3[0].queryi({"RGB_R": 0, "RGB_G": 0, "RGB_B": 0})

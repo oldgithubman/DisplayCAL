@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import math
 import os
 import sys
 
-from argyll_instruments import (get_canonical_instrument_name, instruments)
-from config import getcfg
-from debughelpers import UnloggedError
-from log import safe_print
-from meta import name as appname
-from util_str import make_filename_safe, safe_unicode
-from worker_base import get_argyll_util
-from wxaddons import wx
-from wxLUTViewer import LUTCanvas
-from wxwindows import FlatShadedButton, show_result_dialog
-import CGATS
-import colormath
-import config
-import ICCProfile as ICCP
-import localization as lang
-import wxenhancedplot as plot
+from .argyll_instruments import (get_canonical_instrument_name, instruments)
+from .config import getcfg
+from .debughelpers import UnloggedError
+from .log import safe_print
+from .meta import name as appname
+from .util_str import make_filename_safe, safe_unicode
+from .worker_base import get_argyll_util
+from .wxaddons import wx
+from .wxLUTViewer import LUTCanvas
+from .wxwindows import FlatShadedButton, show_result_dialog
+from . import CGATS
+from . import colormath
+from . import config
+from . import ICCProfile as ICCP
+from . import localization as lang
+from . import wxenhancedplot as plot
 
 
 BGCOLOUR = "#101010"
@@ -134,7 +135,7 @@ class CCXXPlot(wx.Frame):
 				else:
 					try:
 						cgats = CGATS.CGATS(temp_out_path)
-					except Exception, exception:
+					except Exception as exception:
 						show_result_dialog(exception, parent)
 					finally:
 						worker.wrapup(False)

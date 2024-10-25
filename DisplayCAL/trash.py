@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import sys
 import os
 
@@ -31,7 +32,7 @@ if sys.platform == "win32":
 				fo.DeleteItem(item)
 				success = fo.PerformOperations() is None
 				aborted = fo.GetAnyOperationsAborted()
-			except pythoncom.com_error, exception:
+			except pythoncom.com_error as exception:
 				raise TrashAborted(-1)
 		else:
 			# XP
@@ -48,7 +49,7 @@ else:
 	from urllib import quote
 	import shutil
 
-from util_os import getenvu, expanduseru
+from .util_os import getenvu, expanduseru
 
 class TrashAborted(Exception):
 	pass

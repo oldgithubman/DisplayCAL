@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import sys
 
 USE_GI = True
@@ -15,7 +16,7 @@ if sys.platform not in ("darwin", "win32"):
 	if not USE_GI:
 		import dbus
 		from dbus.mainloop import glib
-	from util_xml import XMLDict
+	from .util_xml import XMLDict
 
 	if USE_GI:
 		dbus_session = Gio.bus_get_sync(Gio.BusType.SESSION, None)
@@ -31,7 +32,7 @@ if sys.platform not in ("darwin", "win32"):
 		DBusException = dbus.exceptions.DBusException
 
 
-from util_str import safe_str
+from .util_str import safe_str
 
 
 BUSTYPE_SESSION = 1
@@ -101,7 +102,7 @@ class DBusObject(object):
 					self._iface = dbus.Interface(self._proxy,
 												 dbus_interface=interface)
 			except (TypeError, ValueError,
-					DBusException), exception:
+					DBusException) as exception:
 				raise DBusObjectError(exception, self._bus_name)
 		self._introspectable = None
 
@@ -110,7 +111,7 @@ class DBusObject(object):
 		try:
 			return DBusObjectInterfaceMethod(self._iface, name)
 		except (AttributeError, TypeError, ValueError,
-				DBusException), exception:
+				DBusException) as exception:
 			raise DBusObjectError(exception, self._bus_name)
 
 	@property
@@ -133,7 +134,7 @@ class DBusObject(object):
 									   "org.freedesktop.DBus.Properties")
 			return DBusObjectInterfaceMethod(iface, "GetAll")(interface)
 		except (TypeError, ValueError,
-				DBusException), exception:
+				DBusException) as exception:
 			raise DBusObjectError(exception, self._bus_name)
 
 	def introspect(self):

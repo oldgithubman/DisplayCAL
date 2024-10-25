@@ -1,42 +1,43 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import absolute_import
 import re
-import subprocess as sp
+from . import subprocess as sp
 import math
 import os
 import sys
-import tempfile
+from . import tempfile
 
-from config import (defaults, fs_enc,
+from .config import (defaults, fs_enc,
 					get_argyll_display_number, get_data_path,
 					get_display_profile, get_display_rects, getbitmap, getcfg,
 					geticon, get_verified_path, profile_ext, setcfg, writecfg)
-from log import safe_print
-from meta import name as appname
-from options import debug
-from ordereddict import OrderedDict
-from util_io import GzipFileProper
-from util_list import intlist
-from util_os import launch_file, make_win32_compatible_long_path, waccess
-from util_str import safe_unicode, strtr, universal_newlines, wrap
-from worker import (Error, UnloggedError, UnloggedInfo, check_set_argyll_bin,
+from .log import safe_print
+from .meta import name as appname
+from .options import debug
+from .ordereddict import OrderedDict
+from .util_io import GzipFileProper
+from .util_list import intlist
+from .util_os import launch_file, make_win32_compatible_long_path, waccess
+from .util_str import safe_unicode, strtr, universal_newlines, wrap
+from .worker import (Error, UnloggedError, UnloggedInfo, check_set_argyll_bin,
 					get_argyll_util, make_argyll_compatible_path,
 					show_result_dialog)
-from wxaddons import get_platform_window_decoration_size, wx
-from wxLUTViewer import LUTCanvas, LUTFrame
-from wxVRML2X3D import vrmlfile2x3dfile
-from wxwindows import (BaseApp, BaseFrame, BitmapBackgroundPanelText,
+from .wxaddons import get_platform_window_decoration_size, wx
+from .wxLUTViewer import LUTCanvas, LUTFrame
+from .wxVRML2X3D import vrmlfile2x3dfile
+from .wxwindows import (BaseApp, BaseFrame, BitmapBackgroundPanelText,
 					   CustomCheckBox, CustomGrid, CustomRowLabelRenderer,
 					   ConfirmDialog, FileDrop, InfoDialog, SimpleBook,
 					   TwoWaySplitter)
-from wxfixes import GenBitmapButton as BitmapButton, wx_Panel, set_maxsize
-import colormath
-import config
-import wxenhancedplot as plot
-import localization as lang
-import ICCProfile as ICCP
-import x3dom
+from .wxfixes import GenBitmapButton as BitmapButton, wx_Panel, set_maxsize
+from . import colormath
+from . import config
+from . import wxenhancedplot as plot
+from . import localization as lang
+from . import ICCProfile as ICCP
+from . import x3dom
 
 BGCOLOUR = "#333333"
 FGCOLOUR = "#999999"
@@ -169,18 +170,18 @@ class GamutCanvas(LUTCanvas):
 			min_y = -150.0
 			step = 50
 		
-		convert2coords = {"a*b*": lambda X, Y, Z: colormath.XYZ2Lab(*[v * 100 for v in X, Y, Z])[1:],
+		convert2coords = {"a*b*": lambda X, Y, Z: colormath.XYZ2Lab(*[v * 100 for v in (X, Y, Z)])[1:],
 						  "xy": lambda X, Y, Z: colormath.XYZ2xyY(X, Y, Z)[:2],
-						  "u*v*": lambda X, Y, Z: colormath.XYZ2Luv(*[v * 100 for v in X, Y, Z])[1:],
+						  "u*v*": lambda X, Y, Z: colormath.XYZ2Luv(*[v * 100 for v in (X, Y, Z)])[1:],
 						  "u'v'": lambda X, Y, Z: colormath.XYZ2Lu_v_(X, Y, Z)[1:],
-						  "DIN99": lambda X, Y, Z: colormath.XYZ2DIN99(*[v * 100 for v in X, Y, Z])[1:],
-						  "DIN99b": lambda X, Y, Z: colormath.XYZ2DIN99b(*[v * 100 for v in X, Y, Z])[1:],
-						  "DIN99c": lambda X, Y, Z: colormath.XYZ2DIN99c(*[v * 100 for v in X, Y, Z])[1:],
-						  "DIN99d": lambda X, Y, Z: colormath.XYZ2DIN99d(*[v * 100 for v in X, Y, Z])[1:],
+						  "DIN99": lambda X, Y, Z: colormath.XYZ2DIN99(*[v * 100 for v in (X, Y, Z)])[1:],
+						  "DIN99b": lambda X, Y, Z: colormath.XYZ2DIN99b(*[v * 100 for v in (X, Y, Z)])[1:],
+						  "DIN99c": lambda X, Y, Z: colormath.XYZ2DIN99c(*[v * 100 for v in (X, Y, Z)])[1:],
+						  "DIN99d": lambda X, Y, Z: colormath.XYZ2DIN99d(*[v * 100 for v in (X, Y, Z)])[1:],
 						  "ICtCp": lambda X, Y, Z: colormath.XYZ2ICtCp(X, Y, Z,
 																	  clamp=False)[1:],
 						  "IPT": lambda X, Y, Z: colormath.XYZ2IPT(X, Y, Z)[1:],
-						  "Lpt": lambda X, Y, Z: colormath.XYZ2Lpt(*[v * 100 for v in X, Y, Z])[1:]}[self.colorspace]
+						  "Lpt": lambda X, Y, Z: colormath.XYZ2Lpt(*[v * 100 for v in (X, Y, Z)])[1:]}[self.colorspace]
 
 		if show_outline and (self.colorspace == "a*b*" or
 							 self.colorspace.startswith("DIN99")):
@@ -500,7 +501,7 @@ class GamutCanvas(LUTCanvas):
 						# Device -> PCS, fwd
 						odata = self.worker.xicclu(profile, odata, fwd_intent,
 												   "f", order)
-				except Exception, exception:
+				except Exception as exception:
 					self.errors.append(Error(safe_unicode(exception)))
 					continue
 
@@ -666,7 +667,7 @@ class GamutViewOptions(wx_Panel):
 			srgb = ICCP.ICCProfile(get_data_path("ref/sRGB.icm"))
 		except EnvironmentError:
 			pass
-		except Exception, exception:
+		except Exception as exception:
 			safe_print(exception)
 		if srgb:
 			self.comparison_profiles[srgb.getDescription()] = srgb
@@ -745,7 +746,7 @@ class GamutViewOptions(wx_Panel):
 								profile_no,
 								intent=self.intent,
 								direction=self.direction, order=self.order)
-		except Exception, exception:
+		except Exception as exception:
 			show_result_dialog(exception, parent)
 		if reset:
 			parent.client.reset()
@@ -764,7 +765,7 @@ class GamutViewOptions(wx_Panel):
 	def comparison_profile_drop_handler(self, path):
 		try:
 			profile = ICCP.ICCProfile(path)
-		except Exception, exception:
+		except Exception as exception:
 			show_result_dialog(exception, self.TopLevelParent)
 		else:
 			desc = profile.getDescription()
@@ -1202,7 +1203,7 @@ class ProfileInfoFrame(LUTFrame):
 		if not isinstance(profile, ICCP.ICCProfile):
 			try:
 				profile = ICCP.ICCProfile(profile)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				show_result_dialog(Error(lang.getstr("profile.invalid") + 
 									     "\n" + profile), self)
 				self.DrawCanvas(reset=reset)
@@ -1249,7 +1250,7 @@ class ProfileInfoFrame(LUTFrame):
 				choice.append(lang.getstr("vcgt"))
 			try:
 				self.lookup_tone_response_curves()
-			except Exception, exception:
+			except Exception as exception:
 				wx.CallAfter(show_result_dialog, exception, self)
 			else:
 				choice.append(lang.getstr("[rgb]TRC"))
@@ -1661,7 +1662,7 @@ class ProfileInfoFrame(LUTFrame):
 				return
 			try:
 				profile = ICCP.ICCProfile(path)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				show_result_dialog(Error(lang.getstr("profile.invalid") + "\n" +
 										 path), self)
 			else:

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import wx
 import wx.xrc as xrc
 try:
-	from wxwindows import BetterStaticFancyText as StaticFancyText
+	from .wxwindows import BetterStaticFancyText as StaticFancyText
 except ImportError:
 	from wx.lib.fancytext import StaticFancyText
 

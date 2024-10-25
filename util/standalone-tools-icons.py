@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import print_function
 from glob import glob
 from subprocess import call
 from tempfile import mkdtemp
@@ -42,7 +43,7 @@ def installer(action="install"):
 							  os.path.join(root, appname, "theme", "icons",
 										   "%sx%s" % (size, size),
 										   scriptname + ".png")])
-				except EnvironmentError, exception:
+				except EnvironmentError as exception:
 					exception.filename = "xdg-icon-resource"
 					raise exception
 				with open(desktopfilename) as desktopfile:
@@ -60,7 +61,7 @@ def installer(action="install"):
 				try:
 					call(["xdg-desktop-menu", action, "--noupdate",
 						  "--novendor", tmpfilename])
-				except EnvironmentError, exception:
+				except EnvironmentError as exception:
 					exception.filename = "xdg-desktop-menu"
 					raise exception
 			else:
@@ -68,13 +69,13 @@ def installer(action="install"):
 					for size in [16, 22, 24, 32, 48, 256]:
 						call(["xdg-icon-resource", action, "--noupdate",
 							  "--size", str(size), scriptname])
-				except EnvironmentError, exception:
+				except EnvironmentError as exception:
 					exception.filename = "xdg-icon-resource"
 					raise exception
 				try:
 					call(["xdg-desktop-menu", action, "--noupdate",
 						  desktopfilename])
-				except EnvironmentError, exception:
+				except EnvironmentError as exception:
 					exception.filename = "xdg-desktop-menu"
 					raise exception
 	finally:
@@ -84,7 +85,7 @@ def installer(action="install"):
 					if tmpfilename and os.path.isfile(tmpfilename):
 						os.unlink(tmpfilename)
 				os.rmdir(tmpdir)
-			except Exception, exception:
+			except Exception as exception:
 				import warnings
 				warnings.warn(exception, Warning)
 	if os.geteuid() == 0:
@@ -103,7 +104,7 @@ if __name__ == "__main__":
 	if len(sys.argv) == 2:
 		try:
 			installer(sys.argv[1])
-		except Exception, exception:
-			print exception
+		except Exception as exception:
+			print(exception)
 	else:
-		print "Usage: %s install | uninstall" % os.path.basename(__file__)
+		print("Usage: %s install | uninstall" % os.path.basename(__file__))

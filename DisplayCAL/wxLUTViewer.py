@@ -1,37 +1,38 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import math
 import os
 import re
-import subprocess as sp
+from . import subprocess as sp
 import sys
-import tempfile
+from . import tempfile
 
 import numpy
 
-from argyll_cgats import cal_to_fake_profile, vcgt_to_cal
-from config import (fs_enc, get_argyll_display_number, get_data_path,
+from .argyll_cgats import cal_to_fake_profile, vcgt_to_cal
+from .config import (fs_enc, get_argyll_display_number, get_data_path,
 					get_display_profile, get_display_rects, getcfg, geticon,
 					get_verified_path, setcfg)
-from log import safe_print
-from meta import name as appname
-from options import debug
-from ordereddict import OrderedDict
-from util_decimal import float2dec
-from util_os import waccess
-from util_str import safe_unicode
-from worker import (Error, UnloggedError, UnloggedInfo, Worker, get_argyll_util,
+from .log import safe_print
+from .meta import name as appname
+from .options import debug
+from .ordereddict import OrderedDict
+from .util_decimal import float2dec
+from .util_os import waccess
+from .util_str import safe_unicode
+from .worker import (Error, UnloggedError, UnloggedInfo, Worker, get_argyll_util,
 					make_argyll_compatible_path, show_result_dialog)
-from wxaddons import get_platform_window_decoration_size, wx
-from wxMeasureFrame import MeasureFrame
-from wxwindows import (BaseApp, BaseFrame, BitmapBackgroundPanelText,
+from .wxaddons import get_platform_window_decoration_size, wx
+from .wxMeasureFrame import MeasureFrame
+from .wxwindows import (BaseApp, BaseFrame, BitmapBackgroundPanelText,
 					   CustomCheckBox, FileDrop, InfoDialog, TooltipWindow)
-from wxfixes import GenBitmapButton as BitmapButton, wx_Panel
-import colormath
-import config
-import wxenhancedplot as plot
-import localization as lang
-import ICCProfile as ICCP
+from .wxfixes import GenBitmapButton as BitmapButton, wx_Panel
+from . import colormath
+from . import config
+from . import wxenhancedplot as plot
+from . import localization as lang
+from . import ICCProfile as ICCP
 
 BGCOLOUR = "#333333"
 FGCOLOUR = "#999999"
@@ -940,7 +941,7 @@ class LUTFrame(BaseFrame):
 		else:
 			try:
 				profile = ICCP.ICCProfile(path)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				InfoDialog(self, msg=lang.getstr("profile.invalid") + 
 									 "\n" + path, 
 						   ok=lang.getstr("ok"), 
@@ -986,7 +987,7 @@ class LUTFrame(BaseFrame):
 			# Make sure to only delete the temporary cal file we created
 			try:
 				os.remove(cal)
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(u"Warning - temporary file "
 						   u"'%s' could not be removed: %s" % 
 						   tuple(safe_unicode(s) for s in 
@@ -1041,7 +1042,7 @@ class LUTFrame(BaseFrame):
 	def toggle_clut_handler(self, event):
 		try:
 			self.lookup_tone_response_curves()
-		except Exception, exception:
+		except Exception as exception:
 			import traceback
 			safe_print(traceback.format_exc())
 			show_result_dialog(exception, self)
@@ -1099,7 +1100,7 @@ class LUTFrame(BaseFrame):
 			# so make sure to only delete the temporary cal file we created
 			try:
 				os.remove(outfilename)
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(u"Warning - temporary file "
 						   u"'%s' could not be removed: %s" % 
 						   tuple(safe_unicode(s) for s in 
@@ -1225,7 +1226,7 @@ class LUTFrame(BaseFrame):
 									   direction, order, pcs,
 									   use_icclu=use_icclu,
 									   get_clip=direction == "if")
-		except Exception, exception:
+		except Exception as exception:
 			self.client.errors.append(Error(safe_unicode(exception)))
 		
 		if self.client.errors:
@@ -1421,7 +1422,7 @@ class LUTFrame(BaseFrame):
 		if profile and not isinstance(profile, ICCP.ICCProfile):
 			try:
 				profile = ICCP.ICCProfile(profile)
-			except (IOError, ICCP.ICCProfileInvalidError), exception:
+			except (IOError, ICCP.ICCProfileInvalidError) as exception:
 				show_result_dialog(Error(lang.getstr("profile.invalid") + 
 										 "\n" + profile), self)
 				profile = None
@@ -1461,7 +1462,7 @@ class LUTFrame(BaseFrame):
 			 profile.colorSpace in ("RGB", "GRAY", "CMYK"))):
 			try:
 				self.lookup_tone_response_curves()
-			except Exception, exception:
+			except Exception as exception:
 				wx.CallAfter(show_result_dialog, exception, self)
 			else:
 				curves.append(lang.getstr('[rgb]TRC'))
@@ -2093,7 +2094,7 @@ class LUTFrame(BaseFrame):
 							continue
 						if identical:
 							label = "=".join(["%s" % s for s, v in
-											  filter(lambda (s, v): v is not None,
+											  filter(lambda s_v: s_v[1] is not None,
 													 value)])
 						# Note: We need to make sure each point is a float because it
 						# might be a decimal.Decimal, which can't be divided by floats!

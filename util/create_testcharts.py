@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import os
 import subprocess
 import sys
@@ -43,7 +44,7 @@ def create_testcharts(overwrite=False):
 										 working_dir=cwd,
 										 sessionlogfile=sys.stdout)
 				if isinstance(result, Exception):
-					print result
+					print(result)
 		worker.wrapup(False)
 
 
@@ -53,4 +54,4 @@ if __name__ == "__main__":
 	if check_argyll_bin():
 		create_testcharts("--overwrite" in sys.argv[1:])
 	else:
-		print "ArgyllCMS not found"
+		print("ArgyllCMS not found")

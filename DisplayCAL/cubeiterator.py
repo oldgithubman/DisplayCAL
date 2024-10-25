@@ -31,7 +31,8 @@ class Cube3D(object):
 			return default
 		return self[i]
 
-	def index(self, (c0, c1, c2)):
+	def index(self, xxx_todo_changeme):
+		(c0, c1, c2) = xxx_todo_changeme
 		if not (c0, c1, c2) in self:
 			raise ValueError("%r not in %r" % ((c0, c1, c2), self))
 		i = c0 * self._size ** 2 + c1 * self._size + c2
@@ -49,7 +50,8 @@ class Cube3D(object):
 			v = fallback or upper
 		return v
 
-	def __contains__(self, (c0, c1, c2)):
+	def __contains__(self, xxx_todo_changeme1):
+		(c0, c1, c2) = xxx_todo_changeme1
 		return (c0 == int(c0) and c1 == int(c1) and c2 == int(c2) and
 				max(c0, c1, c2) < self._size and
 				self._start <= c0 * self._size ** 2 +

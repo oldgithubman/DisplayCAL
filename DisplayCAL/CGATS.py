@@ -7,13 +7,14 @@ Copyright (C) 2008 Florian Hoech
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
 import math, os, re, sys
 
-import colormath
-from log import safe_print
-from options import debug, verbose
-from util_io import GzipFileProper, StringIOu as StringIO
-from util_str import safe_unicode
+from . import colormath
+from .log import safe_print
+from .options import debug, verbose
+from .util_io import GzipFileProper, StringIOu as StringIO
+from .util_str import safe_unicode
 
 
 def get_device_value_labels(color_rep=None):
@@ -465,7 +466,7 @@ class CGATS(dict):
 					else:
 						display = self.queryv1("DISPLAY")
 					if localized:
-						import localization as lang
+						from . import localization as lang
 						tech = safe_unicode(tech, "UTF-8")
 						tech = lang.getstr(u"display.tech." + tech, default=tech)
 						if display:
@@ -1102,7 +1103,7 @@ class CGATS(dict):
 							  "LCH(uv)", "Lab", "Luv", "Lu'v'", "RGB", "xyY",
 							  "HSI", "HSL", "HSV", "ICtCp", "IPT", "Lpt"):
 			raise ValueError("export_3d: Unknown colorspace %r" % colorspace)
-		import x3dom
+		from . import x3dom
 		data = self.queryv1("DATA")
 		if self.queryv1("ACCURATE_EXPECTED_VALUES") == "true":
 			cat = "Bradford"

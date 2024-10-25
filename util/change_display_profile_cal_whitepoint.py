@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import os
 import sys
 
@@ -101,5 +102,5 @@ class Invalid(ValueError):
 if __name__ == "__main__":
 	try:
 		main(*sys.argv[1:])
-	except Invalid, exception:
-		print exception
+	except Invalid as exception:
+		print(exception)

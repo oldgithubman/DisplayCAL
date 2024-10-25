@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import locale
 import os
 import sys
 
-from encoding import get_encoding, get_encodings
-from util_str import safe_unicode
+from .encoding import get_encoding, get_encodings
+from .util_str import safe_unicode
 
 original_codepage = None
 

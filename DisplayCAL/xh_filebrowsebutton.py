@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import wx
 import wx.xrc as xrc
 import wx.lib.filebrowsebutton as filebrowse
 try:
-	from wxwindows import FileBrowseBitmapButtonWithChoiceHistory as FileBrowseButtonWithHistory
+	from .wxwindows import FileBrowseBitmapButtonWithChoiceHistory as FileBrowseButtonWithHistory
 except ImportError:
 	FileBrowseButtonWithHistory = filebrowse.FileBrowseButtonWithHistory
 

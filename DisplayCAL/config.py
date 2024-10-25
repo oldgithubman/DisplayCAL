@@ -3,6 +3,8 @@
 """
 Runtime configuration and user settings parser
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import ConfigParser
 ConfigParser.DEFAULTSECT = "Default"
@@ -17,27 +19,27 @@ from time import gmtime, strftime, timezone
 if sys.platform == "win32":
 	import _winreg
 
-from argyll_names import observers, viewconds, intents, video_encodings
-from defaultpaths import appdata, commonappdata
+from .argyll_names import observers, viewconds, intents, video_encodings
+from .defaultpaths import appdata, commonappdata
 if sys.platform == "win32":
-	from defaultpaths import commonprogramfiles
+	from .defaultpaths import commonprogramfiles
 elif sys.platform == "darwin":
-	from defaultpaths import library, library_home, prefs, prefs_home
+	from .defaultpaths import library, library_home, prefs, prefs_home
 else:
-	from defaultpaths import (xdg_config_dir_default, xdg_config_home, 
+	from .defaultpaths import (xdg_config_dir_default, xdg_config_home, 
 							  xdg_data_home, xdg_data_home_default, 
 							  xdg_data_dirs)
-from defaultpaths import (autostart, autostart_home, home, iccprofiles,
+from .defaultpaths import (autostart, autostart_home, home, iccprofiles,
 						  iccprofiles_home)
-from meta import name as appname, build, lastmod, version
-from options import ascii, debug, verbose
-from safe_print import enc, fs_enc, original_codepage
-from util_io import StringIOu as StringIO
-from util_os import (expanduseru, expandvarsu, getenvu, is_superuser,
+from .meta import name as appname, build, lastmod, version
+from .options import ascii, debug, verbose
+from .safe_print import enc, fs_enc, original_codepage
+from .util_io import StringIOu as StringIO
+from .util_os import (expanduseru, expandvarsu, getenvu, is_superuser,
 					 listdir_re, which)
-from util_str import create_replace_function, safe_unicode, strtr
-import colormath
-import encodedstdio
+from .util_str import create_replace_function, safe_unicode, strtr
+from . import colormath
+from . import encodedstdio
 
 # Runtime configuration
 
@@ -237,7 +239,7 @@ def getbitmap(name, display_missing_icon=True, scale=True, use_mask=False):
 	if not given).
 	
 	"""
-	from wxaddons import wx
+	from .wxaddons import wx
 	if not name in bitmaps:
 		parts = name.split("/")
 		w = 16
@@ -439,7 +441,7 @@ def getbitmap(name, display_missing_icon=True, scale=True, use_mask=False):
 
 def get_bitmap_as_icon(size, name, scale=True):
 	""" Like geticon, but return a wx.Icon instance """
-	from wxaddons import wx
+	from .wxaddons import wx
 	icon = wx.EmptyIcon()
 	if sys.platform == "darwin" and wx.VERSION >= (2, 9) and size > 128:
 		# FIXME: wxMac 2.9 doesn't support icon sizes above 128
@@ -504,7 +506,7 @@ def get_display_number(display_no):
 	""" Translate from Argyll display index to wx display index """
 	if is_virtual_display(display_no):
 		return 0
-	from wxaddons import wx
+	from .wxaddons import wx
 	try:
 		display = getcfg("displays")[display_no]
 	except IndexError:
@@ -524,7 +526,7 @@ def get_display_number(display_no):
 
 def get_display_rects():
 	""" Return the Argyll enumerated display coordinates and sizes """
-	from wxaddons import wx
+	from .wxaddons import wx
 	display_rects = []
 	for i, display in enumerate(getcfg("displays")):
 		match = re.search("@ (-?\d+), (-?\d+), (\d+)x(\d+)", display)
@@ -535,7 +537,7 @@ def get_display_rects():
 
 def get_icon_bundle(sizes, name):
 	""" Return a wx.IconBundle with given icon sizes """
-	from wxaddons import wx
+	from .wxaddons import wx
 	iconbundle = wx.IconBundle()
 	if not sizes:
 		# Assume ICO format
@@ -618,7 +620,7 @@ def get_data_path(relpath, rex=None):
 			if os.path.isdir(curpath):
 				try:
 					filelist = listdir_re(curpath, rex)
-				except Exception, exception:
+				except Exception as exception:
 					safe_print(u"Error - directory '%s' listing failed: %s" % 
 							   tuple(safe_unicode(s) for s in (curpath, exception)))
 				else:
@@ -649,7 +651,7 @@ def runtimeconfig(pyfile):
 	
 	"""
 	global safe_print, safe_log
-	from log import setup_logging, safe_print, safe_log
+	from .log import setup_logging, safe_print, safe_log
 	setup_logging(logdir, pyname, pyext, confighome=confighome)
 	if debug:
 		safe_print("[D] pydir:", pydir)
@@ -721,7 +723,7 @@ valid_ranges = {
 	# luminance, but we assume it already *is*
 	# the adapting luminance. To correct for this,
 	# scale so that dispcal gets the correct value.
-	"calibration.ambient_viewcond_adjust.lux": [0.0, sys.maxint / 5.0],
+	"calibration.ambient_viewcond_adjust.lux": [0.0, sys.maxsize / 5.0],
 	"calibration.black_luminance": [0.000001, 10],
 	"calibration.black_output_offset": [0, 1],
 	"calibration.black_point_correction": [0, 1],
@@ -1316,7 +1318,7 @@ def getcfg(name, fallback=True, raw=False, cfg=cfg):
 				value = "g"
 			elif name in valid_values and value not in valid_values[name]:
 				if debug:
-					print "Invalid config value for %s: %s" % (name, value),
+					print("Invalid config value for %s: %s" % (name, value), end=' ')
 				value = None
 			elif name == "copyright":
 				# Make sure DisplayCAL and Argyll version are up-to-date
@@ -1347,10 +1349,10 @@ def getcfg(name, fallback=True, raw=False, cfg=cfg):
 		if hasdef and fallback:
 			value = defval
 			if debug > 1:
-				print name, "- falling back to", value
+				print(name, "- falling back to", value)
 		else:
 			if debug and not hasdef: 
-				print "Warning - unknown option:", name
+				print("Warning - unknown option:", name)
 	if raw:
 		return value
 	if (value and isinstance(value, basestring) and
@@ -1361,7 +1363,7 @@ def getcfg(name, fallback=True, raw=False, cfg=cfg):
 		# colorimeter_correction_matrix_file is special because it's
 		# not (only) a path
 		if debug:
-			print "%s does not exist: %s" % (name, value),
+			print("%s does not exist: %s" % (name, value), end=' ')
 		# Normalize path (important, this turns altsep into sep under
 		# Windows)
 		value = os.path.normpath(value)
@@ -1378,7 +1380,7 @@ def getcfg(name, fallback=True, raw=False, cfg=cfg):
 		if not value and hasdef:
 			value = defval
 		if debug > 1:
-			print name, "- falling back to", value
+			print(name, "- falling back to", value)
 	elif name in ("displays", "instruments"):
 		if not value:
 			return []
@@ -1413,10 +1415,10 @@ def get_current_profile(include_display_profile=False):
 	""" Get the currently selected profile (if any) """
 	path = getcfg("calibration.file", False)
 	if path:
-		import ICCProfile as ICCP
+		from . import ICCProfile as ICCP
 		try:
 			profile = ICCP.ICCProfile(path, use_cache=True)
-		except (IOError, ICCP.ICCProfileInvalidError), exception:
+		except (IOError, ICCP.ICCProfileInvalidError) as exception:
 			return
 		return profile
 	elif include_display_profile:
@@ -1428,11 +1430,11 @@ def get_display_profile(display_no=None):
 		display_no = max(getcfg("display.number") - 1, 0)
 	if is_virtual_display(display_no):
 		return None
-	import ICCProfile as ICCP
+	from . import ICCProfile as ICCP
 	try:
 		return ICCP.get_display_profile(display_no)
-	except Exception, exception:
-		from log import _safe_print, log
+	except Exception as exception:
+		from .log import _safe_print, log
 		_safe_print("ICCP.get_display_profile(%s):" % display_no, 
 					safe_unicode(exception), fn=log)
 
@@ -1442,7 +1444,7 @@ standard_profiles = []
 
 def get_standard_profiles(paths_only=False):
 	if not standard_profiles:
-		import ICCProfile as ICCP
+		from . import ICCProfile as ICCP
 		# Reference profiles (Argyll + DisplayCAL)
 		ref_icc = get_data_path("ref", "\.ic[cm]$") or []
 		# Other profiles installed on the system
@@ -1485,7 +1487,7 @@ def get_standard_profiles(paths_only=False):
 				profile = ICCP.ICCProfile(path, load=False, use_cache=True)
 			except EnvironmentError:
 				pass
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(exception)
 			else:
 				if (profile.version < 4 and
@@ -1595,7 +1597,7 @@ def is_profile(filename=None, include_display_profile=False):
 	filename = filename or getcfg("calibration.file", False)
 	if filename:
 		if os.path.exists(filename):
-			import ICCProfile as ICCP
+			from . import ICCProfile as ICCP
 			try:
 				profile = ICCP.ICCProfile(filename, use_cache=True)
 			except (IOError, ICCP.ICCProfileInvalidError):
@@ -1612,7 +1614,7 @@ def makecfgdir(which="user", worker=None):
 		if not os.path.exists(confighome):
 			try:
 				os.makedirs(confighome)
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(u"Warning - could not create configuration directory "
 						   "'%s': %s" % (confighome, safe_unicode(exception)))
 				return False
@@ -1630,7 +1632,7 @@ def makecfgdir(which="user", worker=None):
 										 asroot=True)
 				if isinstance(result, Exception):
 					raise result
-		except Exception, exception:
+		except Exception as exception:
 			safe_print(u"Warning - could not create configuration directory "
 					   "'%s': %s" % (config_sys, safe_unicode(exception)))
 			return False
@@ -1673,7 +1675,7 @@ def initcfg(module=None, cfg=cfg, force_load=False):
 			if os.path.isfile(cfgfile):
 				try:
 					mtime = os.stat(cfgfile).st_mtime
-				except EnvironmentError, exception:
+				except EnvironmentError as exception:
 					safe_print(u"Warning - os.stat('%s') failed: %s" % 
 							   tuple(safe_unicode(s) for s in (cfgfile,
 															   exception)))
@@ -1699,7 +1701,7 @@ def initcfg(module=None, cfg=cfg, force_load=False):
 		cfg.read(cfgfiles)
 		# This won't raise an exception if the file does not exist, only
 		# if it can't be parsed
-	except Exception, exception:
+	except Exception as exception:
 		safe_print("Warning - could not parse configuration files:\n%s" %
 				   "\n".join(cfgfiles))
 		# Fix Python 2.7 ConfigParser option values being lists instead of
@@ -1724,14 +1726,14 @@ def set_default_app_dpi():
 	global dpiset
 	if not dpiset and not getcfg("app.dpi", False):
 		# HighDPI support
-		from wxaddons import wx
+		from .wxaddons import wx
 		dpiset = True
 		if sys.platform in ("darwin", "win32"):
 			# Determine screen DPI
 			dpi = wx.ScreenDC().GetPPI()[0]
 		else:
 			# Linux
-			from util_os import which
+			from .util_os import which
 			txt_scale = None
 			# XDG_CURRENT_DESKTOP delimiter is colon (':')
 			desktop = os.getenv("XDG_CURRENT_DESKTOP", "").split(":")
@@ -1741,7 +1743,7 @@ def set_default_app_dpi():
 				pass
 				# Nothing to do
 			elif which("gsettings"):
-				import subprocess as sp
+				from . import subprocess as sp
 				p = sp.Popen(["gsettings", "get", "org.gnome.desktop.interface",
 							  "text-scaling-factor"], stdin=sp.PIPE,
 							 stdout=sp.PIPE, stderr=sp.PIPE)
@@ -1762,9 +1764,9 @@ def get_hidpi_scaling_factor():
 		return 1.0  # Handled via app DPI
 	else:
 		# Linux
-		from util_os import which
+		from .util_os import which
 		if which("xrdb"):
-			import subprocess as sp
+			from . import subprocess as sp
 			p = sp.Popen(["xrdb", "-query"], stdin=sp.PIPE,
 						 stdout=sp.PIPE, stderr=sp.PIPE)
 			# Format: 'Xft.dpi:        192'
@@ -1796,11 +1798,11 @@ def get_hidpi_scaling_factor():
 			# e.g. '1.5;2.0;'
 			screen_scale_factors = os.getenv("QT_SCREEN_SCALE_FACTORS", "").split(";")
 			if screen_scale_factors:
-				from wxaddons import wx
+				from .wxaddons import wx
 				match = False
 				app = wx.GetApp()
 				if app:
-					import RealDisplaySizeMM as RDSMM
+					from . import RealDisplaySizeMM as RDSMM
 					if not RDSMM._displays:
 						RDSMM.enumerate_displays()
 					top = app.TopWindow
@@ -1849,7 +1851,7 @@ def get_hidpi_scaling_factor():
 					factor = screen_scale_factors[0].split("=")[-1]
 		if not factor and which("gsettings"):
 			# GNOME
-			import subprocess as sp
+			from . import subprocess as sp
 			p = sp.Popen(["gsettings", "get", "org.gnome.desktop.interface",
 						  "scaling-factor"], stdin=sp.PIPE,
 						 stdout=sp.PIPE, stderr=sp.PIPE)
@@ -1945,7 +1947,7 @@ def writecfg(which="user", worker=None, module=None, options=(), cfg=cfg):
 			cfgfile = open(cfgfilename, "wb")
 			cfgfile.write(os.linesep.join(lines) + os.linesep)
 			cfgfile.close()
-		except Exception, exception:
+		except Exception as exception:
 			safe_print(u"Warning - could not write user configuration file "
 					   "'%s': %s" % (cfgfilename, safe_unicode(exception)))
 			return False
@@ -1977,7 +1979,7 @@ def writecfg(which="user", worker=None, module=None, options=(), cfg=cfg):
 										 asroot=True)
 				if isinstance(result, Exception):
 					raise result
-		except Exception, exception:
+		except Exception as exception:
 			safe_print(u"Warning - could not write system-wide configuration file "
 					   "'%s': %s" % (cfgfilename2, safe_unicode(exception)))
 			return False

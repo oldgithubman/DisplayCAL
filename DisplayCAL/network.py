@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import errno
 import os
 import socket
 import urllib2
 
-import localization as lang
-from log import safe_print
-from util_str import safe_str, safe_unicode
+from . import localization as lang
+from .log import safe_print
+from .util_str import safe_str, safe_unicode
 
 
 def get_network_addr():
@@ -132,7 +133,7 @@ class ScriptingClientSocket(socket.socket):
 			# Will fail if the socket isn't connected, i.e. if there was an
 			# error during the call to connect()
 			self.shutdown(socket.SHUT_RDWR)
-		except socket.error, exception:
+		except socket.error as exception:
 			if exception.errno != errno.ENOTCONN:
 				safe_print(exception)
 		self.close()

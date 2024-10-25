@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
+from __future__ import print_function
 import os
 import re
 import sys
@@ -32,4 +33,4 @@ if chglog:
 	chglog = re.sub(re.compile('href="(#[^"]+)"', flags=re.I),
 					r'href="https://%s/\1"' % domain, chglog)
 
-	print chglog.encode(sys.stdout.encoding, "replace")
+	print(chglog.encode(sys.stdout.encoding, "replace"))

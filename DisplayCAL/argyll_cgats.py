@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import decimal
 Decimal = decimal.Decimal
 import os
 import traceback
 from time import strftime
 
-from debughelpers import Error
-from options import debug
-from ordereddict import OrderedDict
-from safe_print import safe_print
-from util_io import StringIOu as StringIO
-from util_str import safe_unicode
-import CGATS
-import ICCProfile as ICCP
-import colormath
-import localization as lang
+from .debughelpers import Error
+from .options import debug
+from .ordereddict import OrderedDict
+from .safe_print import safe_print
+from .util_io import StringIOu as StringIO
+from .util_str import safe_unicode
+from . import CGATS
+from . import ICCProfile as ICCP
+from . import colormath
+from . import localization as lang
 
 cals = {}
 
@@ -40,7 +41,7 @@ def add_dispcal_options_to_cal(cal, options_dispcal):
 							 " ".join(options_dispcal).encode("UTF-7", 
 															  "replace"))
 		return cgats
-	except Exception, exception:
+	except Exception as exception:
 		safe_print(safe_unicode(traceback.format_exc()))
 
 
@@ -59,7 +60,7 @@ def add_options_to_ti3(ti3, options_dispcal=None, options_colprof=None):
 							   " ".join(options_dispcal).encode("UTF-7", 
 																"replace"))
 		return cgats
-	except Exception, exception:
+	except Exception as exception:
 		safe_print(safe_unicode(traceback.format_exc()))
 
 
@@ -100,7 +101,7 @@ def cal_to_vcgt(cal, return_cgats=False):
 			cal = CGATS.CGATS(cal)
 		except (IOError, CGATS.CGATSInvalidError, 
 			CGATS.CGATSInvalidOperationError, CGATS.CGATSKeyError, 
-			CGATS.CGATSTypeError, CGATS.CGATSValueError), exception:
+			CGATS.CGATSTypeError, CGATS.CGATSValueError) as exception:
 			safe_print(u"Warning - couldn't process CGATS file '%s': %s" % 
 					   tuple(safe_unicode(s) for s in (cal, exception)))
 			return None
@@ -140,7 +141,7 @@ def can_update_cal(path):
 	""" Check if cal can be updated by checking for required fields. """
 	try:
 		calstat = os.stat(path)
-	except Exception, exception:
+	except Exception as exception:
 		safe_print(u"Warning - os.stat('%s') failed: %s" % 
 				   tuple(safe_unicode(s) for s in (path, exception)))
 		return False
@@ -149,7 +150,7 @@ def can_update_cal(path):
 			cal = CGATS.CGATS(path)
 		except (IOError, CGATS.CGATSInvalidError, 
 			CGATS.CGATSInvalidOperationError, CGATS.CGATSKeyError, 
-			CGATS.CGATSTypeError, CGATS.CGATSValueError), exception:
+			CGATS.CGATSTypeError, CGATS.CGATSValueError) as exception:
 			if path in cals:
 				del cals[path]
 			safe_print(u"Warning - couldn't process CGATS file '%s': %s" % 
@@ -202,7 +203,7 @@ def extract_cal_from_profile(profile, out_cal_path=None,
 	else:
 		try:
 			cgats = get_cgats(arg)
-		except (IOError, CGATS.CGATSError), exception:
+		except (IOError, CGATS.CGATSError) as exception:
 			raise Error(lang.getstr("cal_extraction_failed"))
 	if (cal and not prefer_cal and isinstance(profile.tags.get("vcgt"),
 											  ICCP.VideoCardGammaType)):
@@ -303,10 +304,10 @@ def extract_fix_copy_cal(source_filename, target_filename=None):
 	'updateable') and optionally copy it to target_filename.
 	
 	"""
-	from worker import get_options_from_profile
+	from .worker import get_options_from_profile
 	try:
 		profile = ICCP.ICCProfile(source_filename)
-	except (IOError, ICCP.ICCProfileInvalidError), exception:
+	except (IOError, ICCP.ICCProfileInvalidError) as exception:
 		return exception
 	if "CIED" in profile.tags or "targ" in profile.tags:
 		cal_lines = []
@@ -354,7 +355,7 @@ def extract_fix_copy_cal(source_filename, target_filename=None):
 									if o[0] == "G":
 										try:
 											trc = 0 - Decimal(trc)
-										except decimal.InvalidOperation, \
+										except decimal.InvalidOperation as \
 											   exception:
 											continue
 								cal_lines.append('KEYWORD "TARGET_GAMMA"')
@@ -398,7 +399,7 @@ def extract_fix_copy_cal(source_filename, target_filename=None):
 					f = open(target_filename, "w")
 					f.write("\n".join(cal_lines))
 					f.close()
-				except Exception, exception:
+				except Exception as exception:
 					return exception
 			return cal_lines
 	else:

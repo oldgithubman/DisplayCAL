@@ -1,28 +1,29 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from time import gmtime, strftime
 import math
 import os
 import sys
 
-from config import get_data_path, initcfg, getcfg, geticon, hascfg, setcfg
-from log import safe_print
-from meta import name as appname
-from util_str import strtr
-from worker import Error, get_current_profile_path, show_result_dialog
-import CGATS
-import ICCProfile as ICCP
-import config
-import localization as lang
-import worker
-from util_list import natsort_key_factory
-from wxTestchartEditor import TestchartEditor
-from wxwindows import BaseApp, BaseFrame, FileDrop, InfoDialog, wx
-from wxfixes import TempXmlResource
-import xh_fancytext
-import xh_filebrowsebutton
-import xh_hstretchstatbmp
-import xh_bitmapctrls
+from .config import get_data_path, initcfg, getcfg, geticon, hascfg, setcfg
+from .log import safe_print
+from .meta import name as appname
+from .util_str import strtr
+from .worker import Error, get_current_profile_path, show_result_dialog
+from . import CGATS
+from . import ICCProfile as ICCP
+from . import config
+from . import localization as lang
+from . import worker
+from .util_list import natsort_key_factory
+from .wxTestchartEditor import TestchartEditor
+from .wxwindows import BaseApp, BaseFrame, FileDrop, InfoDialog, wx
+from .wxfixes import TempXmlResource
+from . import xh_fancytext
+from . import xh_filebrowsebutton
+from . import xh_hstretchstatbmp
+from . import xh_bitmapctrls
 
 from wx import xrc
 
@@ -284,7 +285,7 @@ class ReportFrame(BaseFrame):
 			cgats = CGATS.CGATS(chart)
 		except (IOError, CGATS.CGATSInvalidError, 
 				CGATS.CGATSInvalidOperationError, CGATS.CGATSKeyError, 
-				CGATS.CGATSTypeError, CGATS.CGATSValueError), exception:
+				CGATS.CGATSTypeError, CGATS.CGATSValueError) as exception:
 			show_result_dialog(exception, self)
 		else:
 			data_format = cgats.queryv1("DATA_FORMAT")
@@ -440,7 +441,7 @@ class ReportFrame(BaseFrame):
 						show_result_dialog(Error(lang.getstr("profile.invalid") +
 												 "\n" + path),
 										   parent=self)
-				except IOError, exception:
+				except IOError as exception:
 					if not silent:
 						show_result_dialog(exception, parent=self)
 			if profile:
@@ -466,7 +467,7 @@ class ReportFrame(BaseFrame):
 							try:
 								odata = self.worker.xicclu(profile, (0, 0, 0),
 														   pcs="x")
-							except Exception, exception:
+							except Exception as exception:
 								show_result_dialog(exception, self)
 								self.set_profile_ctrl_path(which)
 								return
@@ -483,7 +484,7 @@ class ReportFrame(BaseFrame):
 							try:
 								odata = self.worker.xicclu(profile, (0, 0, 0),
 														   pcs="x")
-							except Exception, exception:
+							except Exception as exception:
 								show_result_dialog(exception, self)
 								self.set_profile_ctrl_path(which)
 								return

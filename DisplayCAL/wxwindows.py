@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+from __future__ import absolute_import
+from future.utils import raise_
 from __future__ import with_statement
 from datetime import datetime
 from HTMLParser import HTMLParser
@@ -12,7 +15,7 @@ import re
 import signal
 import socket
 import string
-import subprocess as sp
+from . import subprocess as sp
 import sys
 import tarfile
 import textwrap
@@ -21,44 +24,44 @@ import warnings
 import xml.parsers.expat
 import zipfile
 
-import demjson_compat as demjson
+from . import demjson_compat as demjson
 
-import ICCProfile as ICCP
-import audio
-import config
-from config import (defaults, getbitmap, getcfg, geticon, get_data_path,
+from . import ICCProfile as ICCP
+from . import audio
+from . import config
+from .config import (defaults, getbitmap, getcfg, geticon, get_data_path,
 					get_default_dpi, get_verified_path, hascfg, pyname, setcfg,
 					confighome, appbasename, logdir, set_default_app_dpi)
-from debughelpers import (Error, DownloadError, Info, UnloggedError,
+from .debughelpers import (Error, DownloadError, Info, UnloggedError,
 						  UnloggedInfo, UnloggedWarning, Warn, getevtobjname,
 						  getevttype, handle_error)
-from log import log as log_, safe_print
-from meta import name as appname
-from options import debug
-from ordereddict import OrderedDict
-from network import ScriptingClientSocket, get_network_addr
-from util_io import StringIOu as StringIO
-from util_os import get_program_file, launch_file, waccess
-from util_str import box, safe_str, safe_unicode, wrap
-from util_xml import dict2xml
-from wxaddons import (CustomEvent, FileDrop as _FileDrop, gamma_encode,
+from .log import log as log_, safe_print
+from .meta import name as appname
+from .options import debug
+from .ordereddict import OrderedDict
+from .network import ScriptingClientSocket, get_network_addr
+from .util_io import StringIOu as StringIO
+from .util_os import get_program_file, launch_file, waccess
+from .util_str import box, safe_str, safe_unicode, wrap
+from .util_xml import dict2xml
+from .wxaddons import (CustomEvent, FileDrop as _FileDrop, gamma_encode,
 					  get_parent_frame, get_platform_window_decoration_size, wx,
 					  BetterWindowDisabler, BetterTimer, EVT_BETTERTIMER)
-from wexpect import split_command_line
-from wxfixes import (GenBitmapButton, GenButton, GTKMenuItemGetFixedLabel,
+from .wexpect import split_command_line
+from .wxfixes import (GenBitmapButton, GenButton, GTKMenuItemGetFixedLabel,
 					 PlateButton, ThemedGenButton, adjust_font_size_for_gcdc,
 					 get_bitmap_disabled, get_dc_font_size, get_gcdc_font_size,
 					 platebtn, set_bitmap_labels, wx_Panel, get_dialogs,
 					 set_maxsize)
-from lib.agw import labelbook, pygauge
-from lib.agw.gradientbutton import GradientButton, CLICK, HOVER
-from lib.agw.fourwaysplitter import (_TOLERANCE, FLAG_CHANGED, FLAG_PRESSED,
+from .lib.agw import labelbook, pygauge
+from .lib.agw.gradientbutton import GradientButton, CLICK, HOVER
+from .lib.agw.fourwaysplitter import (_TOLERANCE, FLAG_CHANGED, FLAG_PRESSED,
 									 NOWHERE, FourWaySplitter,
 									 FourWaySplitterEvent)
-import localization as lang
-import util_str
+from . import localization as lang
+from . import util_str
 
-import floatspin
+from . import floatspin
 try:
 	from wx.lib.agw import aui
 	from wx.lib.agw.aui import AuiDefaultTabArt
@@ -74,8 +77,8 @@ import wx.html
 taskbar = None
 if sys.platform == "win32" and sys.getwindowsversion() >= (6, 1):
 	try:
-		import taskbar
-	except Exception, exception:
+		from . import taskbar
+	except Exception as exception:
 		safe_print(exception)
 
 
@@ -795,7 +798,7 @@ class BaseApp(wx.App):
 				safe_print(traceback.format_exc())
 
 		if exc_info is not None:
-			raise exc_info[0], exc_info[1], exc_info[2]
+			raise_(exc_info[0], exc_info[1], exc_info[2])
 
 	@staticmethod
 	def register_exitfunc(func, *args, **kwargs):
@@ -918,7 +921,7 @@ class BaseFrame(wx.Frame):
 		conn.settimeout(3)
 		try:
 			conn.connect((ip, port))
-		except socket.error, exception:
+		except socket.error as exception:
 			del conn
 			return exception
 		return conn
@@ -932,7 +935,7 @@ class BaseFrame(wx.Frame):
 				conn, addrport = sys._appsocket.accept()
 			except socket.timeout:
 				continue
-			except socket.error, exception:
+			except socket.error as exception:
 				if exception.errno == errno.EWOULDBLOCK:
 					sleep(.05)
 					continue
@@ -946,7 +949,7 @@ class BaseFrame(wx.Frame):
 				continue
 			try:
 				conn.settimeout(.2)
-			except socket.error, exception:
+			except socket.error as exception:
 				conn.close()
 				safe_print(lang.getstr("app.client.ignored", exception))
 				sleep(.2)
@@ -969,7 +972,7 @@ class BaseFrame(wx.Frame):
 				incoming = conn.recv(4096)
 			except socket.timeout:
 				continue
-			except socket.error, exception:
+			except socket.error as exception:
 				if exception.errno == errno.EWOULDBLOCK:
 					sleep(.05)
 					continue
@@ -1078,7 +1081,7 @@ class BaseFrame(wx.Frame):
 									 command_timestamp)
 		try:
 			conn.shutdown(socket.SHUT_RDWR)
-		except socket.error, exception:
+		except socket.error as exception:
 			if exception.errno != errno.ENOTCONN:
 				safe_print("Warning - could not shutdown connection:", exception)
 		safe_print(lang.getstr("app.client.disconnect", addrport))
@@ -1176,7 +1179,7 @@ class BaseFrame(wx.Frame):
 										port = line
 									if port:
 										ports.append(port)
-					except EnvironmentError, exception:
+					except EnvironmentError as exception:
 						# This shouldn't happen
 						safe_print("Warning - could not read lockfile %s:" %
 								   lockfilename, exception)
@@ -1666,7 +1669,7 @@ class BaseFrame(wx.Frame):
 		else:
 			try:
 				response = self.process_data(data)
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(exception)
 				if responseformats[conn] != "plain":
 					response = {"class": exception.__class__.__name__,
@@ -1755,7 +1758,7 @@ class BaseFrame(wx.Frame):
 				response = "\n".join(response)
 		try:
 			conn.sendall("%s\4" % safe_str(response, "UTF-8"))
-		except socket.error, exception:
+		except socket.error as exception:
 			safe_print(exception)
 
 	def send_command(self, scripting_host_name_suffix, command):
@@ -1790,7 +1793,7 @@ class BaseFrame(wx.Frame):
 					return response
 			else:
 				safe_print("Warning - %s not running?" % scripting_host)
-		except Exception, exception:
+		except Exception as exception:
 			safe_print("Warning - couldn't talk to %s:" % scripting_host,
 					   exception)
 			return exception
@@ -2490,7 +2493,7 @@ class BitmapBackgroundBitmapButton(wx.BitmapButton):
 		dc = wx.PaintDC(self)
 		try:
 			dc = wx.GCDC(dc)
-		except Exception, exception:
+		except Exception as exception:
 			pass
 		dc.DrawBitmap(self.Parent.GetBitmap(), 0, -self.GetPosition()[1])
 		dc.DrawBitmap(self.GetBitmapLabel(), 0, 0)
@@ -2635,7 +2638,7 @@ class BitmapBackgroundPanelText(BitmapBackgroundPanel):
 			# being replaced with boxes under wxGTK
 			try:
 				dc = wx.GCDC(dc)
-			except Exception, exception:
+			except Exception as exception:
 				pass
 		font.SetPointSize(get_dc_font_size(font.GetPointSize(), dc))
 		dc.SetFont(font)
@@ -2827,7 +2830,7 @@ class FileBrowseBitmapButtonWithChoiceHistory(filebrowse.FileBrowseButtonWithHis
 			line_height = math.ceil(control.GetTextExtent(u"69Gg")[1] * 1.6)
 
 			# Find smallest display client area height
-			max_height = sys.maxint
+			max_height = sys.maxsize
 			for i in xrange(wx.Display.GetCount()):
 				max_height = min(wx.Display(i).ClientArea[3], max_height)
 
@@ -4706,7 +4709,7 @@ def fancytext_RenderToRenderer(str, renderer, enclose=True):
 		p.EndElementHandler = renderer.endElement
 		p.CharacterDataHandler = renderer.characterData
 		p.Parse(str, 1)
-	except xml.parsers.expat.error, err:
+	except xml.parsers.expat.error as err:
 		raise ValueError('error parsing text text "%s": %s' % (str, err)) 
 
 fancytext.RenderToRenderer = fancytext_RenderToRenderer
@@ -5330,7 +5333,7 @@ class LogWindow(InvincibleFrame):
 				file_ = open(path, "w")
 				file_.write(self.log_txt.GetValue().encode("UTF-8", "replace"))
 				file_.close()
-			except Exception, exception:
+			except Exception as exception:
 				InfoDialog(self, msg=safe_unicode(exception), 
 						   ok=lang.getstr("ok"), 
 						   bitmap=geticon(32, "dialog-error"))
@@ -5395,7 +5398,7 @@ class LogWindow(InvincibleFrame):
 					with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as zip:
 						for filename in os.listdir(logdir):
 							zip.write(os.path.join(logdir, filename), filename)
-				except Exception, exception:
+				except Exception as exception:
 					InfoDialog(self, msg=safe_unicode(exception), 
 							   ok=lang.getstr("ok"), 
 							   bitmap=geticon(32, "dialog-error"))
@@ -5454,7 +5457,7 @@ class ProgressDialog(wx.Dialog):
 			self.sizerH.Add(self.sizer0, 1, flag=wx.EXPAND)
 			try:
 				audio.init()
-			except Exception, exception:
+			except Exception as exception:
 				safe_print(exception)
 			self.processor_sound = audio.Sound(get_data_path("theme/engine_hum_loop.wav"),
 											   True)
@@ -5656,7 +5659,7 @@ class ProgressDialog(wx.Dialog):
 				if id < 0:
 					try:
 						wx.Window.UnreserveControlId(id)
-					except wx.wxAssertionError, exception:
+					except wx.wxAssertionError as exception:
 						safe_print(exception)
 		
 	def OnMove(self, event):
@@ -6257,7 +6260,7 @@ class SimpleTerminal(InvincibleFrame):
 class TabButton(PlateButton):
 
 	def __init__(self, *args, **kwargs):
-		from config import get_default_dpi, getcfg
+		from .config import get_default_dpi, getcfg
 		self.dpiscale = max(getcfg("app.dpi") / get_default_dpi(), 1.0)
 		PlateButton.__init__(self, *args, **kwargs)
 		self.Unbind(wx.EVT_PAINT)
@@ -7273,11 +7276,11 @@ def test():
 	lang.init()
 	def key_handler(self, event):
 		if event.GetEventType() == wx.EVT_CHAR_HOOK.typeId:
-			print "Received EVT_CHAR_HOOK", event.GetKeyCode(), repr(unichr(event.GetKeyCode()))
+			print("Received EVT_CHAR_HOOK", event.GetKeyCode(), repr(unichr(event.GetKeyCode())))
 		elif event.GetEventType() == wx.EVT_KEY_DOWN.typeId:
-			print "Received EVT_KEY_DOWN", event.GetKeyCode(), repr(unichr(event.GetKeyCode()))
+			print("Received EVT_KEY_DOWN", event.GetKeyCode(), repr(unichr(event.GetKeyCode())))
 		elif event.GetEventType() == wx.EVT_MENU.typeId:
-			print "Received EVT_MENU", self.id_to_keycode.get(event.GetId()), repr(unichr(self.id_to_keycode.get(event.GetId())))
+			print("Received EVT_MENU", self.id_to_keycode.get(event.GetId()), repr(unichr(self.id_to_keycode.get(event.GetId()))))
 		event.Skip()
 			
 	ProgressDialog.key_handler = key_handler

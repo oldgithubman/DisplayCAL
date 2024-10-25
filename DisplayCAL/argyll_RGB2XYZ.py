@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import math
 
-import colormath
+from . import colormath
 
 # from xcolorants.c
 icx_ink_table = {

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from SocketServer import TCPServer
 from socket import (AF_INET, SHUT_RDWR, SO_BROADCAST, SO_REUSEADDR, SOCK_DGRAM,
 					SOCK_STREAM, SOL_SOCKET, error, gethostname, gethostbyname,
@@ -15,12 +16,12 @@ import threading
 import urllib
 import urlparse
 
-import localization as lang
-from log import safe_print
-from network import get_network_addr
-from util_http import encode_multipart_formdata
-from util_str import safe_unicode
-import webwin
+from . import localization as lang
+from .log import safe_print
+from .network import get_network_addr
+from .util_http import encode_multipart_formdata
+from .util_str import safe_unicode
+from . import webwin
 
 
 _lock = threading.RLock()
@@ -45,7 +46,7 @@ def _shutdown(sock, addr):
 		# Will fail if the socket isn't connected, i.e. if there
 		# was an error during the call to connect()
 		sock.shutdown(SHUT_RDWR)
-	except error, exception:
+	except error as exception:
 		if exception.errno != errno.ENOTCONN:
 			safe_print("PatternGenerator: SHUT_RDWR for %s:%i failed:" %
 					   addr[:2], exception)
@@ -74,7 +75,7 @@ class GenHTTPPatternGeneratorClient(object):
 		try:
 			self.conn.request(method, url, params, headers or {})
 			resp = self.conn.getresponse()
-		except (error, httplib.HTTPException), exception:
+		except (error, httplib.HTTPException) as exception:
 			raise
 		else:
 			if resp.status == httplib.OK:
@@ -179,7 +180,7 @@ class GenTCPSockPatternGeneratorServer(object):
 		if hasattr(self, "conn"):
 			try:
 				self.conn.shutdown(SHUT_RDWR)
-			except error, exception:
+			except error as exception:
 				if exception.errno != errno.ENOTCONN:
 					safe_print("Warning - could not shutdown pattern generator "
 							   "connection:", exception)
@@ -236,7 +237,7 @@ class PrismaPatternGeneratorClient(GenHTTPPatternGeneratorClient):
 									  args=(sock, self.broadcast_ip, port))
 			self._threads.append(thread)
 			thread.start()
-		except error, exception:
+		except error as exception:
 			safe_print("PrismaPatternGeneratorClient: UDP Port %i: %s" %
 					   (port, exception))
 
@@ -249,11 +250,11 @@ class PrismaPatternGeneratorClient(GenHTTPPatternGeneratorClient):
 		while getattr(self, "listening", False):
 			try:
 				data, addr = sock.recvfrom(4096)
-			except timeout, exception:
+			except timeout as exception:
 				safe_print("PrismaPatternGeneratorClient: In receiver thread for %s port %i:" %
 						   (cast, port), exception)
 				continue
-			except error, exception:
+			except error as exception:
 				if exception.errno == errno.EWOULDBLOCK:
 					sleep(.05)
 					continue
@@ -529,7 +530,7 @@ class WebWinHTTPPatternGeneratorServer(TCPServer, object):
 									   poll_interval)
 				if self in r:
 					self._handle_request_noblock()
-		except Exception, exception:
+		except Exception as exception:
 			safe_print("Exception in WebWinHTTPPatternGeneratorServer.serve_forever:",
 					   exception)
 			self._listening.clear()

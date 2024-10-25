@@ -16,6 +16,7 @@ This module also provides some data items to the user:
              any routine from this module, it will be considered as
              another candidate location to store temporary files.
 """
+from __future__ import absolute_import
 
 __all__ = [
     "NamedTemporaryFile", "TemporaryFile", # high level safe interfaces
@@ -143,7 +144,7 @@ def _candidate_tempdir_list():
 
     Unlike the _candidate_tempdir_list of tempfile.py from the stdlib, this one
     supports Unicode."""
-    from util_os import getenvu
+    from .util_os import getenvu
 
     dirlist = []
 
@@ -187,21 +188,21 @@ def _get_default_tempdir():
             dir = _os.path.normcase(_os.path.abspath(dir))
         # Try only a few names per directory.
         for seq in xrange(100):
-            name = namer.next()
+            name = next(namer)
             filename = _os.path.join(dir, name)
             try:
-                fd = _os.open(filename, flags, 0600)
+                fd = _os.open(filename, flags, 0o600)
                 fp = _os.fdopen(fd, 'w')
                 fp.write('blat')
                 fp.close()
                 _os.unlink(filename)
                 del fp, fd
                 return dir
-            except (OSError, IOError), e:
+            except (OSError, IOError) as e:
                 if e[0] != _errno.EEXIST:
                     break # no point trying more names in this directory
                 pass
-    raise IOError, (_errno.ENOENT,
+    raise IOError(_errno.ENOENT,
                     ("No usable temporary directory found in %s" % dirlist))
 
 _name_sequence = None
@@ -226,18 +227,18 @@ def _mkstemp_inner(dir, pre, suf, flags):
     names = _get_candidate_names()
 
     for seq in xrange(TMP_MAX):
-        name = names.next()
+        name = next(names)
         file = _os.path.join(dir, pre + name + suf)
         try:
-            fd = _os.open(file, flags, 0600)
+            fd = _os.open(file, flags, 0o600)
             _set_cloexec(fd)
             return (fd, _os.path.abspath(file))
-        except OSError, e:
+        except OSError as e:
             if e.errno == _errno.EEXIST:
                 continue # try again
             raise
 
-    raise IOError, (_errno.EEXIST, "No usable temporary file name found")
+    raise IOError(_errno.EEXIST, "No usable temporary file name found")
 
 
 # User visible interfaces.
@@ -316,17 +317,17 @@ def mkdtemp(suffix="", prefix=template, dir=None):
     names = _get_candidate_names()
 
     for seq in xrange(TMP_MAX):
-        name = names.next()
+        name = next(names)
         file = _os.path.join(dir, prefix + name + suffix)
         try:
-            _os.mkdir(file, 0700)
+            _os.mkdir(file, 0o700)
             return file
-        except OSError, e:
+        except OSError as e:
             if e.errno == _errno.EEXIST:
                 continue # try again
             raise
 
-    raise IOError, (_errno.EEXIST, "No usable temporary directory name found")
+    raise IOError(_errno.EEXIST, "No usable temporary directory name found")
 
 def mktemp(suffix="", prefix=template, dir=None):
     """User-callable function to return a unique temporary file name.  The
@@ -350,12 +351,12 @@ def mktemp(suffix="", prefix=template, dir=None):
 
     names = _get_candidate_names()
     for seq in xrange(TMP_MAX):
-        name = names.next()
+        name = next(names)
         file = _os.path.join(dir, prefix + name + suffix)
         if not _exists(file):
             return file
 
-    raise IOError, (_errno.EEXIST, "No usable temporary filename found")
+    raise IOError(_errno.EEXIST, "No usable temporary filename found")
 
 
 class _TemporaryFileWrapper:
