@@ -2,6 +2,8 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import range
+from builtins import object
 from ctypes import POINTER, Structure, c_int, c_long, c_ubyte, c_ulong, cdll, pointer, util
 
 libx11pth = util.find_library("X11")
@@ -110,7 +112,7 @@ class XDisplay(object):
 				print("ret_format:", ret_format.value)
 				print("ret_len:", ret_len.value)
 				print("ret_togo:", ret_togo.value)
-			property = [atomv[i] for i in xrange(ret_len.value)]
+			property = [atomv[i] for i in range(ret_len.value)]
 		
 		return property
 
@@ -136,7 +138,7 @@ class XDisplay(object):
 				print("ret_format:", ret_format.value)
 				print("ret_len:", ret_len.value)
 				print("ret_togo:", ret_togo.value)
-			property = [atomv[i] for i in xrange(ret_len.value)]
+			property = [atomv[i] for i in range(ret_len.value)]
 
 		return property
 

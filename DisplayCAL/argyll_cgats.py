@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.builtins import basestring
+from past.utils import old_div
 import decimal
 Decimal = decimal.Decimal
 import os
@@ -109,10 +114,10 @@ def cal_to_vcgt(cal, return_cgats=False):
 	data_format = cal.queryv1("DATA_FORMAT")
 	if data_format:
 		for field in required_fields:
-			if not field in data_format.values():
+			if not field in list(data_format.values()):
 				if debug: safe_print("[D] Missing required field:", field)
 				return None
-		for field in data_format.values():
+		for field in list(data_format.values()):
 			if not field in required_fields:
 				if debug: safe_print("[D] Unknown field:", field)
 				return None
@@ -235,7 +240,7 @@ def extract_cal_from_profile(profile, out_cal_path=None,
 				# value to account for this
 				oldmin = (black / 256.0) * (65536 / 65535.)
 				oldmax = (white / 256.0) * (65536 / 65535.)
-				for entry in data.itervalues():
+				for entry in data.values():
 					for column in "RGB":
 						v_old = entry["RGB_" + column]
 						lvl = round(v_old * (65535 / 65536.) * 256, 2)
@@ -447,7 +452,7 @@ END_DATA""")[0]
 		white = ti3.get_white_cie("XYZ")
 		str_thresh = str(neutrals_ab_threshold)
 		round_digits = len(str_thresh[str_thresh.find(".") + 1:])
-	for i, item in ti3.DATA.iteritems():
+	for i, item in ti3.DATA.items():
 		if not i:
 			# Check if fields are missing
 			for prefix in ("RGB", "XYZ"):
@@ -467,7 +472,7 @@ END_DATA""")[0]
 					# always the first encountered white that will have Y = 100,
 					# even if subsequent white readings may be higher)
 					XYZ = tuple(RGB_XYZ[RGB][i] + XYZ[i]
-								for i in xrange(3))
+								for i in range(3))
 					if not RGB in dupes:
 						dupes[RGB] = 1.0
 					dupes[RGB] += 1.0
@@ -491,11 +496,11 @@ END_DATA""")[0]
 		elif not RGB in [(100.0, 100.0, 100.0),
 						 (0.0, 0.0, 0.0)]:
 			RGB_XYZ_remaining[RGB] = XYZ
-	for RGB, count in dupes.iteritems():
+	for RGB, count in dupes.items():
 		for RGB_XYZ in (RGB_XYZ_extracted, RGB_XYZ_remaining):
 			if RGB in RGB_XYZ:
 				# Average values
-				XYZ = tuple(RGB_XYZ[RGB][i] / count for i in xrange(3))
+				XYZ = tuple(old_div(RGB_XYZ[RGB][i], count) for i in range(3))
 				RGB_XYZ[RGB] = XYZ
 	return ti3_extracted, RGB_XYZ_extracted, RGB_XYZ_remaining
 
@@ -572,10 +577,10 @@ def verify_cgats(cgats, required, ignore_unknown=True):
 		if cgats_1.queryv1("NUMBER_OF_SETS"):
 			if cgats_1.queryv1("DATA_FORMAT"):
 				for field in required:
-					if not field in cgats_1.queryv1("DATA_FORMAT").values():
+					if not field in list(cgats_1.queryv1("DATA_FORMAT").values()):
 						raise CGATS.CGATSKeyError("Missing required field: %s" % field)
 				if not ignore_unknown:
-					for field in cgats_1.queryv1("DATA_FORMAT").values():
+					for field in list(cgats_1.queryv1("DATA_FORMAT").values()):
 						if not field in required:
 							raise CGATS.CGATSError("Unknown field: %s" % field)
 			else:

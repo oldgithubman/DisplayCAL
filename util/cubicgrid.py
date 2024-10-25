@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from builtins import str
+from builtins import range
 import sys
 
 def create_cubic_grid(res=4, skip_grayscale=False, hires_outergamut=False,

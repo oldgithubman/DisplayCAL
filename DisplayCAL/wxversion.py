@@ -78,6 +78,8 @@ found at: http://wiki.wxpython.org/index.cgi/MultiVersionInstalls
 """
 from __future__ import print_function
 
+from past.builtins import execfile
+from builtins import object
 import re, sys, os, glob, fnmatch
 
 

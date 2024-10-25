@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import chr
+from builtins import range
+from past.utils import old_div
 from hashlib import md5
 import codecs
 import math
@@ -21,7 +28,7 @@ if sys.platform == "win32":
 			pass
 	else:
 		# Use registry as fallback for Win2k/XP/2003
-		import _winreg
+		import winreg
 	import pywintypes
 	import win32api
 elif sys.platform == "darwin":
@@ -140,27 +147,27 @@ def get_edid(display_no=0, display_name=None, device=None):
 			subkey = "\\".join(["SYSTEM", "CurrentControlSet", "Enum", 
 								"DISPLAY", id])
 			try:
-				key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, subkey)
+				key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, subkey)
 			except WindowsError:
 				# Registry error
 				safe_print("Windows registry error: Key", 
 						   "\\".join(["HKEY_LOCAL_MACHINE", subkey]), 
 						   "does not exist.")
 				return {}
-			numsubkeys, numvalues, mtime = _winreg.QueryInfoKey(key)
+			numsubkeys, numvalues, mtime = winreg.QueryInfoKey(key)
 			for i in range(numsubkeys):
-				hkname = _winreg.EnumKey(key, i)
-				hk = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, 
+				hkname = winreg.EnumKey(key, i)
+				hk = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, 
 									 "\\".join([subkey, hkname]))
 				try:
-					test = _winreg.QueryValueEx(hk, "Driver")[0]
+					test = winreg.QueryValueEx(hk, "Driver")[0]
 				except WindowsError:
 					# No Driver entry
 					continue
 				if test == driver:
 					# Found our display device
 					try:
-						devparms = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, 
+						devparms = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, 
 										 "\\".join([subkey, hkname, 
 													"Device Parameters"]))
 					except WindowsError:
@@ -171,7 +178,7 @@ def get_edid(display_no=0, display_name=None, device=None):
 								   "does not exist.")
 						continue
 					try:
-						edid = _winreg.QueryValueEx(devparms, "EDID")[0]
+						edid = winreg.QueryValueEx(devparms, "EDID")[0]
 					except WindowsError:
 						# No EDID entry
 						pass
@@ -291,7 +298,7 @@ def edid_get_bits(value, begin, end):
 def edid_decode_fraction(high, low):
 	result = 0.0
 	high = (high << 2) | low
-	for i in xrange(0, 10):
+	for i in range(0, 10):
 		result += edid_get_bit(high, i) * math.pow(2, i - 10)
 	return result
 
@@ -376,7 +383,7 @@ def parse_edid(edid):
 				# 2nd white point index in range 1...255
 				# 3rd white point index in range 2...255
 				# 0 = do not use
-				if ord(block[i]) > i / 5:
+				if ord(block[i]) > old_div(i, 5):
 					white_x = edid_decode_fraction(ord(edid[i + 2]), 
 												   edid_get_bits(ord(edid[i + 1]), 
 																 2, 3))

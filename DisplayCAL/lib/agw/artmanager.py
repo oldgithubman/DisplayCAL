@@ -3,9 +3,15 @@ This module contains drawing routines and customizations for the AGW widgets
 L{LabelBook} and L{FlatMenu}.
 """
 from __future__ import absolute_import
+from __future__ import division
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import wx
-import cStringIO
+import io
 import random
 
 from .fmresources import *
@@ -412,8 +418,8 @@ class RendererMSOffice2007(RendererBase):
         baseColour = colour
 
         # Define the middle points
-        leftPt = wx.Point(rect.x, rect.y + (rect.height / 2))
-        rightPt = wx.Point(rect.x + rect.width-1, rect.y + (rect.height / 2))
+        leftPt = wx.Point(rect.x, rect.y + (old_div(rect.height, 2)))
+        rightPt = wx.Point(rect.x + rect.width-1, rect.y + (old_div(rect.height, 2)))
 
         # Define the top region
         top = wx.RectPP((rect.GetLeft(), rect.GetTop()), rightPt)
@@ -462,7 +468,7 @@ class RendererMSOffice2007(RendererBase):
 
         # Define the rounded rectangle base on the given rect
         # we need an array of 9 points for it
-        regPts = [wx.Point() for ii in xrange(9)]
+        regPts = [wx.Point() for ii in range(9)]
         radius = 2
         
         regPts[0] = wx.Point(rect.x, rect.y + radius)
@@ -479,14 +485,14 @@ class RendererMSOffice2007(RendererBase):
 
         factor = artMgr.GetMenuBgFactor()
         
-        leftPt1 = wx.Point(rect.x, rect.y + (rect.height / factor))
-        leftPt2 = wx.Point(rect.x, rect.y + (rect.height / factor)*(factor-1))
+        leftPt1 = wx.Point(rect.x, rect.y + (old_div(rect.height, factor)))
+        leftPt2 = wx.Point(rect.x, rect.y + (old_div(rect.height, factor))*(factor-1))
 
-        rightPt1 = wx.Point(rect.x + rect.width, rect.y + (rect.height / factor))
-        rightPt2 = wx.Point(rect.x + rect.width, rect.y + (rect.height / factor)*(factor-1))
+        rightPt1 = wx.Point(rect.x + rect.width, rect.y + (old_div(rect.height, factor)))
+        rightPt2 = wx.Point(rect.x + rect.width, rect.y + (old_div(rect.height, factor))*(factor-1))
 
         # Define the top region
-        topReg = [wx.Point() for ii in xrange(7)]
+        topReg = [wx.Point() for ii in range(7)]
         topReg[0] = regPts[0]
         topReg[1] = regPts[1]
         topReg[2] = wx.Point(regPts[2].x+1, regPts[2].y)
@@ -555,11 +561,11 @@ class RendererMSOffice2007(RendererBase):
         # Define the middle points
         factor = artMgr.GetMenuBgFactor()
 
-        leftPt1 = wx.Point(rect.x, rect.y + (rect.height / factor))
-        rightPt1 = wx.Point(rect.x + rect.width, rect.y + (rect.height / factor))
+        leftPt1 = wx.Point(rect.x, rect.y + (old_div(rect.height, factor)))
+        rightPt1 = wx.Point(rect.x + rect.width, rect.y + (old_div(rect.height, factor)))
         
-        leftPt2 = wx.Point(rect.x, rect.y + (rect.height / factor)*(factor-1))
-        rightPt2 = wx.Point(rect.x + rect.width, rect.y + (rect.height / factor)*(factor-1))
+        leftPt2 = wx.Point(rect.x, rect.y + (old_div(rect.height, factor))*(factor-1))
+        rightPt2 = wx.Point(rect.x + rect.width, rect.y + (old_div(rect.height, factor))*(factor-1))
 
         # Define the top region
         topReg = [None]*7
@@ -668,13 +674,13 @@ class ArtManager(wx.EvtHandler):
             img = img.ConvertToImage()
             x, y = img.GetWidth(), img.GetHeight()
             img.InitAlpha()
-            for jj in xrange(y):
-                for ii in xrange(x):
+            for jj in range(y):
+                for ii in range(x):
                     img.SetAlpha(ii, jj, alpha[jj*x+ii])
                     
         else:
 
-            stream = cStringIO.StringIO(xpm)
+            stream = io.StringIO(xpm)
             img = wx.ImageFromStream(stream)
             
         return wx.BitmapFromImage(img)
@@ -781,9 +787,9 @@ class ArtManager(wx.EvtHandler):
 
         # We take the percent way of the colour from colour -. white
         i = percent
-        r = colour.Red() + ((i*rd*100)/high)/100
-        g = colour.Green() + ((i*gd*100)/high)/100
-        b = colour.Blue() + ((i*bd*100)/high)/100
+        r = colour.Red() + old_div((old_div((i*rd*100),high)),100)
+        g = colour.Green() + old_div((old_div((i*gd*100),high)),100)
+        b = colour.Blue() + old_div((old_div((i*bd*100),high)),100)
 
         return wx.Colour(r, g, b)
 
@@ -805,9 +811,9 @@ class ArtManager(wx.EvtHandler):
 
         # We take the percent way of the colour from colour -. white
         i = percent
-        r = colour.Red() + ((i*rd*100)/high)/100
-        g = colour.Green() + ((i*gd*100)/high)/100
-        b = colour.Blue() + ((i*bd*100)/high)/100
+        r = colour.Red() + old_div((old_div((i*rd*100),high)),100)
+        g = colour.Green() + old_div((old_div((i*gd*100),high)),100)
+        b = colour.Blue() + old_div((old_div((i*bd*100),high)),100)
 
         return wx.Colour(r, g, b)
 
@@ -954,7 +960,7 @@ class ArtManager(wx.EvtHandler):
         bstep = float(col2.Blue() - col1.Blue())/float(size)
         
         # draw the upper triangle
-        for i in xrange(size):
+        for i in range(size):
         
             currCol = wx.Colour(col1.Red() + rf, col1.Green() + gf, col1.Blue() + bf)
             dc.SetBrush(wx.Brush(currCol, wx.SOLID))
@@ -985,12 +991,12 @@ class ArtManager(wx.EvtHandler):
                     dc.DrawLine(xTo, rect.y, rect.x + sizeX, rect.y + i)
                     dc.DrawPoint(rect.x + sizeX, rect.y + i)
                 
-            rf += rstep/2
-            gf += gstep/2
-            bf += bstep/2
+            rf += old_div(rstep,2)
+            gf += old_div(gstep,2)
+            bf += old_div(bstep,2)
         
         # draw the lower triangle
-        for i in xrange(size):
+        for i in range(size):
 
             currCol = wx.Colour(col1.Red() + rf, col1.Green() + gf, col1.Blue() + bf)        
             dc.SetBrush(wx.Brush(currCol, wx.SOLID))
@@ -1021,9 +1027,9 @@ class ArtManager(wx.EvtHandler):
                     dc.DrawLine(rect.x, rect.y + i, xTo, rect.y + sizeY)
                     dc.DrawPoint(xTo, rect.y + sizeY)
                 
-            rf += rstep/2
-            gf += gstep/2
-            bf += bstep/2
+            rf += old_div(rstep,2)
+            gf += old_div(gstep,2)
+            bf += old_div(bstep,2)
         
 
         # Restore the pen and brush
@@ -1043,7 +1049,7 @@ class ArtManager(wx.EvtHandler):
         :param `concave`: ``True`` for a concave effect, ``False`` for a convex one.
         """
 
-        diagonalRectWidth = rect.GetWidth()/4
+        diagonalRectWidth = old_div(rect.GetWidth(),4)
         spare = rect.width - 4*diagonalRectWidth
         leftRect = wx.Rect(rect.x, rect.y, diagonalRectWidth, rect.GetHeight())
         rightRect = wx.Rect(rect.x + 3 * diagonalRectWidth + spare, rect.y, diagonalRectWidth, rect.GetHeight())
@@ -1090,9 +1096,9 @@ class ArtManager(wx.EvtHandler):
         """
 
         # calculate gradient coefficients
-        redOffset = float((secondColour.Red() * (100 - percent) / 100) - (firstColour.Red() * percent / 100))
-        greenOffset = float((secondColour.Green() * (100 - percent) / 100) - (firstColour.Green() * percent / 100))
-        blueOffset = float((secondColour.Blue() * (100 - percent) / 100) -  (firstColour.Blue() * percent / 100))
+        redOffset = float((old_div(secondColour.Red() * (100 - percent), 100)) - (old_div(firstColour.Red() * percent, 100)))
+        greenOffset = float((old_div(secondColour.Green() * (100 - percent), 100)) - (old_div(firstColour.Green() * percent, 100)))
+        blueOffset = float((old_div(secondColour.Blue() * (100 - percent), 100)) -  (old_div(firstColour.Blue() * percent, 100)))
 
         return wx.Colour(firstColour.Red() + redOffset, firstColour.Green() + greenOffset,
                         firstColour.Blue() + blueOffset)
@@ -1115,7 +1121,7 @@ class ArtManager(wx.EvtHandler):
         :param `colour`: an instance of `wx.Colour`.
         """
 
-        evg = (colour.Red() + colour.Green() + colour.Blue())/3
+        evg = old_div((colour.Red() + colour.Green() + colour.Blue()),3)
         
         if evg < 127:
             return True
@@ -1151,7 +1157,7 @@ class ArtManager(wx.EvtHandler):
         w, h = dc.GetTextExtent(suffix)
         rectSize -= w
 
-        for i in xrange(textLen, -1, -1):
+        for i in range(textLen, -1, -1):
         
             textW, textH = dc.GetTextExtent(tempText)
             if rectSize >= textW:
@@ -1415,7 +1421,7 @@ class ArtManager(wx.EvtHandler):
         else:
             fixedTextWidth, fixedTextHeight = dc.GetTextExtent(text)
             
-        startLocationY = rect.y + (rect.height - fixedTextHeight)/2
+        startLocationY = rect.y + old_div((rect.height - fixedTextHeight),2)
 
         # get the startLocationX
         if style & BU_EXT_RIGHT_TO_LEFT_STYLE:
@@ -1455,7 +1461,7 @@ class ArtManager(wx.EvtHandler):
                 if maxWidth > fixedTextWidth:
                 
                     # calculate the start location
-                    startLocationX = (maxWidth - fixedTextWidth) / 2
+                    startLocationX = old_div((maxWidth - fixedTextWidth), 2)
                 
                 else:
                 
@@ -1498,7 +1504,7 @@ class ArtManager(wx.EvtHandler):
 
         # get the fixed text dimentions
         fixedTextWidth, fixedTextHeight = dc.GetTextExtent(fixedText)
-        startLocationY = (rect.height - fixedTextHeight) / 2 + rect.y
+        startLocationY = old_div((rect.height - fixedTextHeight), 2) + rect.y
 
         # get the startLocationX
         if style & BU_EXT_RIGHT_TO_LEFT_STYLE:
@@ -1520,7 +1526,7 @@ class ArtManager(wx.EvtHandler):
             else: # meaning wxBU_EXT_CENTER_ALIGN_STYLE
             
                 # calculate the start location
-                startLocationX = (maxWidth - fixedTextWidth) / 2 + bitmapOffset + alignmentBuffer
+                startLocationX = old_div((maxWidth - fixedTextWidth), 2) + bitmapOffset + alignmentBuffer
             
         
         # it is very important to validate that the start location is not less than the alignment buffer
@@ -1918,7 +1924,7 @@ class ArtManager(wx.EvtHandler):
 
         self._menuBarColourScheme = scheme
         # set default colour
-        if scheme in self._colourSchemeMap.keys():
+        if scheme in list(self._colourSchemeMap.keys()):
             self._menuBarBgColour = self._colourSchemeMap[scheme]
 
 
@@ -1952,7 +1958,7 @@ class ArtManager(wx.EvtHandler):
     def GetColourSchemes(self):
         """ Returns the available colour schemes. """
 
-        return self._colourSchemeMap.keys()     
+        return list(self._colourSchemeMap.keys())     
                 
 
     def CreateGreyBitmap(self, bmp):

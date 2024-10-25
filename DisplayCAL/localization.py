@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-import __builtin__
+from future import standard_library
+standard_library.install_aliases()
+import builtins
 import locale
 import os
 import re
@@ -115,7 +117,7 @@ def getstr(id_str, strvars=None, lcode=None, default=None):
 				lstr %= tuple(strvars)
 		return lstr
 	else:
-		if (debug and id_str and not isinstance(id_str, unicode) and
+		if (debug and id_str and not isinstance(id_str, str) and
 			not " " in id_str):
 			usage[id_str] = 0
 		return default or id_str

@@ -178,7 +178,13 @@ or no range::
     SetRange(min_val=None, max_val=None)  # [ , ]
 
 """
+from __future__ import division
 
+from past.builtins import cmp
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 def Property(func):
     return property(**func())
 
@@ -460,7 +466,7 @@ class FloatSpin(wx.PyControl):
             height = best_size.GetHeight()
 
         self._validkeycode = [43, 44, 45, 46, 69, 101]
-        self._validkeycode.extend(range(48, 58))
+        self._validkeycode.extend(list(range(48, 58)))
         self._validkeycode.extend([wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_LEFT,
                                    wx.WXK_RIGHT,
                                    wx.WXK_NUMPAD0, wx.WXK_NUMPAD1,
@@ -1336,7 +1342,7 @@ class FloatSpin(wx.PyControl):
         """
 
         try:
-            snap_value = (value - self._defaultvalue)/self._increment
+            snap_value = old_div((value - self._defaultvalue),self._increment)
             finite = True
         except:
             finite = False
@@ -1518,7 +1524,7 @@ class FixedPoint(object):
             return
 
         if isinstance(value, type(42)) or isinstance(value, type(42)):
-            self.n = long(value) * _tento(p)
+            self.n = int(value) * _tento(p)
             return
 
         if isinstance(value, FixedPoint):
@@ -1579,7 +1585,7 @@ class FixedPoint(object):
         # similarly for long
         yes = 1
         try:
-            aslong = long(value)
+            aslong = int(value)
         except:
             yes = 0
         if yes:
@@ -1676,7 +1682,7 @@ class FixedPoint(object):
         # a float, their hashes may differ.  This is a teensy bit Bad.
         return hash(n) ^ hash(p)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.n != 0
 
     def __neg__(self):
@@ -1721,14 +1727,14 @@ class FixedPoint(object):
 
     def __rdiv__(self, other):
         n1, n2, p = _norm(self, other)
-        return _mkFP(n2, p) / self
+        return old_div(_mkFP(n2, p), self)
 
     def __divmod__(self, other):
         n1, n2, p = _norm(self, other)
         if n2 == 0:
             raise ZeroDivisionError("FixedPoint modulo")
         # floor((n1/10**p)/(n2*10**p)) = floor(n1/n2)
-        q = n1 / n2
+        q = old_div(n1, n2)
         # n1/10**p - q * n2/10**p = (n1 - q * n2)/10**p
         return q, _mkFP(n1 - q * n2, p)
 
@@ -1753,7 +1759,7 @@ class FixedPoint(object):
     # XXX note that __int__ inherits whatever __long__ does,
     # XXX and .frac() is affected too
     def __long__(self):
-        answer = abs(self.n) / _tento(self.p)
+        answer = old_div(abs(self.n), _tento(self.p))
         if self.n < 0:
             answer = -answer
         return answer
@@ -1773,7 +1779,7 @@ class FixedPoint(object):
 
             
         """
-        return self - long(self)
+        return self - int(self)
 
     # return n, p s.t. self == n/10**p and n % 10 != 0
     def __reduce(self):
@@ -1782,7 +1788,7 @@ class FixedPoint(object):
             p = 0
         while p and n % 10 == 0:
             p = p - 1
-            n = n / 10
+            n = old_div(n, 10)
         return n, p
 
 # return 10L**n
@@ -1887,7 +1893,7 @@ def _string2exact(s):
     assert intpart
     assert fracpart
 
-    i, f = long(intpart), long(fracpart)
+    i, f = int(intpart), int(fracpart)
     nfrac = len(fracpart)
     i = i * _tento(nfrac) + f
     exp = exp - nfrac

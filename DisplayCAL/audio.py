@@ -17,6 +17,9 @@ sound.Play(fade_ms=1000)
 """
 from __future__ import absolute_import
 
+from builtins import str
+from builtins import range
+from builtins import object
 from ctypes import (CFUNCTYPE, POINTER, Structure, c_int, c_uint8, c_uint16,
 					c_uint32, c_void_p)
 import ctypes.util
@@ -329,7 +332,7 @@ class _Sound(object):
 		volume = self.volume
 		if fade_ms and ((fade_in and volume < 1) or (not fade_in and volume)):
 			count = 200
-			for i in xrange(count + 1):
+			for i in range(count + 1):
 				if fade_in:
 					self.volume = volume + i / float(count) * (1.0 - volume)
 				else:

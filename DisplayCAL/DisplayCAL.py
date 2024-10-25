@@ -21,11 +21,22 @@ with this program; if not, see <http://www.gnu.org/licenses/>
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import map
+from builtins import str
+from builtins import zip
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
 import sys
 
 # Standard modules
 
-from StringIO import StringIO
+from io import StringIO
 import datetime
 import decimal
 Decimal = decimal.Decimal
@@ -41,10 +52,10 @@ import socket
 from . import subprocess as sp
 import threading
 import traceback
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import zipfile
 if sys.platform == "win32":
-	import _winreg
+	import winreg
 from hashlib import md5
 from time import gmtime, localtime, sleep, strftime, strptime, struct_time
 from zlib import crc32
@@ -193,7 +204,7 @@ def show_ccxx_error_dialog(exception, path, parent):
 
 def swap_dict_keys_values(mydict):
 	""" Swap dictionary keys and values """
-	return dict([(v, k) for (k, v) in mydict.iteritems()])
+	return dict([(v, k) for (k, v) in mydict.items()])
 
 
 def app_update_check(parent=None, silent=False, snapshot=False, argyll=False):
@@ -369,7 +380,7 @@ def app_update_confirm(parent=None, newversion_tuple=(0, 0, 0, 0), chglog=None,
 						cancel=lang.getstr("cancel"), 
 						bitmap=geticon(32, "dialog-information"), 
 						log=True)
-	scale = getcfg("app.dpi") / config.get_default_dpi()
+	scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 	if scale < 1:
 		scale = 1
 	if (argyll and sys.platform not in ("darwin", "win32") and
@@ -439,16 +450,16 @@ def app_update_confirm(parent=None, newversion_tuple=(0, 0, 0, 0), chglog=None,
 				sep = "_V"
 				if sys.platform == "win32":
 					# Determine 32 or 64 bit OS
-					key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
+					key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
 										  r"SYSTEM\CurrentControlSet\Control"
 										  r"\Session Manager\Environment")
 					try:
-						value = _winreg.QueryValueEx(key,
+						value = winreg.QueryValueEx(key,
 													 "PROCESSOR_ARCHITECTURE")[0]
 					except WindowsError:
 						value = "x86"
 					finally:
-						_winreg.CloseKey(key)
+						winreg.CloseKey(key)
 					if value.lower() == "amd64":
 						suffix = "_win64_exe.zip"
 					else:
@@ -580,7 +591,7 @@ def colorimeter_correction_web_check_choose(resp, parent=None):
 					  flag=wx.RIGHT | wx.ALIGN_CENTER_VERTICAL,
 					  border=12)
 	dlg.sizer2.Insert(0, (32 + 7, 1))
-	scale = getcfg("app.dpi") / config.get_default_dpi()
+	scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 	if scale < 1:
 		scale = 1
 	dlg_list_ctrl = wx.ListCtrl(dlg, -1, size=(640 * scale, 150 * scale), style=wx.LC_REPORT | 
@@ -658,9 +669,9 @@ def colorimeter_correction_web_check_choose(resp, parent=None):
 				if v:
 					spectral[key] = v
 		if spectral:
-			spectral_res = u'%.1fnm, %i-%inm' % ((spectral["end_nm"] -
-												  spectral["start_nm"]) /
-												 (spectral["bands"] - 1),
+			spectral_res = u'%.1fnm, %i-%inm' % (old_div((spectral["end_nm"] -
+												  spectral["start_nm"]),
+												 (spectral["bands"] - 1)),
 												 spectral["start_nm"],
 												 spectral["end_nm"])
 		else:
@@ -851,7 +862,7 @@ def get_cgats_path(cgats):
 def get_header(parent, bitmap=None, label=None, size=(-1, 64), x=80, y=44,
 			   repeat_sub_bitmap_h=(220, 0, 2, 64)):
 	w, h = 222, 64
-	scale = getcfg("app.dpi") / config.get_default_dpi()
+	scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 	if scale > 1:
 		size = tuple(int(math.floor(v * scale)) if v > 0 else v for v in size)
 		x, y = [int(round(v * scale)) if v else v for v in (x, y)]
@@ -1327,9 +1338,9 @@ class GamapFrame(BaseFrame):
 			self.intents_ba[lstr] = v
 		
 		self.gamap_perceptual_intent_ctrl.SetItems(
-			self.intents_ab.values())
+			list(self.intents_ab.values()))
 		self.gamap_saturation_intent_ctrl.SetItems(
-			self.intents_ab.values())
+			list(self.intents_ab.values()))
 		
 		self.viewconds_ab[None] = lang.getstr("none")
 		self.viewconds_ba[lang.getstr("none")] = None
@@ -1351,9 +1362,9 @@ class GamapFrame(BaseFrame):
 				self.viewconds_out_ab[v] = lstr
 		
 		self.gamap_src_viewcond_ctrl.SetItems(
-			self.viewconds_ab.values())
+			list(self.viewconds_ab.values()))
 		self.gamap_out_viewcond_ctrl.SetItems(
-			[lang.getstr("none")] + self.viewconds_out_ab.values())
+			[lang.getstr("none")] + list(self.viewconds_out_ab.values()))
 		
 		self.gamap_default_intent_ctrl.SetItems([lang.getstr("gamap.intents." + v)
 												 for v in config.valid_values["gamap_default_intent"]])
@@ -1407,7 +1418,7 @@ class MainFrame(ReportFrame, BaseFrame):
 	""" Display calibrator main application window. """
 
 	# Shared methods from 3D LUT UI
-	for lut3d_ivar_name, lut3d_ivar in LUT3DFrame.__dict__.iteritems():
+	for lut3d_ivar_name, lut3d_ivar in LUT3DFrame.__dict__.items():
 		if lut3d_ivar_name.startswith("lut3d_"):
 			locals()[lut3d_ivar_name] = lut3d_ivar
 
@@ -1668,7 +1679,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		y = 64
 		w = 80
 		h = 120
-		scale = max(getcfg("app.dpi") / config.get_default_dpi(), 1)
+		scale = max(old_div(getcfg("app.dpi"), config.get_default_dpi()), 1)
 		if scale > 1:
 			y, w, h = [int(math.floor(v * scale)) for v in (y, w, h)]
 		self.header_btm = BitmapBackgroundPanel(self.headerpanel, size=(w, -1))
@@ -1920,7 +1931,7 @@ class MainFrame(ReportFrame, BaseFrame):
 	
 	def OnResize(self, event):
 		# Hide the header bitmap on small screens
-		scale = getcfg("app.dpi") / config.get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 		if scale < 1:
 			scale = 1
 		self.header.GetContainingSizer().Show(
@@ -2080,8 +2091,8 @@ class MainFrame(ReportFrame, BaseFrame):
 		self.update_profile_type_ctrl_items()
 
 		self.default_testchart_names = []
-		for testcharts in self.testchart_defaults.values():
-			for chart in testcharts.values():
+		for testcharts in list(self.testchart_defaults.values()):
+			for chart in list(testcharts.values()):
 				chart = lang.getstr(chart)
 				if not chart in self.default_testchart_names:
 					self.default_testchart_names.append(chart)
@@ -2124,7 +2135,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		else:
 			height = self.ClientSize[1]
 		borders_lr = self.Size[0] - self.ClientSize[0]
-		scale = getcfg("app.dpi") / config.get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 		margin = wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
 		header_min_h = 64
 		if scale > 1:
@@ -3474,7 +3485,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			# K-10 and 'unknown' instruments
 			measurement_modes[instrument_type] = []
 			measurement_modes_ab[instrument_type] = []
-			for mode, desc in self.worker.get_instrument_measurement_modes().iteritems():
+			for mode, desc in self.worker.get_instrument_measurement_modes().items():
 				measurement_modes[instrument_type].append(lang.getstr(desc))
 				measurement_modes_ab[instrument_type].append(mode)
 		if instrument_name == "K-10":
@@ -3499,8 +3510,8 @@ class MainFrame(ReportFrame, BaseFrame):
 			# Adaptive mode introduced in Argyll 1.1.0 RC3
 			for key in iter(measurement_modes):
 				instrument_modes = list(measurement_modes[key])
-				for i, mode in reversed(zip(xrange(0, len(instrument_modes)), 
-										    instrument_modes)):
+				for i, mode in reversed(list(zip(range(0, len(instrument_modes)), 
+										    instrument_modes))):
 					if mode == lang.getstr("default"):
 						mode = lang.getstr("measurement_mode.adaptive")
 					else:
@@ -3514,8 +3525,8 @@ class MainFrame(ReportFrame, BaseFrame):
 		if instrument_features.get("highres_mode"):
 			for key in iter(measurement_modes):
 				instrument_modes = list(measurement_modes[key])
-				for i, mode in reversed(zip(xrange(0, len(instrument_modes)), 
-											instrument_modes)):
+				for i, mode in reversed(list(zip(range(0, len(instrument_modes)), 
+											instrument_modes))):
 					if mode == lang.getstr("default"):
 						mode = lang.getstr("measurement_mode.highres")
 					else:
@@ -3526,13 +3537,13 @@ class MainFrame(ReportFrame, BaseFrame):
 					measurement_modes_ab[key].insert(i + 1, (modesig or "") + "H")
 			if getcfg(cfgname + ".highres"):
 				measurement_mode += "H"
-		measurement_modes_ab = dict(zip(measurement_modes_ab.keys(), 
-										[dict(zip(range(len(measurement_modes_ab[key])), 
-												  measurement_modes_ab[key])) 
-												  for key in measurement_modes_ab]))
-		measurement_modes_ba = dict(zip(measurement_modes_ab.keys(), 
+		measurement_modes_ab = dict(list(zip(list(measurement_modes_ab.keys()), 
+										[dict(list(zip(list(range(len(measurement_modes_ab[key]))), 
+												  measurement_modes_ab[key]))) 
+												  for key in measurement_modes_ab])))
+		measurement_modes_ba = dict(list(zip(list(measurement_modes_ab.keys()), 
 										[swap_dict_keys_values(measurement_modes_ab[key]) 
-										 for key in measurement_modes_ab]))
+										 for key in measurement_modes_ab])))
 		return (measurement_mode, measurement_modes, measurement_modes_ab,
 				measurement_modes_ba)
 	
@@ -3596,7 +3607,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		if path in self.ccmx_instruments:
 			del self.ccmx_instruments[path]
 		delete = False
-		for key, value in self.ccmx_mapping.iteritems():
+		for key, value in self.ccmx_mapping.items():
 			if value == path:
 				delete = True
 				break
@@ -3650,7 +3661,7 @@ class MainFrame(ReportFrame, BaseFrame):
 									   imapping[basename])
 						discard_paths.append(path)
 				if discard_paths:
-					ccss_paths = filter(lambda path: path not in discard_paths, ccss_paths)
+					ccss_paths = [path for path in ccss_paths if path not in discard_paths]
 			ccmx_paths.sort(key=os.path.basename)
 			ccss_paths.sort(key=os.path.basename)
 			self.ccmx_cached_paths = ccmx_paths + ccss_paths
@@ -3932,8 +3943,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				msg = (lang.getstr("error.deletion", trashcan) + "\n\n" +
 					   safe_unicode(exception))
 			else:
-				orphans = filter(lambda orphan: os.path.exists(orphan), 
-								 malformed_ccxx)
+				orphans = [orphan for orphan in malformed_ccxx if os.path.exists(orphan)]
 				if orphans:
 					msg = (lang.getstr("error.deletion", trashcan) + "\n\n" + 
 						   "\n".join(orphans))
@@ -4536,7 +4546,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			rsteps /= 1 << (maxits - 1)
 			patches = rsteps
 			# 2nd..nth iteration
-			for i in xrange(maxits - 1):
+			for i in range(maxits - 1):
 				rsteps *= 2
 				patches += rsteps
 			# Multiply by estimated repeats
@@ -4973,13 +4983,13 @@ class MainFrame(ReportFrame, BaseFrame):
 				except (IOError, ICCP.ICCProfileInvalidError) as exception:
 					safe_print("%s:" % profile_filename, exception)
 				else:
-					if profile_filename not in self.input_profiles.values():
+					if profile_filename not in list(self.input_profiles.values()):
 						desc = profile.getDescription()
 						desc = re.sub(r"\s*(?:color profile|primaries with "
 									  "\S+ transfer function)$", "", desc)
 						self.input_profiles[desc] = profile_filename
 		self.input_profiles.sort()
-		self.lut3d_input_profile_ctrl.SetItems(self.input_profiles.keys())
+		self.lut3d_input_profile_ctrl.SetItems(list(self.input_profiles.keys()))
 
 	def lut3d_input_colorspace_handler(self, event):
 		if event:
@@ -5089,7 +5099,7 @@ class MainFrame(ReportFrame, BaseFrame):
 	def lut3d_update_controls(self):
 		self.lut3d_create_cb.SetValue(bool(getcfg("3dlut.create")))
 		lut3d_input_profile = getcfg("3dlut.input.profile")
-		if not lut3d_input_profile in self.input_profiles.values():
+		if not lut3d_input_profile in list(self.input_profiles.values()):
 			if (not lut3d_input_profile or
 				not os.path.isfile(lut3d_input_profile)):
 				lut3d_input_profile = defaults["3dlut.input.profile"]
@@ -5104,9 +5114,9 @@ class MainFrame(ReportFrame, BaseFrame):
 					desc = re.sub(r"\s*(?:color profile|primaries with "
 								  "\S+ transfer function)$", "", desc)
 					self.input_profiles[desc] = lut3d_input_profile
-		if lut3d_input_profile in self.input_profiles.values():
+		if lut3d_input_profile in list(self.input_profiles.values()):
 			self.lut3d_input_profile_ctrl.SetSelection(
-				self.input_profiles.values().index(lut3d_input_profile))
+				list(self.input_profiles.values()).index(lut3d_input_profile))
 			self.lut3d_input_colorspace_handler(None)
 		self.lut3d_update_apply_cal_control()
 		self.lut3d_update_b2a_controls()
@@ -6129,9 +6139,9 @@ class MainFrame(ReportFrame, BaseFrame):
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
 		dlg.sizer3.Add(sizer, flag=wx.TOP, border=12)
 		cols = wx.Choice(dlg, -1,
-						 choices=map(str, config.valid_values["uniformity.cols"]))
+						 choices=list(map(str, config.valid_values["uniformity.cols"])))
 		rows = wx.Choice(dlg, -1,
-						 choices=map(str, config.valid_values["uniformity.rows"]))
+						 choices=list(map(str, config.valid_values["uniformity.rows"])))
 		cols.SetStringSelection(str(getcfg("uniformity.cols")))
 		rows.SetStringSelection(str(getcfg("uniformity.rows")))
 		sizer.Add(cols, flag=wx.ALIGN_CENTER_VERTICAL)
@@ -6279,7 +6289,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			vcgt = "no VCGT"
 		if vcgt:
 			description += ", " + vcgt
-		whitepoint = "%iK" % round(XYZ2CCT(*profile.tags.wtpt.values()))
+		whitepoint = "%iK" % round(XYZ2CCT(*list(profile.tags.wtpt.values())))
 		description += ", " + whitepoint
 		description += u", %i cd/m²" % profile.tags.lumi.Y 
 		if gamma:
@@ -6370,7 +6380,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				pass
 		dlg.display_settings = display_settings_tabs
 		# Column layout
-		scale = getcfg("app.dpi") / config.get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 		if scale < 1:
 			scale = 1
 		display_settings = ((# 1st tab
@@ -7183,7 +7193,7 @@ class MainFrame(ReportFrame, BaseFrame):
 						getcfg("3dlut.enable"))
 		if debug:
 			for n, p in {"profile": profile, "devlink": devlink,
-						 "sim_profile": sim_profile, "oprof": oprof}.iteritems():
+						 "sim_profile": sim_profile, "oprof": oprof}.items():
 				if p:
 					safe_print(n, p.getDescription())
 
@@ -7220,7 +7230,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				# Try chardata instead.
 				XYZbp = oprof.get_chardata_bkpt()
 				if XYZbp:
-					XYZbp = [v * XYZbp[1] for v in oprof.tags.wtpt.pcs.values()]
+					XYZbp = [v * XYZbp[1] for v in list(oprof.tags.wtpt.pcs.values())]
 				else:
 					XYZbp = [0, 0, 0]
 			if apply_trc:
@@ -7238,9 +7248,9 @@ class MainFrame(ReportFrame, BaseFrame):
 				for channel in "rgb":
 					gamma += mprof.tags[channel + "TRC"].get_gamma()
 				gamma /= 3.0
-			rXYZ = mprof.tags.rXYZ.values()
-			gXYZ = mprof.tags.gXYZ.values()
-			bXYZ = mprof.tags.bXYZ.values()
+			rXYZ = list(mprof.tags.rXYZ.values())
+			gXYZ = list(mprof.tags.gXYZ.values())
+			bXYZ = list(mprof.tags.bXYZ.values())
 			mtx = colormath.Matrix3x3([[rXYZ[0], gXYZ[0], bXYZ[0]],
 									   [rXYZ[1], gXYZ[1], bXYZ[1]],
 									   [rXYZ[2], gXYZ[2], bXYZ[2]]])
@@ -7413,7 +7423,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			void, ti3, void = self.worker.chart_lookup(ti1, oprof, pcs="x",
 													   intent="a",
 													   white_patches=0)
-			wtpt = oprof.tags.wtpt.values()
+			wtpt = list(oprof.tags.wtpt.values())
 			if isinstance(oprof.tags.get("lumi"), ICCP.XYZType):
 				luminance = oprof.tags.lumi.Y
 			else:
@@ -7578,7 +7588,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			ti3_ref.quantize_device_values(qbits)
 			if gray:
 				qmax = 2 ** qbits - 1.0
-				gray = [[round(round(v / 100.0 * qmax) / qmax * 100.0, 4)
+				gray = [[round(old_div(round(v / 100.0 * qmax), qmax) * 100.0, 4)
 						 for v in RGB] for RGB in gray]
 
 		# Keep around ref TI3 for diagnostic purposes
@@ -7596,7 +7606,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			# ref because the white patch is always added at the start
 			offset = len(ti3_measured.DATA) - len(ti3_ref.DATA)
 			# Set full white RGB to 100
-			for i in xrange(offset):
+			for i in range(offset):
 				for label in ("RGB_R", "RGB_G", "RGB_B"):
 					ti3_measured.DATA[i][label] = 100.0
 			# Restore original device values
@@ -7696,9 +7706,9 @@ class MainFrame(ReportFrame, BaseFrame):
 		ti3_joined.LUMINANCE_XYZ_CDM2 = ti3_measured.LUMINANCE_XYZ_CDM2
 		# add XYZ to DATA_FORMAT if not yet present
 		labels_xyz = ("XYZ_X", "XYZ_Y", "XYZ_Z")
-		if not "XYZ_X" in ti3_joined.DATA_FORMAT.values() and \
-		   not "XYZ_Y" in ti3_joined.DATA_FORMAT.values() and \
-		   not "XYZ_Z" in ti3_joined.DATA_FORMAT.values():
+		if not "XYZ_X" in list(ti3_joined.DATA_FORMAT.values()) and \
+		   not "XYZ_Y" in list(ti3_joined.DATA_FORMAT.values()) and \
+		   not "XYZ_Z" in list(ti3_joined.DATA_FORMAT.values()):
 			ti3_joined.DATA_FORMAT.add_data(labels_xyz)
 		# set XYZ in joined ti3 to XYZ of measurements
 		for i in ti3_joined.DATA:
@@ -7709,11 +7719,11 @@ class MainFrame(ReportFrame, BaseFrame):
 		self.worker.wrapup(False if not isinstance(result, Exception)
 						   else result)
 		
-		wtpt_profile_norm = tuple(n * 100 for n in profile.tags.wtpt.values())
+		wtpt_profile_norm = tuple(n * 100 for n in list(profile.tags.wtpt.values()))
 		if isinstance(profile.tags.get("chad"), ICCP.chromaticAdaptionTag):
 			# undo chromatic adaption of profile whitepoint
 			WX, WY, WZ = profile.tags.chad.inverted() * wtpt_profile_norm
-			wtpt_profile_norm = tuple((n / WY) * 100.0 for n in (WX, WY, WZ))
+			wtpt_profile_norm = tuple((old_div(n, WY)) * 100.0 for n in (WX, WY, WZ))
 			# guess chromatic adaption transform (Bradford, CAT02...)
 			cat = profile.guess_cat() or cat
 		elif isinstance(profile.tags.get("arts"), ICCP.chromaticAdaptionTag):
@@ -7726,15 +7736,15 @@ class MainFrame(ReportFrame, BaseFrame):
 			wtpt_profile = wtpt_profile_norm
 		
 		if sim_profile:
-			wtpt_sim_profile_norm = tuple(n * 100 for n in sim_profile.tags.wtpt.values())
+			wtpt_sim_profile_norm = tuple(n * 100 for n in list(sim_profile.tags.wtpt.values()))
 			if "chad" in sim_profile.tags:
 				# undo chromatic adaption of profile whitepoint
 				WX, WY, WZ = sim_profile.tags.chad.inverted() * wtpt_sim_profile_norm
-				wtpt_sim_profile_norm = tuple((n / WY) * 100.0 for n in (WX, WY, WZ))
+				wtpt_sim_profile_norm = tuple((old_div(n, WY)) * 100.0 for n in (WX, WY, WZ))
 		
 		wtpt_measured = tuple(float(n) for n in ti3_joined.LUMINANCE_XYZ_CDM2.split())
 		# normalize so that Y = 100
-		wtpt_measured_norm = tuple((n / wtpt_measured[1]) * 100 for n in wtpt_measured)
+		wtpt_measured_norm = tuple((old_div(n, wtpt_measured[1])) * 100 for n in wtpt_measured)
 		
 		if intent != "a" and sim_intent != "a":
 			white = ti3_joined.queryi(white_rgb)
@@ -7750,7 +7760,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				XYZbp = oprof.get_chardata_bkpt(True)
 				if XYZbp:
 					bkpt_measured_norm = tuple(v * 100 for v in XYZbp)
-			bkpt_measured = tuple(wtpt_measured[1] / 100 * n for n in bkpt_measured_norm)
+			bkpt_measured = tuple(old_div(wtpt_measured[1], 100) * n for n in bkpt_measured_norm)
 		else:
 			bkpt_measured_norm = None
 			bkpt_measured = None
@@ -7758,12 +7768,12 @@ class MainFrame(ReportFrame, BaseFrame):
 		# set Lab values
 		labels_Lab = ("LAB_L", "LAB_A", "LAB_B")
 		for data in (ti3_ref, ti3_joined):
-			if "XYZ_X" in data.DATA_FORMAT.values() and \
-			   "XYZ_Y" in data.DATA_FORMAT.values() and \
-			   "XYZ_Z" in data.DATA_FORMAT.values():
-				if not "LAB_L" in data.DATA_FORMAT.values() and \
-				   not "LAB_A" in data.DATA_FORMAT.values() and \
-				   not "LAB_B" in data.DATA_FORMAT.values():
+			if "XYZ_X" in list(data.DATA_FORMAT.values()) and \
+			   "XYZ_Y" in list(data.DATA_FORMAT.values()) and \
+			   "XYZ_Z" in list(data.DATA_FORMAT.values()):
+				if not "LAB_L" in list(data.DATA_FORMAT.values()) and \
+				   not "LAB_A" in list(data.DATA_FORMAT.values()) and \
+				   not "LAB_B" in list(data.DATA_FORMAT.values()):
 					# add Lab fields to DATA_FORMAT if not present
 					data.DATA_FORMAT.add_data(labels_Lab)
 					has_Lab = False
@@ -7963,7 +7973,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					"channels": 3,
 					"entryCount": 256,
 					"entrySize": 1,
-					"data": [range(0, 256), range(0, 256), range(0, 256)]
+					"data": [list(range(0, 256)), list(range(0, 256)), list(range(0, 256))]
 				})
 				profile.size = len(profile.data)
 				profile.is_loaded = True
@@ -8038,8 +8048,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				stream.write(line)
 			stream.seek(0)
 			wx.CallAfter(self.show_additional_infoframe,
-						 "".join(filter(lambda line: line.strip(),
-										stream.readlines())).strip(),
+						 "".join([line for line in stream.readlines() if line.strip()]).strip(),
 						 self.report_title)
 		self.worker.wrapup(False)
 		self.Show()
@@ -8140,7 +8149,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		display_name = config.get_display_name(None, True)
 		if (display_name == "Web @ localhost" or
 			display_name.startswith("Chromecast ")):
-			for name, patterngenerator in self.worker.patterngenerators.items():
+			for name, patterngenerator in list(self.worker.patterngenerators.items()):
 				if isinstance(patterngenerator,
 							  (WebWinHTTPPatternGeneratorServer, CCPG)):
 					# Need to free connection for dispwin
@@ -8181,7 +8190,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		for observer in config.valid_values["observer"]:
 			self.observers_ab[observer] = lang.getstr("observer." + observer)
 		self.observers_ba = swap_dict_keys_values(self.observers_ab)
-		self.observer_ctrl.SetItems(self.observers_ab.values())
+		self.observer_ctrl.SetItems(list(self.observers_ab.values()))
 
 	def setup_patterngenerator(self, parent=None, title=appname, upload=False):
 		if not parent:
@@ -8907,7 +8916,7 @@ class MainFrame(ReportFrame, BaseFrame):
 								   "/colorhug-calibration/master/data/" +
 								   calibration)
 							try:
-								response = urllib2.urlopen(url)
+								response = urllib.request.urlopen(url)
 							except Exception as exception:
 								self.measure_auto_finish(exception)
 								return
@@ -9219,9 +9228,9 @@ class MainFrame(ReportFrame, BaseFrame):
 					if gamut_volume:
 						for key, name, volume in gamuts:
 							vinfo.append("%.1f%% %s" %
-										 (gamut_volume *
-										  ICCP.GAMUT_VOLUME_SRGB /
-										  volume * 100,
+										 (old_div(gamut_volume *
+										  ICCP.GAMUT_VOLUME_SRGB,
+										  volume) * 100,
 										  name))
 							if len(vinfo) == len(cinfo):
 								break
@@ -10143,7 +10152,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				   self.profile_settings_btn: self.profile_settings_panel,
 				   self.lut3d_settings_btn: self.lut3d_settings_panel,
 				   self.mr_settings_btn: self.mr_settings_panel}
-		for btn, tab in btn2tab.iteritems():
+		for btn, tab in btn2tab.items():
 			if event.GetId() == btn.Id:
 				if tab is self.mr_settings_panel and not tab.IsShown():
 					self.mr_update_controls()
@@ -10490,7 +10499,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			hsizer.Add(dlg.observer_reference_label,
 					   flag=wx.LEFT | wx.ALIGN_CENTER_VERTICAL, border=4)
 			dlg.observer_reference_ctrl = wx.Choice(dlg, -1,
-										  choices=self.observers_ab.values())
+										  choices=list(self.observers_ab.values()))
 			dlg.observer_reference_ctrl.Bind(wx.EVT_CHOICE,
 											 check_last_ccxx_ti3)
 			hsizer.Add(dlg.observer_reference_ctrl,
@@ -10590,7 +10599,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			hsizer.Add(dlg.observer_label,
 					   flag=wx.LEFT | wx.ALIGN_CENTER_VERTICAL, border=4)
 			dlg.observer_ctrl = wx.Choice(dlg, -1,
-										  choices=self.observers_ab.values())
+										  choices=list(self.observers_ab.values()))
 			dlg.observer_ctrl.Bind(wx.EVT_CHOICE, check_last_ccxx_ti3)
 			hsizer.Add(dlg.observer_ctrl,
 					   flag=wx.LEFT | wx.ALIGN_CENTER_VERTICAL, border=8)
@@ -10639,10 +10648,10 @@ class MainFrame(ReportFrame, BaseFrame):
 				dlg.Freeze()
 				modes = self.get_ccxx_measurement_modes(
 					dlg.instrument.GetStringSelection())
-				dlg.measurement_mode.SetItems(modes.values())
+				dlg.measurement_mode.SetItems(list(modes.values()))
 				dlg.measurement_mode.SetStringSelection(
 					modes.get(getcfg("colorimeter_correction.measurement_mode"),
-							  modes.values()[-1]))
+							  list(modes.values())[-1]))
 				dlg.measurement_mode.Enable(bool(modes))
 				show_observer_ctrl()
 				boxsizer.Layout()
@@ -10793,7 +10802,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			ti3_range = (0, 1)
 		else:
 			ti3_range = (0, )
-		for n in xrange(len(paths or ti3_range)):
+		for n in range(len(paths or ti3_range)):
 			path = None
 			if not paths:
 				if reference_ti3:
@@ -10947,13 +10956,13 @@ class MainFrame(ReportFrame, BaseFrame):
 									  "RGB_R=100 RGB_G=0 RGB_B=0": "red",
 									  "RGB_R=0 RGB_G=100 RGB_B=0": "green",
 									  "RGB_R=0 RGB_G=0 RGB_B=100": "blue"}
-			for i, values in required.iteritems():
+			for i, values in required.items():
 				patch = OrderedDict([("RGB_R", values[0]),
 									 ("RGB_G", values[1]),
 									 ("RGB_B", values[2])])
 				devicecombination = " ".join(["=".join([key, "%i" % value])
 											  for key, value in
-											  patch.iteritems()])
+											  patch.items()])
 				name = devicecombination2name.get(devicecombination,
 												  devicecombination)
 				item = data_reference.queryi1(patch)
@@ -11112,7 +11121,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				# CB_SORT isn't supported by wxOSX/Cocoa!
 				# Why isn't this mentioned in the wxPython docs?
 				dlg.manufacturer_txt_ctrl = AutocompleteComboBox(dlg, -1, 
-													  choices=natsort(pnpidcache.values()), 
+													  choices=natsort(list(pnpidcache.values())), 
 													  size=(400, -1))
 				if (not manufacturer and
 					display == self.worker.get_display_name(False, True, False)):
@@ -11128,13 +11137,13 @@ class MainFrame(ReportFrame, BaseFrame):
 				boxsizer.Add((1, 8))
 			loctech = OrderedDict()
 			techloc = {}
-			for technology_string in technology_strings.values():
+			for technology_string in list(technology_strings.values()):
 				loc = lang.getstr("display.tech." + technology_string,
 								  default=technology_string)
 				loctech[loc] = technology_string
 				techloc[technology_string] = loc
 			dlg.display_tech_ctrl = wx.Choice(dlg, -1,
-											  choices=loctech.keys())
+											  choices=list(loctech.keys()))
 			dlg.display_tech_ctrl.SetStringSelection(techloc.get(tech, ""))
 			boxsizer.Add(dlg.display_tech_ctrl,
 						 flag=wx.ALL | wx.ALIGN_LEFT | wx.EXPAND, border=4)
@@ -11172,7 +11181,7 @@ class MainFrame(ReportFrame, BaseFrame):
 							  ccxxmake_version >= [1, 7]):
 			if ccxxmake_version >= [1, 7]:
 				args.extend(["-t", dict((v, k) for k, v in
-										technology_strings.iteritems()).get(tech, "u")])
+										technology_strings.items()).get(tech, "u")])
 			else:
 				args.extend(["-T", safe_str(tech, "UTF-8")])
 		# Prepare our files
@@ -11231,19 +11240,19 @@ class MainFrame(ReportFrame, BaseFrame):
 						# relationship
 						XYZ_CDM2 = [float(v) for v in XYZ_CDM2.split()]
 						XYZ_CDM2 = ["%.6f" % (v * XYZ_CDM2[1] / 100.0)
-									for v in white.queryv1(("XYZ_X", "XYZ_Y",
-															"XYZ_Z")).values()]
+									for v in list(white.queryv1(("XYZ_X", "XYZ_Y",
+															"XYZ_Z")).values())]
 						reference_ti3[0].LUMINANCE_XYZ_CDM2 = " ".join(XYZ_CDM2)
 					data_format = reference_ti3.queryv1("DATA_FORMAT")
 					# Remove L*a*b*. Do not use iter, as we change the
 					# dictionary in-place
-					for i, column in data_format.items():
+					for i, column in list(data_format.items()):
 						if column.startswith("LAB_"):
 							del data_format[i]
 					# Normalize to Y=100
 					data = reference_ti3.queryv1("DATA")
-					for i, sample in data.iteritems():
-						for column in data_format.itervalues():
+					for i, sample in data.items():
+						for column in data_format.values():
 							if column.startswith("XYZ_") or column.startswith("SPEC_"):
 								sample[column] /= scale
 					reference_ti3.write()
@@ -11290,7 +11299,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					white_abs.append(white)
 				if debug or verbose > 1:
 					safe_print("ref white %.6f %.6f %.6f" % tuple(white_abs[0]))
-				white_ref = [v / white_abs[0][1] for v in white_abs[0]]
+				white_ref = [old_div(v, white_abs[0][1]) for v in white_abs[0]]
 				if getcfg("ccmx.use_four_color_matrix_method"):
 					safe_print(appname + ": Creating matrix using four-color method")
 					XYZ = []
@@ -11307,7 +11316,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					R = colormath.four_color_matrix(*XYZ)
 					safe_print(appname + ": Correction matrix is:")
 					ccmx = CGATS.CGATS(source)
-					for i in xrange(3):
+					for i in range(3):
 						safe_print("  %.6f %.6f %.6f" % tuple(R[i]))
 						for j, component in enumerate("XYZ"):
 							ccmx[0].DATA[i]["XYZ_" + component] = R[i][j]
@@ -11339,7 +11348,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					# Populate pnpidcache
 					get_manufacturer_name("???")
 				manufacturers = dict([name, id] for id, name in
-									 pnpidcache.iteritems())
+									 pnpidcache.items())
 				manufacturer_id = manufacturers.get(manufacturer)
 			if manufacturer_id and not re.search('\nMANUFACTURER_ID\s+".+?"\n',
 												 cgats):
@@ -11374,7 +11383,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				# delta E
 				matrix = colormath.Matrix3x3()
 				ccmx = CGATS.CGATS(cgats)
-				for i, sample in ccmx.queryv1("DATA").iteritems():
+				for i, sample in ccmx.queryv1("DATA").items():
 					matrix.append([])
 					for component in "XYZ":
 						matrix[i].append(sample["XYZ_%s" % component])
@@ -11393,7 +11402,7 @@ class MainFrame(ReportFrame, BaseFrame):
 										ccmx.queryv1("INSTRUMENT") or
 										lang.getstr("instrument")),
 									   lang.getstr("corrected")))
-				scale = getcfg("app.dpi") / config.get_default_dpi()
+				scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 				if scale < 1:
 					scale = 1
 				for i, label in enumerate(labels):
@@ -11446,7 +11455,7 @@ class MainFrame(ReportFrame, BaseFrame):
 						   "      Corrected xyY         |"
 						   "   DE94   |   DE00   ")
 				safe_print("-" * 80)
-				for i, ref in ref_data.iteritems():
+				for i, ref in ref_data.items():
 					tgt = tgt_data[i]
 					grid.AppendRows(1)
 					row = grid.GetNumberRows() - 1
@@ -11471,8 +11480,8 @@ class MainFrame(ReportFrame, BaseFrame):
 						for k, value in enumerate(xyYabs[j]):
 							grid.SetCellValue(row, j * 5 + k, "%.4f" % value)
 						# Show sRGB approximation of measured patch
-						X, Y, Z = [v / max(white_abs[0][1],
-										   (matrix * white_abs[1])[1])
+						X, Y, Z = [old_div(v, max(white_abs[0][1],
+										   (matrix * white_abs[1])[1]))
 								   for v in XYZabs[j]]
 						# Adapt from reference white to D65
 						X, Y, Z = colormath.adapt(X, Y, Z, white_ref, "D65")
@@ -11504,9 +11513,9 @@ class MainFrame(ReportFrame, BaseFrame):
 					grid.SetCellValue(row, 8, "%.4f" % deltaE)
 				safe_print("")
 				safe_print(appname + ": Fit error is max %.6f, avg %.6f DE94" %
-						   (max(deltaE_94), sum(deltaE_94) / len(deltaE_94)))
+						   (max(deltaE_94), old_div(sum(deltaE_94), len(deltaE_94))))
 				safe_print(appname + ": Fit error is max %.6f, avg %.6f DE00" %
-						   (max(deltaE_00), sum(deltaE_00) / len(deltaE_00)))
+						   (max(deltaE_00), old_div(sum(deltaE_00), len(deltaE_00))))
 				grid.DefaultCellBackgroundColour = grid.LabelBackgroundColour
 				grid.EndBatch()
 				dlg.sizer0.SetSizeHints(dlg)
@@ -11521,11 +11530,11 @@ class MainFrame(ReportFrame, BaseFrame):
 					return
 				# Add dE fit error to CGATS as meta
 				for label, fit_error in (("MAX_DE94", max(deltaE_94)),
-										 ("AVG_DE94", sum(deltaE_94) /
-													  len(deltaE_94)),
+										 ("AVG_DE94", old_div(sum(deltaE_94),
+													  len(deltaE_94))),
 										 ("MAX_DE00", max(deltaE_00)),
-										 ("AVG_DE00", sum(deltaE_00) /
-													  len(deltaE_00))):
+										 ("AVG_DE00", old_div(sum(deltaE_00),
+													  len(deltaE_00)))):
 					cgats = re.sub('(\nREFERENCE\s+"[^"]*"\n)',
 								   '\\1FIT_%s "%.6f"\n' %
 								   (label, fit_error), cgats)
@@ -11556,7 +11565,7 @@ class MainFrame(ReportFrame, BaseFrame):
 									" ".join(ccmx_data_format))
 					data_format = meas.queryv1("DATA_FORMAT")
 					data = meas.queryv1("DATA")
-					for i, sample in data.iteritems():
+					for i, sample in data.items():
 						RGB_XYZ = []
 						for column in ccmx_data_format:
 							RGB_XYZ.append(str(sample[column]))
@@ -11564,7 +11573,7 @@ class MainFrame(ReportFrame, BaseFrame):
 										(i + 1, " ".join(RGB_XYZ)))
 						# Line length limit for CGATS keywords 1024 chars, add
 						# spectral data as individual keywords
-						for column in data_format.itervalues():
+						for column in data_format.values():
 							if (column not in ccmx_data_format and
 								column != "SAMPLE_ID"):
 								metadata.append(label + '_DATA_%i_%s "%s"' %
@@ -11639,7 +11648,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					if globals()[algo_hash[0]](meas).hexdigest() == algo_hash[-1]:
 						params[label.lower() + "_cgats"] = meas
 			if debug or test:
-				safe_print(params.keys())
+				safe_print(list(params.keys()))
 			# Upload correction
 			self.worker.interactive = False
 			self.worker.start(lambda result: result, 
@@ -12083,7 +12092,7 @@ class MainFrame(ReportFrame, BaseFrame):
 													   spyd4, spyd4en, icd,
 													   oeminst, path, asroot)
 		paths = []
-		for name, importer in importers.iteritems():
+		for name, importer in importers.items():
 			imported = locals().get(name, False)
 			if (not imported or name == "i1d3") and auto:
 				# Automatic download
@@ -12104,8 +12113,7 @@ class MainFrame(ReportFrame, BaseFrame):
 						result = self.worker.extract_archive(result)
 						if isinstance(result, Exception):
 							break
-						result = filter(lambda path: not os.path.isdir(path),
-										result)
+						result = [path for path in result if not os.path.isdir(path)]
 					paths.append(result)
 				else:
 					# Cancelled
@@ -12133,7 +12141,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		mapping = {"i1 Profiler/ColorMunki Display": i1d3,
 				   "Spyder4/5": spyd4,
 				   "iColor Display": icd}
-		for name, subresult in mapping.iteritems():
+		for name, subresult in mapping.items():
 			if subresult and not isinstance(subresult, Exception):
 				imported.append(name)
 			elif subresult is not None:
@@ -12828,7 +12836,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		result = dlg.ShowModal()
 		if result == wx.ID_OK:
 			indexes = []
-			for index in xrange(dlg.grid.GetNumberRows()):
+			for index in range(dlg.grid.GetNumberRows()):
 				if dlg.grid.GetCellValue(index, 0) == "":
 					indexes.insert(0, index)
 			data = ti3_1.queryv1("DATA")
@@ -12837,10 +12845,10 @@ class MainFrame(ReportFrame, BaseFrame):
 				removed.insert(0, data.pop(dlg.suspicious_items[index]))
 			for item in removed:
 				safe_print("Removed patch #%i from TI3: %s" % (item.key, item))
-			for index, fields in dlg.mods.iteritems():
+			for index, fields in dlg.mods.items():
 				if index not in indexes:
 					item = dlg.suspicious_items[index]
-					for field, value in fields.iteritems():
+					for field, value in fields.items():
 						old = item[field]
 						if old != value:
 							item[field] = value
@@ -12934,8 +12942,7 @@ class MainFrame(ReportFrame, BaseFrame):
 		lut3d_ext = ["." + strtr(lut3d_format, {"eeColor": "txt",
 												"madVR": "3dlut"})
 					 for lut3d_format in
-					 filter(lambda format: format not in ("icc", "icm", "png"),
-							config.valid_values["3dlut.format"])]
+					 [format for format in config.valid_values["3dlut.format"] if format not in ("icc", "icm", "png")]]
 		has_3dlut = False
 		for filename in filenames:
 			if os.path.splitext(filename)[1].lower() in lut3d_ext:
@@ -13881,7 +13888,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				# Prefer files with same basename in 'ArgyllCMS' folder over
 				# 'color' folder
 				mapping[basename] = filename
-		for filename in mapping.itervalues():
+		for filename in mapping.values():
 			if include_lastmod:
 				try:
 					lastmod = os.stat(filename).st_mtime
@@ -13962,10 +13969,10 @@ class MainFrame(ReportFrame, BaseFrame):
 				self.black_luminance_textctrl.GetValue()))
 
 	def get_black_output_offset(self):
-		return str(Decimal(self.black_output_offset_ctrl.GetValue()) / 100)
+		return str(old_div(Decimal(self.black_output_offset_ctrl.GetValue()), 100))
 
 	def get_black_point_correction(self):
-		return str(Decimal(self.black_point_correction_ctrl.GetValue()) / 100)
+		return str(old_div(Decimal(self.black_point_correction_ctrl.GetValue()), 100))
 
 	def get_black_point_rate(self):
 		if defaults["calibration.black_point_rate.enabled"]:
@@ -14551,7 +14558,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			return
 		if getcfg("colorimeter_correction_matrix_file") in ("AUTO:", ""):
 			# Check for applicable corrections
-			ccmx_instruments = self.ccmx_instruments.itervalues()
+			ccmx_instruments = iter(self.ccmx_instruments.values())
 			i1d3 = ("i1 DisplayPro, ColorMunki Display" in
 					self.worker.instruments and
 					not "" in ccmx_instruments)
@@ -15111,7 +15118,7 @@ class MainFrame(ReportFrame, BaseFrame):
 											 "3DLUT_APPLY_CAL":
 											 "3dlut.output.profile.apply_cal",
 											 "SIMULATION_PROFILE":
-											 "measurement_report.simulation_profile"}.iteritems():
+											 "measurement_report.simulation_profile"}.items():
 						cfgvalue = cfgpart.queryv1(keyword)
 						if keyword in ("MIN_DISPLAY_UPDATE_DELAY_MS",
 									   "DISPLAY_SETTLE_TIME_MULT"):
@@ -15502,7 +15509,7 @@ class MainFrame(ReportFrame, BaseFrame):
 				ok=lang.getstr("delete"), cancel=lang.getstr("cancel"), 
 				bitmap=geticon(32, "dialog-warning"))
 			if self.related_files:
-				scale = getcfg("app.dpi") / config.get_default_dpi()
+				scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 				if scale < 1:
 					scale = 1
 				scrolled = ScrolledPanel(dlg, -1, style=wx.VSCROLL)
@@ -15557,9 +15564,7 @@ class MainFrame(ReportFrame, BaseFrame):
 						deleted = trash([os.path.dirname(cal)])
 					else:
 						deleted = trash(delete_related_files)
-					orphan_related_files = filter(lambda related_file:  
-												  os.path.exists(related_file), 
-												  delete_related_files)
+					orphan_related_files = [related_file for related_file in delete_related_files if os.path.exists(related_file)]
 					if orphan_related_files:
 						InfoDialog(self, 
 								   msg=lang.getstr("error.deletion", trashcan) + 
@@ -15630,7 +15635,7 @@ class MainFrame(ReportFrame, BaseFrame):
 									   size=(100, 100))
 		self.aboutdialog.panel.BackgroundColour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
 		items = []
-		scale = max(getcfg("app.dpi") / config.get_default_dpi(), 1)
+		scale = max(old_div(getcfg("app.dpi"), config.get_default_dpi()), 1)
 		items.append(wx_Panel(self.aboutdialog.panel, -1,
 							  size=(-1, int(round(6 * scale)))))
 		items[-1].BackgroundColour = "#66CC00"
@@ -15787,7 +15792,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			self.synthiccframe.Hide()
 		if getattr(self, "wpeditor", None):
 			self.wpeditor.Close()
-		for profile_info in self.profile_info.values():
+		for profile_info in list(self.profile_info.values()):
 			profile_info.Close()
 		while self.measureframes:
 			measureframe = self.measureframes.pop()
@@ -15819,7 +15824,7 @@ class MainFrame(ReportFrame, BaseFrame):
 					wx.CallAfter(self.init_lut_viewer, show=True)
 			else:
 				setcfg("lut_viewer.show", 0)
-			for profile_info in reversed(self.profile_info.values()):
+			for profile_info in reversed(list(self.profile_info.values())):
 				profile_info.Show()
 		if start_timers:
 			self.start_timers()
@@ -15862,7 +15867,7 @@ class MainFrame(ReportFrame, BaseFrame):
 			if isinstance(getattr(self.worker, "madtpg", None),
 						  madvr.MadTPG_Net):
 				self.worker.madtpg.shutdown()
-			for patterngenerator in self.worker.patterngenerators.values():
+			for patterngenerator in list(self.worker.patterngenerators.values()):
 				patterngenerator.listening = False
 			self.HideAll()
 			if (self.worker.tempdir and os.path.isdir(self.worker.tempdir) and
@@ -15920,9 +15925,9 @@ class StartupFrame(start_cls):
 			numframes = 15
 			self.splash_alpha = self.splash_bmp.ConvertToImage().GetAlphaData()
 			minv = 1.0 / self.splash_bmp.Size[0]
-			for x in xrange(numframes):
+			for x in range(numframes):
 				scale = minv + colormath.specialpow(0.35 + 
-													x / (numframes - 1.0) * (1 - 0.35),
+													old_div(x, (numframes - 1.0)) * (1 - 0.35),
 													-2084) * (1 - minv)
 				self.zoom_scales.append(scale)
 			self.zoom_scales.append(1.02)
@@ -16266,7 +16271,7 @@ class StartupFrame(start_cls):
 			label_str += " Beta"
 		dc.SetTextForeground("#101010")
 		yoff = 10
-		scale = getcfg("app.dpi") / config.get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 		if scale > 1:
 			yoff = int(round(yoff * scale))
 		yoff -= 10
@@ -16309,8 +16314,8 @@ class StartupFrame(start_cls):
 						  max(int(round(self.splash_bmp.Size[1] * scale)), 1),
 						  quality)
 			frame.Resize(self.splash_bmp.Size,
-						 (int(round(self.splash_bmp.Size[0] / 2 - frame.Width / 2)),
-						  int(round(self.splash_bmp.Size[1] / 2 - frame.Height / 2))))
+						 (int(round(old_div(self.splash_bmp.Size[0], 2) - old_div(frame.Width, 2))),
+						  int(round(old_div(self.splash_bmp.Size[1], 2) - old_div(frame.Height, 2)))))
 			pdc.DrawBitmap(frame.ConvertToBitmap(), x, y)
 		else:
 			# Animation
@@ -16343,7 +16348,7 @@ class StartupFrame(start_cls):
 class MeasurementFileCheckSanityDialog(ConfirmDialog):
 	
 	def __init__(self, parent, ti3, suspicious, force=False):
-		scale = getcfg("app.dpi") / config.get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 		if scale < 1:
 			scale = 1
 		ConfirmDialog.__init__(self, parent,
@@ -16410,7 +16415,7 @@ class MeasurementFileCheckSanityDialog(ConfirmDialog):
 													  1].SAMPLE_ID)
 		grid.SetRowLabelSize(max(w, grid.GetDefaultRowSize()))
 		w, h = dc.GetTextExtent("9999999999")
-		for i in xrange(grid.GetNumberCols()):
+		for i in range(grid.GetNumberCols()):
 			if i in (4, 5) or i > 8:
 				attr = wx.grid.GridCellAttr()
 				attr.SetReadOnly(True) 
@@ -16581,7 +16586,7 @@ class MeasurementFileCheckSanityDialog(ConfirmDialog):
 	def check_select_status(self, has_false_values=None, has_true_values=None):
 		dlg = self
 		if None in (has_false_values, has_true_values):
-			for index in xrange(dlg.grid.GetNumberRows()):
+			for index in range(dlg.grid.GetNumberRows()):
 				if dlg.grid.GetCellValue(index, 0) != "1":
 					has_false_values = True
 				else:
@@ -16596,7 +16601,7 @@ class MeasurementFileCheckSanityDialog(ConfirmDialog):
 		dlg = self
 		has_false_values = False
 		has_true_values = False
-		for index in xrange(dlg.grid.GetNumberRows()):
+		for index in range(dlg.grid.GetNumberRows()):
 			if dlg.grid.GetCellValue(index, 0) == "1":
 				value = ""
 				has_false_values = True
@@ -16631,7 +16636,7 @@ class MeasurementFileCheckSanityDialog(ConfirmDialog):
 			value = "1"
 		else:
 			value = ""
-		for index in xrange(dlg.grid.GetNumberRows()):
+		for index in range(dlg.grid.GetNumberRows()):
 			dlg.grid.SetCellValue(index, 0, value)
 		self.check_select_status(not value, value)
 	
@@ -16657,7 +16662,7 @@ class MeasurementFileCheckSanityDialog(ConfirmDialog):
 														delta["L_ok"])) and
 										 delta_to_sRGB["ok"]
 									  else "")
-		for col in xrange(3):
+		for col in range(3):
 			dlg.mark_cell(row, 6 + col, (not delta or (delta["E_ok"] and
 													   (delta["L_ok"] or
 														col != 1))) and

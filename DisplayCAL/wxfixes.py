@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from __future__ import division
+from builtins import map
+from builtins import chr
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import os
 import re
 import shutil
@@ -640,7 +647,7 @@ wx.Window.SetToolTipString = SetToolTipString
 
 def _adjust_sizer_args_scaling_for_appdpi(*args, **kwargs):
 	from .config import get_default_dpi, getcfg
-	scale = getcfg("app.dpi") / get_default_dpi()
+	scale = old_div(getcfg("app.dpi"), get_default_dpi())
 	if scale > 1:
 		args = list(args)
 		if kwargs.get("border"):
@@ -696,7 +703,7 @@ class GridSizer(wx._GridSizer):
 	def __init__(self, rows=0, cols=0, vgap=0, hgap=0):
 		if vgap or hgap:
 			from .config import get_default_dpi, getcfg
-			scale = getcfg("app.dpi") / get_default_dpi()
+			scale = old_div(getcfg("app.dpi"), get_default_dpi())
 			if scale > 1:
 				##print vgap, hgap, '->',
 				vgap, hgap = [int(round(v * scale)) for v in (vgap, hgap)]
@@ -716,7 +723,7 @@ class FlexGridSizer(wx._FlexGridSizer):
 	def __init__(self, rows=0, cols=0, vgap=0, hgap=0):
 		if vgap or hgap:
 			from .config import get_default_dpi, getcfg
-			scale = getcfg("app.dpi") / get_default_dpi()
+			scale = old_div(getcfg("app.dpi"), get_default_dpi())
 			if scale > 1:
 				##print vgap, hgap, '->',
 				vgap, hgap = [int(round(v * scale)) for v in (vgap, hgap)]
@@ -737,20 +744,20 @@ def GridGetSelection(self):
 	# rows
 	rows = self.GetSelectedRows()
 	for row in rows:
-		for i in xrange(numcols):
+		for i in range(numcols):
 			sel.append((row, i))
 	# cols
 	cols = self.GetSelectedCols()
 	for col in cols:
-		for i in xrange(numrows):
+		for i in range(numrows):
 			sel.append((i, col))
 	# block
 	tl = self.GetSelectionBlockTopLeft()
 	br = self.GetSelectionBlockBottomRight()
 	if tl and br:
-		for n in xrange(min(len(tl), len(br))):
-			for i in xrange(tl[n][0], br[n][0] + 1): # rows
-				for j in xrange(tl[n][1], br[n][1] + 1): # cols
+		for n in range(min(len(tl), len(br))):
+			for i in range(tl[n][0], br[n][0] + 1): # rows
+				for j in range(tl[n][1], br[n][1] + 1): # cols
 					sel.append((i, j))
 	# single selected cells
 	sel.extend(self.GetSelectedCells())
@@ -779,13 +786,13 @@ def get_dc_font_scale(dc):
 		# wx.GCDC is used, to make text the same size as if wx.GCDC weren't used
 		from .config import get_default_dpi, getcfg, set_default_app_dpi
 		set_default_app_dpi()
-		scale = getcfg("app.dpi") / get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), get_default_dpi())
 	if wx.VERSION < (2, 9):
 		# On Linux, we need to correct the font size by a certain factor if
 		# wx.GCDC is used, to make text the same size as if wx.GCDC weren't used
-		screenppi = map(float, wx.ScreenDC().GetPPI())
+		screenppi = list(map(float, wx.ScreenDC().GetPPI()))
 		ppi = dc.GetPPI()
-		scale *= (screenppi[0] / ppi[0] + screenppi[1] / ppi[1]) / 2.0
+		scale *= (old_div(screenppi[0], ppi[0]) + old_div(screenppi[1], ppi[1])) / 2.0
 	return (scale * pointsize[0] + scale * pointsize[1]) / 2.0
 
 
@@ -859,7 +866,7 @@ def get_bitmap_hover(bitmap, ctrl=None):
 	for i, byte in enumerate(databuffer):
 		RGB[i % 3] = ord(byte)
 		if i % 3 == 2:
-			RGBv = RGB.values()
+			RGBv = list(RGB.values())
 			if not is_bw:
 				RGBv_max = max(RGBv)
 				if minv == 256 and alphabuffer[j] > "\x20":
@@ -868,7 +875,7 @@ def get_bitmap_hover(bitmap, ctrl=None):
 					# value as a crude means to determine if the graphic
 					# contains a black outline.
 					minv = min(RGBv_max, minv)
-			for k in xrange(3):
+			for k in range(3):
 				if is_bw:
 					v = color[k]
 				else:
@@ -973,11 +980,10 @@ def set_bitmap_labels(btn, disabled=True, focus=None, pressed=True):
 
 def get_dialogs(modal=False):
 	""" If there are any dialogs open, return them """
-	return filter(lambda window: window and
+	return [window for window in wx.GetTopLevelWindows() if window and
 								 isinstance(window, wx.Dialog) and
 								 window.IsShown() and
-								 (not modal or window.IsModal()),
-				  wx.GetTopLevelWindows())
+								 (not modal or window.IsModal())]
 
 
 # wx.DirDialog and wx.FileDialog are normally not returned by
@@ -1068,11 +1074,11 @@ class ScrolledWindow(wx._ScrolledWindow):
 
 		# is it before the left edge?
 		if cr.x < 0 and sppu_x > 0:
-			new_vs_x = vs_x + (cr.x / sppu_x)
+			new_vs_x = vs_x + (old_div(cr.x, sppu_x))
 
 		# is it above the top?
 		if cr.y < 0 and sppu_y > 0:
-			new_vs_y = vs_y + (cr.y / sppu_y)
+			new_vs_y = vs_y + (old_div(cr.y, sppu_y))
 
 		# For the right and bottom edges, scroll enough to show the
 		# whole control if possible, but if not just scroll such that
@@ -1080,19 +1086,19 @@ class ScrolledWindow(wx._ScrolledWindow):
 
 		# is it past the right edge ?
 		if cr.right > clntsz.width and sppu_x > 0:
-			diff = (cr.right - clntsz.width) / sppu_x
+			diff = old_div((cr.right - clntsz.width), sppu_x)
 			if cr.x - diff * sppu_x > 0:
 				new_vs_x = vs_x + diff + 1
 			else:
-				new_vs_x = vs_x + (cr.x / sppu_x)
+				new_vs_x = vs_x + (old_div(cr.x, sppu_x))
 				
 		# is it below the bottom ?
 		if cr.bottom > clntsz.height and sppu_y > 0:
-			diff = (cr.bottom - clntsz.height) / sppu_y
+			diff = old_div((cr.bottom - clntsz.height), sppu_y)
 			if cr.y - diff * sppu_y > 0:
 				new_vs_y = vs_y + diff + 1
 			else:
-				new_vs_y = vs_y + (cr.y / sppu_y)
+				new_vs_y = vs_y + (old_div(cr.y, sppu_y))
 
 		# if we need to adjust
 		if new_vs_x != -1 or new_vs_y != -1:
@@ -1214,7 +1220,7 @@ class GenBitmapButton(GenButton, _GenBitmapButton):
 			bmp = self.BitmapFocus
 		bw, bh = bmp.GetWidth(), bmp.GetHeight()
 		hasMask = bmp.GetMask() != None
-		dc.DrawBitmap(bmp, (width-bw)/2+dx, (height-bh)/2+dy, hasMask)
+		dc.DrawBitmap(bmp, old_div((width-bw),2)+dx, old_div((height-bh),2)+dy, hasMask)
 
 	def GetBitmapHover(self):
 		return self.bmpHover
@@ -1310,7 +1316,7 @@ class ThemedGenButton(GenButton, _ThemedGenButton):
 		tw, th = dc.GetTextExtent(label)
 		if sys.platform != "win32" and not self.up:
 			dx = dy = self.labelDelta
-		dc.DrawText(label, (width-tw)/2+dx, (height-th)/2+dy)
+		dc.DrawText(label, old_div((width-tw),2)+dx, old_div((height-th),2)+dy)
 
 	def Enable(self, enable=True):
 		if enable != self.Enabled:
@@ -1365,7 +1371,7 @@ class PlateButton(platebtn.PlateButton):
 
 	def __init__(self, *args, **kwargs):
 		from .config import get_default_dpi, getcfg
-		self.dpiscale = getcfg("app.dpi") / get_default_dpi()
+		self.dpiscale = old_div(getcfg("app.dpi"), get_default_dpi())
 		platebtn.PlateButton.__init__(self, *args, **kwargs)
 		self._bmp["hilite"] = None
 		if sys.platform == "darwin":
@@ -1576,7 +1582,7 @@ class TempXmlResource(object):
 
 	def __init__(self, xmlpath):
 		from .config import get_default_dpi, getcfg
-		scale = max(getcfg("app.dpi") / get_default_dpi(), 1)
+		scale = max(old_div(getcfg("app.dpi"), get_default_dpi()), 1)
 		if scale > 1 or "gtk3" in wx.PlatformInfo:
 			if not TempXmlResource._temp:
 				try:
@@ -1670,12 +1676,12 @@ class GenBitmapTextButton(GenButton, _GenBitmapTextButton):
 		if sys.platform != "win32" and not self.up:
 			dx = dy = self.labelDelta
 
-		pos_x = (width-bw-sw-tw)/2+dx      # adjust for bitmap and text to centre
+		pos_x = old_div((width-bw-sw-tw),2)+dx      # adjust for bitmap and text to centre
 		if bmp is not None:
-			dc.DrawBitmap(bmp, pos_x, (height-bh)/2+dy, hasMask) # draw bitmap if available
+			dc.DrawBitmap(bmp, pos_x, old_div((height-bh),2)+dy, hasMask) # draw bitmap if available
 			pos_x = pos_x + sw   # extra spacing from bitmap
 
-		dc.DrawText(label, pos_x + dx+bw, (height-th)/2+dy)      # draw the text
+		dc.DrawText(label, pos_x + dx+bw, old_div((height-th),2)+dy)      # draw the text
 
 
 class ThemedGenBitmapTextButton(ThemedGenButton, GenBitmapTextButton):

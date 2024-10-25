@@ -94,7 +94,9 @@ Latest Revision: Andrea Gavana @ 14 Apr 2010, 12.00 GMT
 Version 0.4
 
 """
+from __future__ import division
 
+from past.utils import old_div
 __docformat__ = "epytext"
 
 
@@ -538,8 +540,8 @@ class FourWaySplitter(wx.PyPanel):
         if self._expanded < 0:
             totw = width - barSize - 2*border
             toth = height - barSize - 2*border
-            self._splitx = (self._fhor*totw)/10000
-            self._splity = (self._fver*toth)/10000
+            self._splitx = old_div((self._fhor*totw),10000)
+            self._splity = old_div((self._fver*toth),10000)
             rightw = totw - self._splitx
             bottomh = toth - self._splity
             if win0:
@@ -637,11 +639,11 @@ class FourWaySplitter(wx.PyPanel):
         border = self._GetBorderSize()
         
         self._fhor = (width > barSize and \
-                      [(10000*self._splitx+(width-barSize-1))/(width-barSize)] \
+                      [old_div((10000*self._splitx+(width-barSize-1)),(width-barSize))] \
                       or [0])[0]
         
         self._fver = (height > barSize and \
-                      [(10000*self._splity+(height-barSize-1))/(height-barSize)] \
+                      [old_div((10000*self._splity+(height-barSize-1)),(height-barSize))] \
                       or [0])[0]
 
         self._SizeWindows()

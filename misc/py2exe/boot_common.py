@@ -38,6 +38,7 @@
 # system-supplied sys.stdout (or sys.stderr) an exception will be raised.
 #
 
+from builtins import object
 import sys
 if sys.frozen == "windows_exe":
     class Stderr(object):

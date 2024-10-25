@@ -7,7 +7,14 @@ Interactive display calibration UI
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import chr
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import math
 import os
 import re
@@ -139,7 +146,7 @@ class UntetheredFrame(BaseFrame):
 		self.grid.style = ""
 		self.grid.CreateGrid(0, 9)
 		self.grid.SetRowLabelSize(62)
-		for i in xrange(9):
+		for i in range(9):
 			if i in (3, 4):
 				size = self.grid.GetDefaultRowSize()
 				if i == 4:
@@ -175,15 +182,15 @@ class UntetheredFrame(BaseFrame):
 			# Use an accelerator table for tab, space, 0-9, A-Z, numpad,
 			# navigation keys and processing keys
 			keycodes = [wx.WXK_TAB, wx.WXK_SPACE]
-			keycodes.extend(range(ord("0"), ord("9")))
-			keycodes.extend(range(ord("A"), ord("Z")))
+			keycodes.extend(list(range(ord("0"), ord("9"))))
+			keycodes.extend(list(range(ord("A"), ord("Z"))))
 			keycodes.extend(numpad_keycodes)
 			keycodes.extend(nav_keycodes)
 			keycodes.extend(processing_keycodes)
 			for keycode in keycodes:
 				self.id_to_keycode[wx.Window.NewControlId()] = keycode
 			accels = []
-			for id, keycode in self.id_to_keycode.iteritems():
+			for id, keycode in self.id_to_keycode.items():
 				self.Bind(wx.EVT_MENU, self.key_handler, id=id)
 				accels.append((wx.ACCEL_NORMAL, keycode, id))
 				if keycode == wx.WXK_TAB:
@@ -236,7 +243,7 @@ class UntetheredFrame(BaseFrame):
 		self.stop_timer()
 		del self.timer
 		if hasattr(wx.Window, "UnreserveControlId"):
-			for id in self.id_to_keycode.iterkeys():
+			for id in self.id_to_keycode.keys():
 				if id < 0:
 					try:
 						wx.Window.UnreserveControlId(id)
@@ -298,7 +305,7 @@ class UntetheredFrame(BaseFrame):
 			query = self.cgats[0].DATA
 			for i in query:
 				XYZ = query[i]["XYZ_X"], query[i]["XYZ_Y"], query[i]["XYZ_Z"]
-				XYZ = [v / self.white_XYZ[1] * 100 for v in XYZ]
+				XYZ = [old_div(v, self.white_XYZ[1]) * 100 for v in XYZ]
 				query[i]["XYZ_X"], query[i]["XYZ_Y"], query[i]["XYZ_Z"] = XYZ
 			normalized = "YES"
 		else:
@@ -309,12 +316,12 @@ class UntetheredFrame(BaseFrame):
 		if hasattr(self.cgats[0], "APPROX_WHITE_POINT"):
 			self.cgats[0].remove_keyword("APPROX_WHITE_POINT")
 		# Remove L*a*b* from DATA_FORMAT if present
-		for i, label in reversed(self.cgats[0].DATA_FORMAT.items()):
+		for i, label in reversed(list(self.cgats[0].DATA_FORMAT.items())):
 			if label.startswith("LAB_"):
 				self.cgats[0].DATA_FORMAT.pop(i)
 		# Add XYZ to DATA_FORMAT if not yet present
 		for label in ("XYZ_X", "XYZ_Y", "XYZ_Z"):
-			if not label in self.cgats[0].DATA_FORMAT.values():
+			if not label in list(self.cgats[0].DATA_FORMAT.values()):
 				self.cgats[0].DATA_FORMAT.add_data((label, ))
 		self.cgats[0].write(os.path.splitext(self.cgats.filename)[0] + ".ti3")
 		self.safe_send("Q")
@@ -330,8 +337,8 @@ class UntetheredFrame(BaseFrame):
 		self.last_XYZ = XYZ
 		Lab = colormath.XYZ2Lab(*XYZ)
 		if self.white_XYZ[1] > 0:
-			XYZ = [v / self.white_XYZ[1] * 100 for v in XYZ]
-			white_XYZ_Y100 = [v / self.white_XYZ[1] * 100 for v in self.white_XYZ]
+			XYZ = [old_div(v, self.white_XYZ[1]) * 100 for v in XYZ]
+			white_XYZ_Y100 = [old_div(v, self.white_XYZ[1]) * 100 for v in self.white_XYZ]
 			white_CCT = colormath.XYZ2CCT(*white_XYZ_Y100)
 			if white_CCT:
 				DXYZ = colormath.CIEDCCT2XYZ(white_CCT, scale=100.0)
@@ -538,7 +545,7 @@ class UntetheredFrame(BaseFrame):
 						row = query[i]
 						self.grid.SetCellBackgroundColour(query[i].SAMPLE_ID - 1,
 														  4, wx.Colour(*color))
-						for j in xrange(3):
+						for j in range(3):
 							self.grid.SetCellValue(query[i].SAMPLE_ID - 1, 5 + j, "%.2f" % Lab[j])
 					self.grid.MakeCellVisible(self.index, 0)
 					self.grid.ForceRefresh()
@@ -548,13 +555,13 @@ class UntetheredFrame(BaseFrame):
 					else:
 						# Jump to the next or previous unmeasured patch, if any
 						index = self.index
-						for i in xrange(self.index + 1, data_len):
+						for i in range(self.index + 1, data_len):
 							if (getcfg("untethered.measure.auto") or
 								not i in self.measured):
 								self.index = i
 								break
 						if self.index == index:
-							for i in xrange(self.index - 1, -1, -1):
+							for i in range(self.index - 1, -1, -1):
 								if not i in self.measured:
 									self.index = i
 									break
@@ -592,10 +599,10 @@ class UntetheredFrame(BaseFrame):
 		if not num_cols:
 			return
 		grid_w = self.grid.GetSize()[0] - self.grid.GetDefaultRowSize() * 2
-		col_w = round(grid_w / (num_cols - 1))
+		col_w = round(old_div(grid_w, (num_cols - 1)))
 		last_col_w = grid_w - col_w * (num_cols - 2)
 		self.grid.SetRowLabelSize(col_w)
-		for i in xrange(num_cols):
+		for i in range(num_cols):
 			if i in (3, 4):
 				w = self.grid.GetDefaultRowSize()
 			elif i == num_cols - 1:
@@ -701,13 +708,13 @@ class UntetheredFrame(BaseFrame):
 
 
 if __name__ == "__main__":
-	from thread import start_new_thread
+	from _thread import start_new_thread
 	from time import sleep
 	import random
 	from .util_io import Files
 	from . import ICCProfile as ICCP
 	from . import worker
-	class Subprocess():
+	class Subprocess(object):
 		def send(self, bytes):
 			start_new_thread(test, (bytes,))
 	class Worker(worker.Worker):

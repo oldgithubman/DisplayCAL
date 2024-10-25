@@ -7,7 +7,17 @@ Interactive display calibration UI
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import chr
+from builtins import zip
+from builtins import map
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import os
 import re
 import sys
@@ -43,7 +53,7 @@ FGCOLOUR = wx.Colour(0x99, 0x99, 0x99)
 CRT = True
 
 def get_panel(parent, size=wx.DefaultSize):
-	scale = max(getcfg("app.dpi") / get_default_dpi(), 1.0)
+	scale = max(old_div(getcfg("app.dpi"), get_default_dpi()), 1.0)
 	size = tuple(int(round(v * scale)) for v in size)
 	panel = wx_Panel(parent, wx.ID_ANY, size=size)
 	if debug:
@@ -125,7 +135,7 @@ class DisplayAdjustmentImageContainer(labelbook.ImageContainer):
 			if self._pinBtnRect.Contains(pt):
 				return -1, IMG_OVER_PIN
 
-		for i in xrange(len(self._pagesInfoVec)):
+		for i in range(len(self._pagesInfoVec)):
 		
 			if self._pagesInfoVec[i].GetPosition() == wx.Point(-1, -1):
 				break
@@ -209,7 +219,7 @@ class DisplayAdjustmentImageContainer(labelbook.ImageContainer):
 
 		count = 0
 		
-		for i in xrange(len(self._pagesInfoVec)):
+		for i in range(len(self._pagesInfoVec)):
 			if self.GetParent().GetParent().is_busy and i != self.GetParent().GetSelection():
 				continue
 			if i in self.GetParent().disabled_pages:
@@ -291,8 +301,8 @@ class DisplayAdjustmentImageContainer(labelbook.ImageContainer):
 				
 				else:
 				
-					imgXcoord = pos + (rectWidth / 2) - (self._nImgSize / 2)
-					imgYcoord = (style & INB_SHOW_ONLY_IMAGES and [self._nImgSize / 2] or [imgTopPadding])[0]
+					imgXcoord = pos + (old_div(rectWidth, 2)) - (old_div(self._nImgSize, 2))
+					imgYcoord = (style & INB_SHOW_ONLY_IMAGES and [old_div(self._nImgSize, 2)] or [imgTopPadding])[0]
 
 				if self._nHoeveredImgIdx == i:
 					self.stateimgs.Draw(0, dc,
@@ -325,15 +335,15 @@ class DisplayAdjustmentImageContainer(labelbook.ImageContainer):
 				
 				if bUseYcoord:
 				
-					textOffsetX = ((rectWidth - textWidth) / 2 )
+					textOffsetX = (old_div((rectWidth - textWidth), 2) )
 					textOffsetY = (not style & INB_SHOW_ONLY_TEXT  and [pos + self._nImgSize  + imgTopPadding + 3] or \
-									   [pos + ((self._nImgSize * 2 - textHeight) / 2 )])[0]
+									   [pos + (old_div((self._nImgSize * 2 - textHeight), 2) )])[0]
 				
 				else:
 				
-					textOffsetX = (rectWidth - textWidth) / 2  + pos + nTextPaddingLeft
+					textOffsetX = old_div((rectWidth - textWidth), 2)  + pos + nTextPaddingLeft
 					textOffsetY = (not style & INB_SHOW_ONLY_TEXT and [self._nImgSize + imgTopPadding + 3] or \
-									   [((self._nImgSize * 2 - textHeight) / 2 )])[0]
+									   [(old_div((self._nImgSize * 2 - textHeight), 2) )])[0]
 				
 				dc.SetTextForeground(self.GetForegroundColour())
 				dc.DrawText(fixedText, textOffsetX, textOffsetY)
@@ -431,7 +441,7 @@ class DisplayAdjustmentFlatImageBook(labelbook.FlatImageBook):
 		self._mainSizer.Add(self._pages, 0, wx.EXPAND)
 
 		if className == "FlatImageBook":
-			scale = getcfg("app.dpi") / get_default_dpi()
+			scale = old_div(getcfg("app.dpi"), get_default_dpi())
 			if scale < 1:
 				scale = 1
 			if agwStyle & INB_LEFT or agwStyle & INB_RIGHT:
@@ -545,7 +555,7 @@ class DisplayAdjustmentPanel(wx_Panel):
 						   "G": (wx.Colour(0, 153, 0), wx.Colour(0, 255, 0)),
 						   "B": (wx.Colour(0, 0, 153), wx.Colour(0, 0, 255)),
 						   "L": (wx.Colour(153, 153, 153), wx.Colour(255, 255, 255))}
-		scale = max(getcfg("app.dpi") / get_default_dpi(), 1.0)
+		scale = max(old_div(getcfg("app.dpi"), get_default_dpi()), 1.0)
 		self.gauges[name] = PyGauge(self, size=(int(round(200 * scale)),
 												int(round(8 * scale))))
 		self.gauges[name].SetBackgroundColour(BORDERCOLOUR)
@@ -566,7 +576,7 @@ class DisplayAdjustmentPanel(wx_Panel):
 
 	def add_marker(self, direction="top"):
 		self.sizer.Add((1, 1))
-		scale = max(getcfg("app.dpi") / get_default_dpi(), 1.0)
+		scale = max(old_div(getcfg("app.dpi"), get_default_dpi()), 1.0)
 		self.sizer.Add(wx.StaticBitmap(self, -1,
 									   getbitmap("theme/marker_%s" % direction),
 									   size=(int(round(200 * scale)),
@@ -717,7 +727,7 @@ class DisplayAdjustmentFrame(windowcls):
 		self.indicator_panel.SetSizer(wx.BoxSizer(wx.HORIZONTAL))
 		self.indicator_panel.SetForegroundColour(FGCOLOUR)
 		self.btnsizer.Add(self.indicator_panel, flag=wx.EXPAND)
-		scale = max(getcfg("app.dpi") / get_default_dpi(), 1.0)
+		scale = max(old_div(getcfg("app.dpi"), get_default_dpi()), 1.0)
 		self.indicator_ctrl = wx.StaticBitmap(self.indicator_panel, wx.ID_ANY,
 											  geticon(10, "empty",
 													  use_mask=True),
@@ -755,15 +765,15 @@ class DisplayAdjustmentFrame(windowcls):
 			# Use an accelerator table for tab, space, 0-9, A-Z, numpad,
 			# navigation keys and processing keys
 			keycodes = [wx.WXK_TAB, wx.WXK_SPACE]
-			keycodes.extend(range(ord("0"), ord("9")))
-			keycodes.extend(range(ord("A"), ord("Z")))
+			keycodes.extend(list(range(ord("0"), ord("9"))))
+			keycodes.extend(list(range(ord("A"), ord("Z"))))
 			keycodes.extend(numpad_keycodes)
 			keycodes.extend(nav_keycodes)
 			keycodes.extend(processing_keycodes)
 			for keycode in keycodes:
 				self.id_to_keycode[wx.Window.NewControlId()] = keycode
 			accels = []
-			for id, keycode in self.id_to_keycode.iteritems():
+			for id, keycode in self.id_to_keycode.items():
 				self.Bind(wx.EVT_MENU, self.key_handler, id=id)
 				accels.append((wx.ACCEL_NORMAL, keycode, id))
 				if keycode == wx.WXK_TAB:
@@ -817,7 +827,7 @@ class DisplayAdjustmentFrame(windowcls):
 		self.stop_timer()
 		del self.timer
 		if hasattr(wx.Window, "UnreserveControlId"):
-			for id in self.id_to_keycode.iterkeys():
+			for id in self.id_to_keycode.keys():
 				if id < 0:
 					try:
 						wx.Window.UnreserveControlId(id)
@@ -854,10 +864,10 @@ class DisplayAdjustmentFrame(windowcls):
 				msg != self.lastmsg):
 				self.lastmsg = msg
 				self.Freeze()
-				for txt in self.lb.GetCurrentPage().txt.itervalues():
+				for txt in self.lb.GetCurrentPage().txt.values():
 					txt.checkmark.GetContainingSizer().Hide(txt.checkmark)
 					txt.SetLabel(" ")
-				txt = self.lb.GetCurrentPage().txt.values()[0]
+				txt = list(self.lb.GetCurrentPage().txt.values())[0]
 				if txt.GetLabel() != wrap(msg, 46):
 					txt.SetLabel(wrap(msg, 46))
 					txt.SetForegroundColour(FGCOLOUR)
@@ -921,10 +931,10 @@ class DisplayAdjustmentFrame(windowcls):
 		self.lb.GetPage(2).update_desc()
 		
 		# Set size
-		scale = getcfg("app.dpi") / get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), get_default_dpi())
 		if scale < 1:
 			scale = 1
-		img_w, img_h = map(int, map(round, (84 * scale, 72 * scale)))
+		img_w, img_h = list(map(int, list(map(round, (84 * scale, 72 * scale)))))
 		min_h = (img_h + 8) * (self.lb.GetPageCount() - len(self.lb.disabled_pages)) + 2 - 8
 		if init:
 			self.lb.SetMinSize((418, min_h))
@@ -940,7 +950,7 @@ class DisplayAdjustmentFrame(windowcls):
 		# The button sizer will be as wide as the labelbook or wider,
 		# so use it as reference
 		w = self.btnsizer.CalcMin()[0] - img_w - 12
-		for pagenum in xrange(0, self.lb.GetPageCount()):
+		for pagenum in range(0, self.lb.GetPageCount()):
 			page = self.lb.GetPage(pagenum)
 			page.SetSize((w, -1))
 			page.desc.SetLabel(page.desc.GetLabel().replace("\n", " "))
@@ -968,7 +978,7 @@ class DisplayAdjustmentFrame(windowcls):
 														   bitmap))
 			page.Fit()
 			page.Layout()
-			for txt in page.txt.itervalues():
+			for txt in page.txt.values():
 				txt.SetLabel(" ")
 		self.lb.SetMinSize((self.lb.GetMinSize()[0],
 							max(self.lb.GetCurrentPage().GetSize()[1], min_h)))
@@ -1067,8 +1077,8 @@ class DisplayAdjustmentFrame(windowcls):
 					event.Skip()
 			elif keycode in [ord(str(c)) for c in range(1, 6)]:
 				key_num = chr(keycode)
-				pagenum = dict(zip(self.pagenum_2_argyll_key_num.values(),
-								   self.pagenum_2_argyll_key_num.keys())).get(key_num)
+				pagenum = dict(list(zip(list(self.pagenum_2_argyll_key_num.values()),
+								   list(self.pagenum_2_argyll_key_num.keys())))).get(key_num)
 				if pagenum not in self.lb.disabled_pages and not self.is_measuring:
 					self.lb.SetSelection(pagenum)
 					self.start_interactive_adjustment()
@@ -1327,7 +1337,7 @@ class DisplayAdjustmentFrame(windowcls):
 		self.Freeze()
 		self._setup()
 		# Reset controls
-		for pagenum in xrange(0, self.lb.GetPageCount()):
+		for pagenum in range(0, self.lb.GetPageCount()):
 			page = self.lb.GetPage(pagenum)
 			page.initial_br = None
 			page.target_bl = None
@@ -1335,7 +1345,7 @@ class DisplayAdjustmentFrame(windowcls):
 				if page.gauges.get(name):
 					page.gauges[name].SetValue(0)
 					page.gauges[name].Refresh()
-			for txt in page.txt.itervalues():
+			for txt in page.txt.values():
 				txt.checkmark.GetContainingSizer().Hide(txt.checkmark)
 				txt.SetForegroundColour(FGCOLOUR)
 		self.create_start_interactive_adjustment_button()
@@ -1359,9 +1369,9 @@ class DisplayAdjustmentFrame(windowcls):
 
 
 if __name__ == "__main__":
-	from thread import start_new_thread
+	from _thread import start_new_thread
 	from time import sleep
-	class Subprocess():
+	class Subprocess(object):
 		def send(self, bytes):
 			start_new_thread(test, (bytes,))
 	class Worker(object):

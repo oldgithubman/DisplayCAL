@@ -9,7 +9,15 @@ In most cases, unless otherwise stated RGB is R'G'B' (gamma-compressed)
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
 
+from builtins import map
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
 import colorsys
 import logging
 import math
@@ -18,7 +26,7 @@ import warnings
 
 
 def get_transfer_function_phi(alpha, gamma):
-	return (math.pow(1 + alpha, gamma) * math.pow(gamma - 1, gamma - 1)) / (math.pow(alpha, gamma - 1) * math.pow(gamma, gamma))
+	return old_div((math.pow(1 + alpha, gamma) * math.pow(gamma - 1, gamma - 1)), (math.pow(alpha, gamma - 1) * math.pow(gamma, gamma)))
 
 
 LSTAR_E = 216.0 / 24389.0  # Intent of CIE standard, actual CIE standard = 0.008856
@@ -49,11 +57,11 @@ def specialpow(a, b, slope_limit=0):
 		# Power curve
 		if a < 0.0:
 			if slope_limit:
-				return min(-math.pow(-a, b), a / slope_limit)
+				return min(-math.pow(-a, b), old_div(a, slope_limit))
 			return -math.pow(-a, b)
 		else:
 			if slope_limit:
-				return max(math.pow(a, b), a / slope_limit)
+				return max(math.pow(a, b), old_div(a, slope_limit))
 			return math.pow(a, b)
 	if a < 0.0:
 		signScale = -1.0
@@ -62,13 +70,13 @@ def specialpow(a, b, slope_limit=0):
 		signScale = 1.0
 	if b in (1.0 / -601, 1.0 / -709):
 		# XYZ -> RGB, Rec. 601/709 TRC
-		if a < REC709_K0 / REC709_P:
+		if a < old_div(REC709_K0, REC709_P):
 			v = a * REC709_P
 		else:
 			v = 1.099 * math.pow(a, 0.45) - 0.099
 	elif b == 1.0 / -240:
 		# XYZ -> RGB, SMPTE 240M TRC
-		if a < SMPTE240M_K0 / SMPTE240M_P:
+		if a < old_div(SMPTE240M_K0, SMPTE240M_P):
 			v = a * SMPTE240M_P
 		else:
 			v = 1.1115 * math.pow(a, 0.45) - 0.1115
@@ -80,43 +88,43 @@ def specialpow(a, b, slope_limit=0):
 			v = 1.16 * math.pow(a, 1.0 / 3.0) - 0.16
 	elif b == 1.0 / -2.4:
 		# XYZ -> RGB, sRGB TRC
-		if a <= SRGB_K0 / SRGB_P:
+		if a <= old_div(SRGB_K0, SRGB_P):
 			v = a * SRGB_P
 		else:
 			v = 1.055 * math.pow(a, 1.0 / 2.4) - 0.055
 	elif b == 1.0 / -2084:
 		# XYZ -> RGB, SMPTE 2084 (PQ)
-		v = ((2413.0 * (a ** SMPTE2084_M1) + 107) /
-			 (2392.0 * (a ** SMPTE2084_M1) + 128)) ** SMPTE2084_M2
+		v = (old_div((2413.0 * (a ** SMPTE2084_M1) + 107),
+			 (2392.0 * (a ** SMPTE2084_M1) + 128))) ** SMPTE2084_M2
 	elif b == -2.4:
 		# RGB -> XYZ, sRGB TRC
 		if a <= SRGB_K0:
-			v = a / SRGB_P
+			v = old_div(a, SRGB_P)
 		else:
 			v = math.pow((a + 0.055) / 1.055, 2.4)
 	elif b == -3.0:
 		# RGB -> XYZ, L* TRC
 		if a <= 0.08:  # E * K * 0.01
-			v = 100.0 * a / LSTAR_K
+			v = old_div(100.0 * a, LSTAR_K)
 		else:
 			v = math.pow((a + 0.16) / 1.16, 3.0)
 	elif b == -240:
 		# RGB -> XYZ, SMPTE 240M TRC
 		if a < SMPTE240M_K0:
-			v = a / SMPTE240M_P
+			v = old_div(a, SMPTE240M_P)
 		else:
 			v = math.pow((0.1115 + a) / 1.1115, 1.0 / 0.45)
 	elif b in (-601, -709):
 		# RGB -> XYZ, Rec. 601/709 TRC
 		if a < REC709_K0:
-			v = a / REC709_P
+			v = old_div(a, REC709_P)
 		else:
 			v = math.pow((a + .099) / 1.099, 1.0 / 0.45)
 	elif b == -2084:
 		# RGB -> XYZ, SMPTE 2084 (PQ)
 		# See https://www.smpte.org/sites/default/files/2014-05-06-EOTF-Miller-1-2-handout.pdf
-		v = (max(a ** (1.0 / SMPTE2084_M2) - SMPTE2084_C1, 0) /
-			 (SMPTE2084_C2 - SMPTE2084_C3 * a ** (1.0 / SMPTE2084_M2))) ** (1.0 / SMPTE2084_M1)
+		v = (old_div(max(a ** (1.0 / SMPTE2084_M2) - SMPTE2084_C1, 0),
+			 (SMPTE2084_C2 - SMPTE2084_C3 * a ** (1.0 / SMPTE2084_M2)))) ** (1.0 / SMPTE2084_M1)
 	else:
 		raise ValueError("Invalid gamma %r" % b)
 	return v * signScale
@@ -150,11 +158,10 @@ def DICOM(j, inverse=False):
 		h = -3.1978977E-3
 		k = 1.2992634E-4
 		m = 1.3635334E-3
-		return ((a + c * logj + e * math.pow(logj, 2) +
-				 g * math.pow(logj, 3) + m * math.pow(logj, 4))
-				/
+		return (old_div((a + c * logj + e * math.pow(logj, 2) +
+				 g * math.pow(logj, 3) + m * math.pow(logj, 4)),
 				(1 + b * logj + d * math.pow(logj, 2) + f * math.pow(logj, 3) +
-				 h * math.pow(logj, 4) + k * math.pow(logj, 5)))
+				 h * math.pow(logj, 4) + k * math.pow(logj, 5))))
 
 
 class HLG(object):
@@ -205,7 +212,7 @@ class HLG(object):
 			if 0 <= v <= 1 / 2.:
 				v = v ** 2 / 3.
 			else:
-				v = (math.exp((v - c) / a) + b) / 12.
+				v = (math.exp(old_div((v - c), a)) + b) / 12.
 		else:
 			# Relative scene linear light to non-linear HLG signal
 			if 0 <= v <= 1 / 12.:
@@ -257,13 +264,13 @@ class HLG(object):
 			black_cdm2 = float(self.black_cdm2)
 		else:
 			black_cdm2 = 0
-		alpha = (self.white_cdm2 - black_cdm2) / self.white_cdm2
-		beta = black_cdm2 / self.white_cdm2
+		alpha = old_div((self.white_cdm2 - black_cdm2), self.white_cdm2)
+		beta = old_div(black_cdm2, self.white_cdm2)
 		Y = 0.2627 * R + 0.6780 * G + 0.0593 * B
 		if inverse:
 			if Y > beta:
-				R, G, B = (((Y - beta) / alpha) ** ((1 - self.gamma) / self.gamma) *
-						   ((v - beta) / alpha) for v in (R, G, B))
+				R, G, B = ((old_div((Y - beta), alpha)) ** (old_div((1 - self.gamma), self.gamma)) *
+						   (old_div((v - beta), alpha)) for v in (R, G, B))
 			else:
 				R, G, B = 0, 0, 0
 		else:
@@ -278,7 +285,7 @@ class HLG(object):
 		X, Y, Z = (max(v, 0) for v in (X, Y, Z))
 		Yy = self.ootf(Y, apply_black_offset=False)
 		if Y:
-			X, Y, Z = (v / Y * Yy for v in (X, Y, Z))
+			X, Y, Z = (old_div(v, Y) * Yy for v in (X, Y, Z))
 		else:
 			X, Y, Z = (v * Yy for v in self.rgb_space[1])
 		if apply_black_offset:
@@ -295,7 +302,7 @@ class HLG(object):
 			X, Y, Z = apply_bpc(X, Y, Z, bp_in, (0, 0, 0), self.rgb_space[1])
 		Yy = self.ootf(Y, True, apply_black_offset=False)
 		if Y:
-			X, Y, Z = (v / Y * Yy for v in (X, Y, Z))
+			X, Y, Z = (old_div(v, Y) * Yy for v in (X, Y, Z))
 		R, G, B = self.rgb_space[-1].inverted() * (X, Y, Z)
 		R, G, B = (max(v, 0) for v in (R, G, B))
 		R, G, B = [self.oetf(v) for v in (R, G, B)]
@@ -360,12 +367,12 @@ def var(a):
 		l -= 1
 		s += a[l]
 	l = len(a)
-	m = s / l
+	m = old_div(s, l)
 	s = 0.0
 	while l:
 		l -= 1
 		s += (a[l] - m) ** 2
-	return s / len(a)
+	return old_div(s, len(a))
 
 
 def XYZ2LMS(X, Y, Z, cat="Bradford"):
@@ -388,13 +395,13 @@ def LMS_wp_adaption_matrix(whitepoint_source=None,
 	XYZWD = get_whitepoint(whitepoint_destination)
 	if XYZWS[1] <= 1.0 and XYZWD[1] > 1.0:
 		# make sure the scaling is identical
-		XYZWD = [v / XYZWD[1] * XYZWS[1] for v in XYZWD]
+		XYZWD = [old_div(v, XYZWD[1]) * XYZWS[1] for v in XYZWD]
 	if XYZWD[1] <= 1.0 and XYZWS[1] > 1.0:
 		# make sure the scaling is identical
-		XYZWS = [v / XYZWS[1] * XYZWD[1] for v in XYZWS]
+		XYZWS = [old_div(v, XYZWS[1]) * XYZWD[1] for v in XYZWS]
 	Ls, Ms, Ss = XYZ2LMS(XYZWS[0], XYZWS[1], XYZWS[2], cat)
 	Ld, Md, Sd = XYZ2LMS(XYZWD[0], XYZWD[1], XYZWD[2], cat)
-	return Matrix3x3([[Ld/Ls, 0, 0], [0, Md/Ms, 0], [0, 0, Sd/Ss]])
+	return Matrix3x3([[old_div(Ld,Ls), 0, 0], [0, old_div(Md,Ms), 0], [0, 0, old_div(Sd,Ss)]])
 
 
 def wp_adaption_matrix(whitepoint_source=None, whitepoint_destination=None, 
@@ -457,7 +464,7 @@ def apply_bpc(X, Y, Z, bp_in=None, bp_out=None, wp_out="D50", weight=False,
 		L = XYZ2Lab(*[v * 100 for v in (X, Y, Z)])[0]
 		bp_in_Lab = XYZ2Lab(*[v * 100 for v in bp_in])
 		bp_out_Lab = XYZ2Lab(*[v * 100 for v in bp_out])
-		vv = (L - bp_in_Lab[0]) / (100.0 - bp_in_Lab[0])  # 0 at bp, 1 at wp
+		vv = old_div((L - bp_in_Lab[0]), (100.0 - bp_in_Lab[0]))  # 0 at bp, 1 at wp
 		vv = 1.0 - vv
 		if vv < 0.0:
 			vv = 0.0
@@ -476,7 +483,7 @@ def apply_bpc(X, Y, Z, bp_in=None, bp_out=None, wp_out="D50", weight=False,
 	else:
 		XYZ = [X, Y, Z]
 	for i, v in enumerate(XYZ):
-		XYZ[i] = ((wp_out[i] - bp_out[i]) * v - wp_out[i] * (bp_in[i] - bp_out[i])) / (wp_out[i] - bp_in[i])
+		XYZ[i] = old_div(((wp_out[i] - bp_out[i]) * v - wp_out[i] * (bp_in[i] - bp_out[i])), (wp_out[i] - bp_in[i]))
 	if pin_chromaticity:
 		XYZ = xyY2XYZ(x, y, XYZ[0])
 	return XYZ
@@ -493,7 +500,7 @@ def blend_ab(X, Y, Z, bp, wp, power=40.0, signscale=1):
 	bpL, bpa, bpb = XYZ2Lab(*bp, whitepoint=wp)
 	if bpL == 100:
 		raise ValueError("Black L* is 100!")
-	vv = (L - bpL) / (100.0 - bpL)  # 0 at bp, 1 at wp
+	vv = old_div((L - bpL), (100.0 - bpL))  # 0 at bp, 1 at wp
 	vv = 1.0 - vv  # 1 at bp, 0 at wp
 	if vv < 0.0:
 		vv = 0.0
@@ -518,7 +525,7 @@ def blend_blackpoint(X, Y, Z, bp_in=None, bp_out=None, wp=None, power=40.0,
 	for i, bp in enumerate((bp_in, bp_out)):
 		if not bp or tuple(bp) == (0, 0, 0):
 			continue
-		bp_wp = tuple(v / wp[1] * bp[1] for v in wp)
+		bp_wp = tuple(old_div(v, wp[1]) * bp[1] for v in wp)
 		if i == 0:
 			X, Y, Z = blend_ab(X, Y, Z, bp, wp, power, -1)
 			X, Y, Z = apply_bpc(X, Y, Z, bp_wp, None, wp, pin_chromaticity)
@@ -537,7 +544,7 @@ def interp(x, xp, fp, left=None, right=None):
 	interp(0, [0, 0], [0, 1]) will return 0
 	
 	"""
-	if not isinstance(x, (int, long, float, complex)):
+	if not isinstance(x, (int, int, float, complex)):
 		yi = []
 		for n in x:
 			yi.append(interp(n, xp, fp, left, right))
@@ -558,17 +565,17 @@ def interp(x, xp, fp, left=None, right=None):
 			elif v > x and i < higher:
 				higher = i
 		step = float(x - xp[lower])
-		steps = (xp[higher] - xp[lower]) / step
-		return fp[lower] + (fp[higher] - fp[lower]) / steps
+		steps = old_div((xp[higher] - xp[lower]), step)
+		return fp[lower] + old_div((fp[higher] - fp[lower]), steps)
 
 
 def interp_resize(iterable, new_size, use_numpy=False):
 	""" Change size of iterable through linear interpolation """
 	result = []
-	x_new = range(len(iterable))
+	x_new = list(range(len(iterable)))
 	interp = Interp(x_new, iterable, use_numpy=use_numpy)
-	for i in xrange(new_size):
-		result.append(interp(i / (new_size - 1.0) * (len(iterable) - 1.0)))
+	for i in range(new_size):
+		result.append(interp(old_div(i, (new_size - 1.0)) * (len(iterable) - 1.0)))
 	return result
 
 
@@ -577,8 +584,8 @@ def interp_fill(xp, fp, new_size, use_numpy=False):
 	result = []
 	last = xp[-1]
 	interp = Interp(xp, fp, use_numpy=use_numpy)
-	for i in xrange(new_size):
-		result.append(interp(i / (new_size - 1.0) * last))
+	for i in range(new_size):
+		result.append(interp(old_div(i, (new_size - 1.0)) * last))
 	return result
 
 
@@ -597,20 +604,20 @@ def smooth_avg(values, passes=1, window=None, protect=None):
 			warnings.warn("Invalid window %r, size %i - using default (1, 1, 1)" %
 						  (window, len(window)), Warning)
 		window = (1.0, 1.0, 1.0)
-	for x in xrange(0, passes):
+	for x in range(0, passes):
 		data = []
 		for j, v in enumerate(values):
 			tmpwindow = window
 			if not protect or j not in protect:
 				while j > 0 and j < len(values) - 1 and len(tmpwindow) >= 3:
-					tl = (len(tmpwindow) - 1) / 2
+					tl = old_div((len(tmpwindow) - 1), 2)
 					# print j, tl, tmpwindow
 					if tl > 0 and j - tl >= 0 and j + tl <= len(values) - 1:
 						windowslice = values[j - tl:j + tl + 1]
 						windowsize = 0
 						for k, weight in enumerate(tmpwindow):
 							windowsize += float(weight) * windowslice[k]
-						v = windowsize / sum(tmpwindow)
+						v = old_div(windowsize, sum(tmpwindow))
 						break
 					else:
 						tmpwindow = tmpwindow[1:-1]
@@ -640,13 +647,13 @@ def compute_bpc(bp_in, bp_out):
 	ty = bp_in[1] - D50[1]
 	tz = bp_in[2] - D50[2]
 
-	ax = (bp_out[0] - D50[0]) / tx
-	ay = (bp_out[1] - D50[1]) / ty
-	az = (bp_out[2] - D50[2]) / tz
+	ax = old_div((bp_out[0] - D50[0]), tx)
+	ay = old_div((bp_out[1] - D50[1]), ty)
+	az = old_div((bp_out[2] - D50[2]), tz)
 
-	bx = - D50[0] * (bp_out[0] - bp_in[0]) / tx
-	by = - D50[1] * (bp_out[1] - bp_in[1]) / ty
-	bz = - D50[2] * (bp_out[2] - bp_in[2]) / tz
+	bx = old_div(- D50[0] * (bp_out[0] - bp_in[0]), tx)
+	by = old_div(- D50[1] * (bp_out[1] - bp_in[1]), ty)
+	bz = old_div(- D50[2] * (bp_out[2] - bp_in[2]), tz)
 
 	matrix = Matrix3x3([[ax, 0,  0],
 						[0, ay,  0],
@@ -709,7 +716,7 @@ def delta(L1, a1, b1, L2, a2, b2, method="1976", p1=None, p2=None, p3=None,
 			KL = 2.0 if textiles else 1.0
 			KC = 1.0
 			KH = 1.0
-			dLw, dCw, dHw = dL / (KL * SL), dC / (KC * SC), dH / (KH * SH)
+			dLw, dCw, dHw = old_div(dL, (KL * SL)), old_div(dC, (KC * SC)), old_div(dH, (KH * SH))
 			dE = math.sqrt(math.pow(dLw, 2) + math.pow(dCw, 2) + math.pow(dHw, 2))
 		elif method in ("cmc(2:1)", "cmc21", "cmc(1:1)", "cmc11", "cmc"):
 			if method in ("cmc(2:1)", "cmc21"):
@@ -722,13 +729,13 @@ def delta(L1, a1, b1, L2, a2, b2, method="1976", p1=None, p2=None, p3=None,
 			dC = C2 - C1
 			dH2 = math.pow(a1 - a2, 2) + math.pow(b1 - b2, 2) - math.pow(dC, 2)
 			dH = math.sqrt(dH2) if dH2 > 0 else 0
-			SL = 0.511 if L1 < 16 else (0.040975 * L1) / (1 + 0.01765 * L1)
-			SC = (0.0638 * C1) / (1 + 0.0131 * C1) + 0.638
-			F = math.sqrt(math.pow(C1, 4) / (math.pow(C1, 4) + 1900.0))
+			SL = 0.511 if L1 < 16 else old_div((0.040975 * L1), (1 + 0.01765 * L1))
+			SC = old_div((0.0638 * C1), (1 + 0.0131 * C1)) + 0.638
+			F = math.sqrt(old_div(math.pow(C1, 4), (math.pow(C1, 4) + 1900.0)))
 			H1 = math.degrees(math.atan2(b1, a1)) + (0 if b1 >= 0 else 360.0)
 			T = 0.56 + abs(0.2 * math.cos(math.radians(H1 + 168.0))) if 164 <= H1 and H1 <= 345 else 0.36 + abs(0.4 * math.cos(math.radians(H1 + 35)))
 			SH = SC * (F * T + 1 - F)
-			dLw, dCw, dHw = dL / (l * SL), dC / (c * SC), dH / SH
+			dLw, dCw, dHw = old_div(dL, (l * SL)), old_div(dC, (c * SC)), old_div(dH, SH)
 			dE = math.sqrt(math.pow(dLw, 2) + math.pow(dCw, 2) + math.pow(dHw, 2))
 		elif method in ("00", "2k", "2000", "cie00", "cie2k", "cie2000"):
 			pow25_7 = math.pow(25, 7)
@@ -738,7 +745,7 @@ def delta(L1, a1, b1, L2, a2, b2, method="1976", p1=None, p2=None, p3=None,
 			C1 = math.sqrt(math.pow(a1, 2) + math.pow(b1, 2))
 			C2 = math.sqrt(math.pow(a2, 2) + math.pow(b2, 2))
 			C_avg = avg(C1, C2)
-			G = .5 * (1 - math.sqrt(math.pow(C_avg, 7) / (math.pow(C_avg, 7) + pow25_7)))
+			G = .5 * (1 - math.sqrt(old_div(math.pow(C_avg, 7), (math.pow(C_avg, 7) + pow25_7))))
 			L1_ = L1
 			a1_ = (1 + G) * a1
 			b1_ = b1
@@ -762,17 +769,17 @@ def delta(L1, a1, b1, L2, a2, b2, method="1976", p1=None, p2=None, p3=None,
 			h__avg_cond = 3.0 if C1_ * C2_ == 0 else (0 if abs(h2_ - h1_) <= 180 else (1.0 if h2_ + h1_ < 360 else 2.0))
 			h__avg = h1_ + h2_ if h__avg_cond == 3 else (avg(h1_, h2_) if h__avg_cond == 0 else (avg(h1_, h2_) + 180.0 if h__avg_cond == 1 else avg(h1_, h2_) - 180.0))
 			AB = math.pow(L__avg - 50.0, 2)  # (L'_ave-50)^2
-			S_L = 1 + .015 * AB / math.sqrt(20.0 + AB)
+			S_L = 1 + old_div(.015 * AB, math.sqrt(20.0 + AB))
 			S_C = 1 + .045 * C__avg
 			T = (1 - .17 * math.cos(math.radians(h__avg - 30.0)) + .24 * math.cos(math.radians(2.0 * h__avg)) + .32 * math.cos(math.radians(3.0 * h__avg + 6.0))
 				 - .2 * math.cos(math.radians(4 * h__avg - 63.0)))
 			S_H = 1 + .015 * C__avg * T
 			dTheta = 30.0 * math.exp(-1 * math.pow((h__avg - 275.0) / 25.0, 2))
-			R_C = 2.0 * math.sqrt(math.pow(C__avg, 7) / (math.pow(C__avg, 7) + pow25_7))
+			R_C = 2.0 * math.sqrt(old_div(math.pow(C__avg, 7), (math.pow(C__avg, 7) + pow25_7)))
 			R_T = -math.sin(math.radians(2.0 * dTheta)) * R_C
-			AJ = dL_ / S_L / k_L  # dL' / k_L / S_L
-			AK = dC_ / S_C / k_C  # dC' / k_C / S_C
-			AL = dH_ / S_H / k_H  # dH' / k_H / S_H
+			AJ = old_div(old_div(dL_, S_L), k_L)  # dL' / k_L / S_L
+			AK = old_div(old_div(dC_, S_C), k_C)  # dC' / k_C / S_C
+			AL = old_div(old_div(dH_, S_H), k_H)  # dH' / k_H / S_H
 			dLw, dCw, dHw = AJ, AK, AL
 			dE = math.sqrt(math.pow(AJ, 2) + math.pow(AK, 2) + math.pow(AL, 2) + R_T * AK * AL)
 		else:
@@ -858,7 +865,7 @@ def four_color_matrix(XrR, YrR, ZrR, XrG, YrG, ZrG, XrB, YrB, ZrB, XrW, YrW, ZrW
 		# Four-Color Matrix Method for Correction of Tristimulus Colorimeters –
 		# Part 2
 		MW = XmW, YmW, ZmW
-		kY = YrW / (R * MW)[1]
+		kY = old_div(YrW, (R * MW)[1])
 		R[:] = [[kY * v for v in row] for row in R]
 	return R
 
@@ -874,22 +881,22 @@ def get_gamma(values, scale=1.0, vmin=0.0, vmax=1.0, average=True, least_squares
 	vmax /= scale
 	for x, y in values:
 		x /= scale
-		y = (y / scale - vmin) * (vmax + vmin)
+		y = (old_div(y, scale) - vmin) * (vmax + vmin)
 		if x > 0 and x < 1 and y > 0:
 			if least_squares:
 				logxy.append(math.log(x) * math.log(y))
 				logx2.append(math.pow(math.log(x), 2))
 			else:
-				gammas.append(math.log(y) / math.log(x))
+				gammas.append(old_div(math.log(y), math.log(x)))
 	if average or least_squares:
 		if least_squares:
 			if not logxy or not logx2:
 				return 0
-			return sum(logxy) / sum(logx2)
+			return old_div(sum(logxy), sum(logx2))
 		else:
 			if not gammas:
 				return 0
-			return sum(gammas) / len(gammas)
+			return old_div(sum(gammas), len(gammas))
 	else:
 		return gammas
 
@@ -930,14 +937,14 @@ def CIEDCCT2xyY(T, scale=1.0):
 		warnings.warn("Daylight CCT is only accurate down to about 4000 K",
 					  Warning)
 	if T <= 7000:
-		xD = (((-4.607 * math.pow(10, 9)) / math.pow(T, 3))
-			+ ((2.9678 * math.pow(10, 6)) / math.pow(T, 2))
-			+ ((0.09911 * math.pow(10, 3)) / T)
+		xD = ((old_div((-4.607 * math.pow(10, 9)), math.pow(T, 3)))
+			+ (old_div((2.9678 * math.pow(10, 6)), math.pow(T, 2)))
+			+ (old_div((0.09911 * math.pow(10, 3)), T))
 			+ 0.244063)
 	else:
-		xD = (((-2.0064 * math.pow(10, 9)) / math.pow(T, 3))
-			+ ((1.9018 * math.pow(10, 6)) / math.pow(T, 2))
-			+ ((0.24748 * math.pow(10, 3)) / T)
+		xD = ((old_div((-2.0064 * math.pow(10, 9)), math.pow(T, 3)))
+			+ (old_div((1.9018 * math.pow(10, 6)), math.pow(T, 2)))
+			+ (old_div((0.24748 * math.pow(10, 3)), T))
 			+ 0.237040)
 	yD = -3 * math.pow(xD, 2) + 2.87 * xD - 0.275
 	return xD, yD, scale
@@ -962,14 +969,14 @@ def cLUT65_to_VidRGB(v, size=65):
 		# Scale up to near black point
 		return v * 256.0 / 255
 	else:
-		return 1 - (1 - v) * (1 - 236.0 / 255) / (1 - 236.0 / 256)
+		return 1 - old_div((1 - v) * (1 - 236.0 / 255), (1 - 236.0 / 256))
 
 
 def VidRGB_to_cLUT65(v, size=65):
 	if v <= 236.0 / 255.0:
 		return v * 255.0 / 256
 	else:
-		return 1 - (1 - v) * (1 - 236.0 / 256) / (1 - 236.0 / 255)
+		return 1 - old_div((1 - v) * (1 - 236.0 / 256), (1 - 236.0 / 255))
 
 
 def VidRGB_to_eeColor(v):
@@ -983,7 +990,7 @@ def eeColor_to_VidRGB(v):
 def DIN992Lab(L99, a99, b99, kCH=1.0, kE=1.0):
 	C99, H99 = DIN99familyab2DIN99CH(a99, b99)
 	return DIN99familyLCH2Lab(L99, C99, H99, 0, 105.51, .0158, 16, .7,
-							  1 / (0.045 * kCH * kE), 0.045, kE, 0)
+							  old_div(1, (0.045 * kCH * kE)), 0.045, kE, 0)
 
 
 def DIN99b2Lab(L99, a99, b99):
@@ -994,7 +1001,7 @@ def DIN99b2Lab(L99, a99, b99):
 def DIN99o2Lab(L99, a99, b99, kCH=1.0, kE=1.0):
 	C99, H99 = DIN99familyab2DIN99CH(a99, b99)
 	return DIN99familyLCH2Lab(L99, C99, H99, 0, 303.67, .0039, 26, .83,
-							  1 / (0.0435 * kCH * kE), .075, kE)
+							  old_div(1, (0.0435 * kCH * kE)), .075, kE)
 
 
 def DIN99bLCH2Lab(L99, C99, H99):
@@ -1020,7 +1027,7 @@ def DIN99dLCH2Lab(L99, C99, H99, whitepoint=None):
 
 def DIN99familyLCH2Lab(L99, C99, H99, x, l1, l2, deg, f1, c1, c2,
 					   whitepoint=None, kE=1.0, hdeg=None):
-	G = (math.exp(C99 / c1) - 1) / c2
+	G = old_div((math.exp(old_div(C99, c1)) - 1), c2)
 	if hdeg is None:
 		hdeg = deg
 	H99 -= hdeg
@@ -1034,22 +1041,22 @@ def DIN99familyLCH2Lab(L99, C99, H99, x, l1, l2, deg, f1, c1, c2,
 
 
 def DIN99cdXYZ2XYZ(X, Y, Z, x):
-	X = (X + x * Z) / (1 + x)
+	X = old_div((X + x * Z), (1 + x))
 	return X, Y, Z
 
 
 def DIN99familyLHCG2Lab(L99, H99, C99, G, kE, l1, l2, deg, f1):
-	L = (math.exp((L99 * kE) / l1) - 1) / l2
-	h99ef = H99 * math.pi / 180
+	L = old_div((math.exp(old_div((L99 * kE), l1)) - 1), l2)
+	h99ef = old_div(H99 * math.pi, 180)
 	e = G * math.cos(h99ef)
 	f = G * math.sin(h99ef)
-	rad = deg * math.pi / 180
-	a = e * math.cos(rad) - (f / f1) * math.sin(rad)
-	b = e * math.sin(rad) + (f / f1) * math.cos(rad)
+	rad = old_div(deg * math.pi, 180)
+	a = e * math.cos(rad) - (old_div(f, f1)) * math.sin(rad)
+	b = e * math.sin(rad) + (old_div(f, f1)) * math.cos(rad)
 	return L, a, b
 
 def DIN99familyCH2DIN99ab(C99, H99):
-	h99ef = H99 * math.pi / 180
+	h99ef = old_div(H99 * math.pi, 180)
 	return C99 * math.cos(h99ef), C99 * math.sin(h99ef)
 
 
@@ -1064,12 +1071,12 @@ def DIN99familyab2DIN99CH(a99, b99):
 		h99ef = math.atan2(b99, a99)
 	else:
 		if b99 > 0:
-			h99ef = math.pi / 2
+			h99ef = old_div(math.pi, 2)
 		elif b99 < 0:
-			h99ef = (3 * math.pi) / 2
+			h99ef = old_div((3 * math.pi), 2)
 		else:
 			h99ef = 0.0
-	H99 = h99ef * 180 / math.pi
+	H99 = old_div(h99ef * 180, math.pi)
 	return C99, H99
 
 
@@ -1082,7 +1089,7 @@ def HSI2RGB(H, S, I, scale=1.0):
 	elif 240 < H <= 360:
 		h -= 240
 
-	f = math.cos(math.radians(h)) / math.cos(math.radians(60 - h))
+	f = old_div(math.cos(math.radians(h)), math.cos(math.radians(60 - h)))
 	a = I + I * S * f
 	b = I + I * S * (1 - f)
 	c = I - I * S
@@ -1173,7 +1180,7 @@ def Lab2DIN99d(L, a, b, kE=1.0, whitepoint=None):
 
 def Lab2DIN99LCH(L, a, b, kCH=1.0, kE=1.0):
 	return Lab2DIN99familyLCH(L, a, b, 105.51, .0158, 16, .7,
-							  1 / (0.045 * kCH * kE), 0.045, kE, 0)
+							  old_div(1, (0.045 * kCH * kE)), 0.045, kE, 0)
 
 
 def Lab2DIN99bLCH(L, a, b, kE=1.0):
@@ -1182,7 +1189,7 @@ def Lab2DIN99bLCH(L, a, b, kE=1.0):
 
 def Lab2DIN99oLCH(L, a, b, kCH=1.0, kE=1.0):
 	return Lab2DIN99familyLCH(L, a, b, 303.67, .0039, 26, .83,
-							  1 / (0.0435 * kCH * kE), .075, kE)
+							  old_div(1, (0.0435 * kCH * kE)), .075, kE)
 
 
 def Lab2DIN99familyLCH(L, a, b, l1, l2, deg, f1, c1, c2, kE=1.0, hdeg=None):
@@ -1190,13 +1197,13 @@ def Lab2DIN99familyLCH(L, a, b, l1, l2, deg, f1, c1, c2, kE=1.0, hdeg=None):
 	C99 = c1 * math.log(1 + c2 * G)
 	if hdeg is None:
 		hdeg = deg
-	H99 = h99ef * 180 / math.pi + hdeg
+	H99 = old_div(h99ef * 180, math.pi) + hdeg
 	return L99, C99, H99
 
 
 def Lab2DIN99familyLGhrad(L, a, b, kE, l1, l2, deg, f1):
 	L99 = (1.0 / kE) * l1 * math.log(1 + l2 * L)
-	rad = deg * math.pi / 180
+	rad = old_div(deg * math.pi, 180)
 	if rad:
 		ar = math.cos(rad)  # a rotation term
 		br = math.sin(rad)  # b rotation term
@@ -1212,7 +1219,7 @@ def Lab2DIN99familyLGhrad(L, a, b, kE, l1, l2, deg, f1):
 
 def Lab2LCHab(L, a, b):
 	C = math.sqrt(math.pow(a, 2) + math.pow(b, 2))
-	H = 180.0 * math.atan2(b, a) / math.pi
+	H = old_div(180.0 * math.atan2(b, a), math.pi)
 	if (H < 0.0):
 		H += 360.0
 	return L, C, H
@@ -1255,17 +1262,17 @@ def Lab2XYZ(L, a, b, whitepoint=None, scale=1.0):
 	if math.pow(fx, 3.0) > LSTAR_E:
 		xr = math.pow(fx, 3.0)
 	else:
-		xr = (116.0 * fx - 16) / LSTAR_K
+		xr = old_div((116.0 * fx - 16), LSTAR_K)
 	
 	if L > LSTAR_K * LSTAR_E:
 		yr = math.pow((L + 16) / 116.0, 3.0)
 	else:
-		yr = L / LSTAR_K
+		yr = old_div(L, LSTAR_K)
 	
 	if math.pow(fz, 3.0) > LSTAR_E:
 		zr = math.pow(fz, 3.0)
 	else:
-		zr = (116.0 * fz - 16) / LSTAR_K
+		zr = old_div((116.0 * fz - 16), LSTAR_K)
 	
 	Xr, Yr, Zr = get_whitepoint(whitepoint, scale)
 	
@@ -1283,7 +1290,7 @@ def Lab2xyY(L, a, b, whitepoint=None, scale=1.0):
 
 def Luv2LCHuv(L, u, v):
 	C = math.sqrt(math.pow(u, 2) + math.pow(v, 2))
-	H = 180.0 * math.atan2(v, u) / math.pi
+	H = old_div(180.0 * math.atan2(v, u), math.pi)
 	if (H < 0.0):
 		H += 360.0
 	return L, C, H
@@ -1299,8 +1306,8 @@ def Luv2RGB(L, u, v, rgb_space=None, scale=1.0, round_=False, clamp=True,
 def u_v_2xy(u, v):
 	""" Convert from u'v' to xy """
 	
-	x = (9.0 * u) / (6 * u - 16 * v + 12)
-	y = (4 * v) / (6 * u - 16 * v + 12)
+	x = old_div((9.0 * u), (6 * u - 16 * v + 12))
+	y = old_div((4 * v), (6 * u - 16 * v + 12))
 	
 	return x, y
 
@@ -1310,17 +1317,17 @@ def Luv2XYZ(L, u, v, whitepoint=None, scale=1.0):
 	
 	Xr, Yr, Zr = get_whitepoint(whitepoint)
 	
-	Y = math.pow((L + 16.0) / 116.0, 3) if L > LSTAR_K * LSTAR_E else L / LSTAR_K
+	Y = math.pow((L + 16.0) / 116.0, 3) if L > LSTAR_K * LSTAR_E else old_div(L, LSTAR_K)
 	
-	uo = (4.0 * Xr) / (Xr + 15.0 * Yr + 3.0 * Zr)
-	vo = (9.0 * Yr) / (Xr + 15.0 * Yr + 3.0 * Zr)
+	uo = old_div((4.0 * Xr), (Xr + 15.0 * Yr + 3.0 * Zr))
+	vo = old_div((9.0 * Yr), (Xr + 15.0 * Yr + 3.0 * Zr))
 	
-	a = (1.0 / 3.0) * (((52.0 * L) / (u + 13 * L * uo)) -1)
+	a = (1.0 / 3.0) * ((old_div((52.0 * L), (u + 13 * L * uo))) -1)
 	b = -5.0 * Y
 	c = -(1.0 / 3.0)
-	d = Y * (((39.0 * L) / (v + 13 * L * vo)) - 5)
+	d = Y * ((old_div((39.0 * L), (v + 13 * L * vo))) - 5)
 	
-	X = (d - b) / (a - c)
+	X = old_div((d - b), (a - c))
 	Z = X * a + b
 	
 	return tuple([v * scale for v in (X, Y, Z)])
@@ -1329,11 +1336,11 @@ def Luv2XYZ(L, u, v, whitepoint=None, scale=1.0):
 def RGB2HSI(R, G, B, scale=1.0):
 	I = (R + G + B) / 3.0
 	if I:
-		S = 1 - min(R, G, B) / I
+		S = 1 - old_div(min(R, G, B), I)
 	else:
 		S = 0
 	if not R == G == B:
-		H = math.atan2(math.sqrt(3) * (G - B), 2 * R - G - B) / math.pi / 2
+		H = old_div(old_div(math.atan2(math.sqrt(3) * (G - B), 2 * R - G - B), math.pi), 2)
 		if H < 0:
 			H += 1.0
 		if H > 1:
@@ -1456,7 +1463,7 @@ def RGB2XYZ(R, G, B, rgb_space=None, scale=1.0, eotf=None):
 			RGB[i] = eotf(v)
 		elif isinstance(gamma, (list, tuple)):
 			RGB[i] = interp(v, [n / float(len(gamma) - 1) for n in
-							    xrange(len(gamma))], gamma)
+							    range(len(gamma))], gamma)
 		else:
 			RGB[i] = specialpow(v, gamma)
 	XYZ = matrix * RGB
@@ -1493,8 +1500,8 @@ def RGB2YPbPr_matrix(rgb_space="NTSC 1953"):
 	Pb_scale = ((1 - KB) / 0.5)
 	Pr_scale = ((1 - KR) / 0.5)
 	return Matrix3x3([[KR, KG, KB],
-					  [-KR / Pb_scale, -KG / Pb_scale, 0.5],
-					  [0.5, -KG / Pr_scale, -KB / Pr_scale]])
+					  [old_div(-KR, Pb_scale), old_div(-KG, Pb_scale), 0.5],
+					  [0.5, old_div(-KG, Pr_scale), old_div(-KB, Pr_scale)]])
 
 
 def YCbCr2YPbPr(Y, Cb, Cr, bits=8, fullrange=False):
@@ -1531,7 +1538,7 @@ def YPbPr2RGB(Y, Pb, Pr, rgb_space="NTSC 1953", scale=1.0, round_=False,
 			  clamp=True):
 	""" Y'PbPr to R'G'B' """
 	RGB = RGB2YPbPr_matrix(rgb_space).inverted() * (Y, Pb, Pr)
-	for i in xrange(3):
+	for i in range(3):
 		if clamp:
 			RGB[i] = min(1.0, max(0.0, RGB[i]))
 		RGB[i] *= scale
@@ -1587,7 +1594,7 @@ def xyYsaturation(x, y, Y, wx, wy, saturation):
 def convert_range(v, oldmin=0, oldmax=1, newmin=0, newmax=1):
 	oldrange = float(oldmax - oldmin)
 	newrange = newmax - newmin
-	return (((v - oldmin) * newrange) / oldrange) + newmin
+	return (old_div(((v - oldmin) * newrange), oldrange)) + newmin
 
 
 def rgb_to_xyz_matrix(rx, ry, gx, gy, bx, by, whitepoint=None, scale=1.0):
@@ -1612,7 +1619,7 @@ def find_primaries_wp_xy_rgb_space_name(xy, rgb_space_names=None,
 	return its name (or None if no match)
 	
 	"""
-	for i, rgb_space_name in enumerate(rgb_space_names or rgb_spaces.iterkeys()):
+	for i, rgb_space_name in enumerate(rgb_space_names or iter(rgb_spaces.keys())):
 		if not rgb_space_names and rgb_space_name in ("ECI RGB", "ECI RGB v2",
 													  "SMPTE 240M", "sRGB"):
 			# Skip in favor of base color space (i.e. NTSC 1953, SMPTE-C and
@@ -1650,7 +1657,7 @@ def get_rgb_space_primaries_wp_xy(rgb_space=None, digits=4):
 	"""
 	rgb_space = get_rgb_space(rgb_space)
 	xy = []
-	for i in xrange(3):
+	for i in range(3):
 		xy.extend(rgb_space[2:][i][:2])
 	xy.extend(XYZ2xyY(*get_whitepoint(rgb_space[1]))[:2])
 	if digits:
@@ -1730,17 +1737,17 @@ def make_monotonically_increasing(iterable, passes=0, window=None):
 	
 	"""
 	if isinstance(iterable, dict):
-		keys = iterable.keys()
-		values = iterable.values()
+		keys = list(iterable.keys())
+		values = list(iterable.values())
 	else:
 		if hasattr(iterable, "next"):
 			values = list(iterable)
 		else:
 			values = iterable
-		keys = xrange(len(values))
+		keys = range(len(values))
 	if passes:
 		values = smooth_avg(values, passes, window)
-	sequence = zip(keys, values)
+	sequence = list(zip(keys, values))
 	numvalues = len(sequence)
 	s_new = []
 	y_min = sequence[0][1]
@@ -1753,11 +1760,11 @@ def make_monotonically_increasing(iterable, passes=0, window=None):
 	x_new = [item[0] for item in sequence]
 	y = [item[1] for item in sequence]
 	values = []
-	for i in xrange(numvalues):
+	for i in range(numvalues):
 		values.append(interp(i, x_new, y))
 	if isinstance(iterable, dict):
 		# Add in original keys
-		return iterable.__class__(zip(keys, values))
+		return iterable.__class__(list(zip(keys, values)))
 	return values
 
 
@@ -1786,14 +1793,14 @@ def planckianCT2xyY(T, scale=1.0):
 	
 	"""
 	if   1667 <= T and T <= 4000:
-		x = (  -0.2661239 * (math.pow(10, 9) / math.pow(T, 3))
-			 -  0.2343580 * (math.pow(10, 6) / math.pow(T, 2))
-			 +  0.8776956 * (math.pow(10, 3) / T)
+		x = (  -0.2661239 * (old_div(math.pow(10, 9), math.pow(T, 3)))
+			 -  0.2343580 * (old_div(math.pow(10, 6), math.pow(T, 2)))
+			 +  0.8776956 * (old_div(math.pow(10, 3), T))
 			 +  0.179910)
 	elif 4000 <= T and T <= 25000:
-		x = (  -3.0258469 * (math.pow(10, 9) / math.pow(T, 3))
-			 +  2.1070379 * (math.pow(10, 6) / math.pow(T, 2))
-			 +  0.2226347 * (math.pow(10, 3) / T)
+		x = (  -3.0258469 * (old_div(math.pow(10, 9), math.pow(T, 3)))
+			 +  2.1070379 * (old_div(math.pow(10, 6), math.pow(T, 2)))
+			 +  0.2226347 * (old_div(math.pow(10, 3), T))
 			 +  0.24039)
 	else:
 		return None
@@ -1930,8 +1937,8 @@ def XYZ2CCT(X, Y, Z):
 	if ((X < 1.0e-20 and Y < 1.0e-20 and Z < 1.0e-20) or
 		X + 15.0 * Y + 3.0 * Z == 0):
 		return None	# protect against possible divide-by-zero failure
-	us = (4.0 * X) / (X + 15.0 * Y + 3.0 * Z)
-	vs = (6.0 * Y) / (X + 15.0 * Y + 3.0 * Z)
+	us = old_div((4.0 * X), (X + 15.0 * Y + 3.0 * Z))
+	vs = old_div((6.0 * Y), (X + 15.0 * Y + 3.0 * Z))
 	dm = 0.0
 	i = 0
 	while i < 31:
@@ -1944,9 +1951,9 @@ def XYZ2CCT(X, Y, Z):
 		# bad XYZ input, color temp would be less than minimum of 1666.7 
 		# degrees, or too far towards blue
 		return None
-	di = di / math.sqrt(1.0 + uvt[i    ][2] * uvt[i    ][2])
-	dm = dm / math.sqrt(1.0 + uvt[i - 1][2] * uvt[i - 1][2])
-	p = dm / (dm - di)	# p = interpolation parameter, 0.0 : i-1, 1.0 : i
+	di = old_div(di, math.sqrt(1.0 + uvt[i    ][2] * uvt[i    ][2]))
+	dm = old_div(dm, math.sqrt(1.0 + uvt[i - 1][2] * uvt[i - 1][2]))
+	p = old_div(dm, (dm - di))	# p = interpolation parameter, 0.0 : i-1, 1.0 : i
 	p = 1.0 / (LERP(rt[i - 1], rt[i], p))
 	return p
 
@@ -2050,9 +2057,9 @@ def XYZ2Lab(X, Y, Z, whitepoint=None, scale=100):
 	"""
 	Xr, Yr, Zr = get_whitepoint(whitepoint, scale)
 
-	xr = X / Xr
-	yr = Y / Yr
-	zr = Z / Zr
+	xr = old_div(X, Xr)
+	yr = old_div(Y, Yr)
+	zr = old_div(Z, Zr)
 	fx = cbrt(xr) if xr > LSTAR_E else (LSTAR_K * xr + 16) / 116.0
 	fy = cbrt(yr) if yr > LSTAR_E else (LSTAR_K * yr + 16) / 116.0
 	fz = cbrt(zr) if zr > LSTAR_E else (LSTAR_K * zr + 16) / 116.0
@@ -2093,7 +2100,7 @@ def XYZ2Lpt(X, Y, Z, whitepoint=None):
 
 	lms = xyz2lms * (X, Y, Z)
 
-	for j in xrange(3):
+	for j in range(3):
 		lms[j] /= wlms[j]
 
 		if (lms[j] > 0.008856451586):
@@ -2136,7 +2143,7 @@ def Lpt2XYZ(L, p, t, whitepoint=None, scale=1.0):
 
 	lms = Lpt2LMS_matrix * (L, p, t)
 
-	for j in xrange(3):
+	for j in range(3):
 		lms[j] = (lms[j] + 16.0) / 116.0
 
 		if lms[j] > 24.0 / 116.0:
@@ -2160,12 +2167,12 @@ def XYZ2Lu_v_(X, Y, Z, whitepoint=None):
 
 	Xr, Yr, Zr = get_whitepoint(whitepoint, 100)
 	
-	yr = Y / Yr
+	yr = old_div(Y, Yr)
 	
 	L = 116.0 * cbrt(yr) - 16.0 if yr > LSTAR_E else LSTAR_K * yr
 	
-	u_ = (4.0 * X) / (X + 15.0 * Y + 3.0 * Z)
-	v_ = (9.0 * Y) / (X + 15.0 * Y + 3.0 * Z)
+	u_ = old_div((4.0 * X), (X + 15.0 * Y + 3.0 * Z))
+	v_ = old_div((9.0 * Y), (X + 15.0 * Y + 3.0 * Z))
 	
 	return L, u_, v_
 
@@ -2181,15 +2188,15 @@ def XYZ2Luv(X, Y, Z, whitepoint=None):
 
 	Xr, Yr, Zr = get_whitepoint(whitepoint, 100)
 	
-	yr = Y / Yr
+	yr = old_div(Y, Yr)
 	
 	L = 116.0 * cbrt(yr) - 16.0 if yr > LSTAR_E else LSTAR_K * yr
 	
-	u_ = (4.0 * X) / (X + 15.0 * Y + 3.0 * Z)
-	v_ = (9.0 * Y) / (X + 15.0 * Y + 3.0 * Z)
+	u_ = old_div((4.0 * X), (X + 15.0 * Y + 3.0 * Z))
+	v_ = old_div((9.0 * Y), (X + 15.0 * Y + 3.0 * Z))
 	
-	u_r = (4.0 * Xr) / (Xr + 15.0 * Yr + 3.0 * Zr)
-	v_r = (9.0 * Yr) / (Xr + 15.0 * Yr + 3.0 * Zr)
+	u_r = old_div((4.0 * Xr), (Xr + 15.0 * Yr + 3.0 * Zr))
+	v_r = old_div((9.0 * Yr), (Xr + 15.0 * Yr + 3.0 * Zr))
 	
 	u = 13.0 * L * (u_ - u_r)
 	v = 13.0 * L * (v_ - v_r)
@@ -2250,7 +2257,7 @@ def XYZ2RGB(X, Y, Z, rgb_space=None, scale=1.0, round_=False, clamp=True,
 			key = id(gamma)
 			if not key in XYZ2RGB.interp:
 				ginterp = Interp(gamma, [n / float(len(gamma) - 1) for n in
-									     xrange(len(gamma))], use_numpy=True)
+									     range(len(gamma))], use_numpy=True)
 				XYZ2RGB.interp[key] = ginterp
 			else:
 				ginterp = XYZ2RGB.interp[key]
@@ -2325,9 +2332,9 @@ def dmatrixz(nrl, nrh, ncl, nch):
 	rows = nrh - nrl + 1
 	cols = nch - ncl + 1
 
-	for i in xrange(rows):
+	for i in range(rows):
 		m[i + nrl] = {}
-		for j in xrange(cols):
+		for j in range(cols):
 			m[i][j + ncl] = 0
 
 	return m
@@ -2353,7 +2360,7 @@ def gam_fit(gf, v):
 
 	t1 = math.pow(gf.bp, 1.0 / gamma);
 	t2 = math.pow(gf.wp, 1.0 / gamma);
-	b = t1 / (t2 - t1)  # Offset
+	b = old_div(t1, (t2 - t1))  # Offset
 	a = math.pow(t2 - t1, gamma)  # Gain
 
 	# Comput 50% output for this technical gamma
@@ -2401,13 +2408,13 @@ def linmin(cp, xi, di, ftol, func, fdata):
 	# (Search isn't symetric, but it seems to depend on cp being
 	# best current solution ?)
 	ax = 0.0
-	for i in xrange(di):
+	for i in range(di):
 		xt[i] = cp[i] + ax * xi[i]
 	af = func(fdata, xt)
 
 	# xx being vector offset 0.618
 	xx =  1.0 / POWELL_GOLD
-	for i in xrange(di):
+	for i in range(di):
 		xt[i] = cp[i] + xx * xi[i]
 	xf = func(fdata, xt)
 
@@ -2426,7 +2433,7 @@ def linmin(cp, xi, di, ftol, func, fdata):
 																		 xx, xf))
 
 	bx = xx + POWELL_GOLD * (xx-ax)  # Guess b beyond a -> x
-	for i in xrange(di):
+	for i in range(di):
 		xt[i] = cp[i] + bx * xi[i]
 	bf = func(fdata, xt)
 
@@ -2448,12 +2455,12 @@ def linmin(cp, xi, di, ftol, func, fdata):
 			tt = 1e-20
 		elif tt <= 0.0 and tt > -1e-20:  # If -ve too small
 			tt = -1e-20
-		ux = xx - ((xx - bx) * q - (xx - ax) * r) / (2.0 * tt)
+		ux = xx - old_div(((xx - bx) * q - (xx - ax) * r), (2.0 * tt))
 		ulim = xx + 100.0 * (bx - xx)  # Extrapolation limit
 
 		if (xx - ux) * (ux - bx) > 0.0:  # u is between x and b
 
-			for i in xrange(di):  # Evaluate u
+			for i in range(di):  # Evaluate u
 				xt[i] = cp[i] + ux * xi[i]
 			uf = func(fdata, xt)
 
@@ -2473,7 +2480,7 @@ def linmin(cp, xi, di, ftol, func, fdata):
 			ux = bx + POWELL_GOLD * (bx - xx)
 
 		elif (bx - ux) * (ux - ulim) > 0.0:  # u is between b and limit
-			for i in xrange(di):  # Evaluate u
+			for i in range(di):  # Evaluate u
 				xt[i] = cp[i] + ux * xi[i]
 			uf = func(fdata, xt)
 
@@ -2496,7 +2503,7 @@ def linmin(cp, xi, di, ftol, func, fdata):
 		else:  # u is to left side of x ?
 			ux = bx + POWELL_GOLD * (bx - xx)
 		# Evaluate u, and move into place at b
-		for i in xrange(di):
+		for i in range(di):
 			xt[i] = cp[i] + ux * xi[i]
 		uf = func(fdata, xt)
 		ax = xx
@@ -2537,7 +2544,7 @@ def linmin(cp, xi, di, ftol, func, fdata):
 		wx = vx = xx  # Initial values of other center points
 		wf = xf = xf
 
-		for iter in xrange(1, POWELL_MAXIT + 1):
+		for iter in range(1, POWELL_MAXIT + 1):
 			mx = 0.5 * (ax + bx)  # m is center of bracket values
 			#if ABSTOL:
 				#tol1 = ftol  # Absolute tollerance
@@ -2575,7 +2582,7 @@ def linmin(cp, xi, di, ftol, func, fdata):
 					de = POWELL_CGOLD * e
 					logging.debug("linmin: Moving to golden section search")
 				else:  # Use parabolic fit
-					de = p / q  # Change in xb
+					de = old_div(p, q)  # Change in xb
 					ux = xx + de  # Trial point according to parabolic fit
 					if (ux - ax) < tol2 or (bx - ux) < tol2:
 						if (mx - xx) > 0.0:  # Don't use parabolic, use tol1
@@ -2602,7 +2609,7 @@ def linmin(cp, xi, di, ftol, func, fdata):
 								  (ux, xx, tol1))
 
 			# Evaluate function
-			for i in xrange(di):
+			for i in range(di):
 				xt[i] = cp[i] + ux * xi[i]
 			uf = func(fdata, xt)
 
@@ -2640,7 +2647,7 @@ def linmin(cp, xi, di, ftol, func, fdata):
 		# Solution is at xx, xf
 
 		# Compute solution vector
-		for i in xrange(di):
+		for i in range(di):
 			cp[i] += xx * xi[i]
 
 	return xf
@@ -2682,7 +2689,7 @@ def powell(di, cp, s, ftol, maxit, func, fdata, prog=None, pdata=None):
 
 	# Create initial direction matrix by
 	# placing search start on diagonal
-	for i in xrange(di):
+	for i in range(di):
 		dmtx[i][i] = s[i]
 		# Save the starting point
 		spt[i] = cp[i]
@@ -2694,7 +2701,7 @@ def powell(di, cp, s, ftol, maxit, func, fdata, prog=None, pdata=None):
 	retv = func(fdata, cp)
 
 	# Iterate untill we converge on a solution, or give up.
-	for iter in xrange(1, maxit):
+	for iter in range(1, maxit):
 		#lretv  # Last function return value
 		ibig = 0  # Index of biggest delta
 		del_ = 0.0  # Biggest function value decrease
@@ -2703,11 +2710,11 @@ def powell(di, cp, s, ftol, maxit, func, fdata, prog=None, pdata=None):
 		pretv = retv  # Save return value at top of iteration
 
 		# Loop over all directions in the set
-		for i in xrange(di):
+		for i in range(di):
 
 			logging.debug("Looping over direction %d" % i)
 
-			for j in xrange(di):  # Extract this direction to make search vector
+			for j in range(di):  # Extract this direction to make search vector
 				svec[j] = dmtx[j][i]
 
 			# Minimize in that direction
@@ -2727,8 +2734,8 @@ def powell(di, cp, s, ftol, maxit, func, fdata, prog=None, pdata=None):
 		if startdel < 0.0:
 			startdel = curdel
 		elif curdel > 0 and startdel > 0:
-			tt = (100.0 * math.pow((math.log(curdel) - math.log(startdel)) /
-								   (math.log(stopth) - math.log(startdel)),
+			tt = (100.0 * math.pow(old_div((math.log(curdel) - math.log(startdel)),
+								   (math.log(stopth) - math.log(startdel))),
 								   4.0) + 0.5)
 			if tt > pc and tt < 100:
 				pc = tt
@@ -2744,7 +2751,7 @@ def powell(di, cp, s, ftol, maxit, func, fdata, prog=None, pdata=None):
 		logging.debug("Not stopping because curdel %f > stopth %f" % (curdel,
 																	  stopth))
 
-		for i in xrange(di):
+		for i in range(di):
 			svec[i] = cp[i] - spt[i]  # Average direction moved after minimization round
 			xpt[i]  = cp[i] + svec[i]  # Extrapolated point after round of minimization
 			spt[i]  = cp[i]  # New start point for next round
@@ -2761,7 +2768,7 @@ def powell(di, cp, s, ftol, maxit, func, fdata, prog=None, pdata=None):
 				# Move to the minimum of the new direction
 				retv = linmin(cp, svec, di, ftol, func, fdata)
 
-				for i in xrange(di):  # Save the new direction
+				for i in range(di):  # Save the new direction
 					dmtx[i][ibig] = svec[i]  # by replacing best previous
 
 	if prog:  # Report final progress
@@ -2884,7 +2891,7 @@ class BT1886(object):
 		# Input offset white to 1/pow
 		wtipow = math.pow(1.0 - self.outo, 1.0 / self.gamma)
 		# non-linear Y that makes input offset proportion of black point
-		self.ingo = bkipow / (wtipow - bkipow)
+		self.ingo = old_div(bkipow, (wtipow - bkipow))
 		# Scale to make input of 1 map to 1.0 - self.outo
 		self.outsc = pow(wtipow - bkipow, self.gamma)
 		self.apply_trc = apply_trc
@@ -2906,7 +2913,7 @@ class BT1886(object):
 
 		logging.debug("bt1886 RGB in %f %f %f" % (out[0], out[1], out[2]))
 
-		for j in xrange(3):
+		for j in range(3):
 			vv = out[j]
 		
 			if self.apply_trc:
@@ -2941,7 +2948,7 @@ class BT1886(object):
 															out[2]))
 
 		# Blend ab to required black point offset self.tab[] as L approaches black.
-		vv = (out[0] - self.outL) / (100.0 - self.outL)  # 0 at bp, 1 at wp
+		vv = old_div((out[0] - self.outL), (100.0 - self.outL))  # 0 at bp, 1 at wp
 		vv = 1.0 - vv
 
 		if vv < 0.0:
@@ -2999,14 +3006,14 @@ class BT2390(object):
 		self.mmaxv = master_white_cdm2 / 10000.0  # LW
 		mmaxi = specialpow(self.mmaxv, 1.0 / -2084)
 		if use_alternate_master_white_clip:
-			self.maxci = (mmaxi - self.mmini) / (1 - self.mmini)
+			self.maxci = old_div((mmaxi - self.mmini), (1 - self.mmini))
 			self.mmaxi = 1.0
 		else:
 			self.maxci = 1.0
 			self.mmaxi = mmaxi
-		self.mini = (self.omini - self.mmini) / (self.mmaxi - self.mmini)  # Normalized minLum
+		self.mini = old_div((self.omini - self.mmini), (self.mmaxi - self.mmini))  # Normalized minLum
 		self.minv = specialpow(self.mini, -2084)
-		self.maxi = (self.omaxi - self.mmini) / (self.mmaxi - self.mmini)  # Normalized maxLum
+		self.maxi = old_div((self.omaxi - self.mmini), (self.mmaxi - self.mmini))  # Normalized maxLum
 		self.maxv = specialpow(self.maxi, -2084)
 
 		self.KS = 1.5 * self.maxi - 0.5
@@ -3014,16 +3021,16 @@ class BT2390(object):
 		if self.maxi <= self.maxci < 1:
 			E2 = self.P(self.maxci, self.KS, self.maxi)
 			diff = self.maxci - E2
-			self.s = (self.maxci - self.maxi) / diff
+			self.s = old_div((self.maxci - self.maxi), diff)
 
 	def P(self, B, KS, maxi, maxci=1.0):
-		T = (B - KS) / (1 - KS)
+		T = old_div((B - KS), (1 - KS))
 		E2 = ((2 * T ** 3 - 3 * T ** 2 + 1) * KS + (T ** 3 - 2 * T ** 2 + T) *
 			  (1 - KS) + (-2 * T ** 3 + 3 * T ** 2) * maxi)
 		if maxci < 1:
 			# (Old) Clipping for better target display peak luminance usage
 			# XXX: Only kept for backwards compatibility
-			s = min(((B - KS) / (maxci - KS)) ** 4, 1)
+			s = min((old_div((B - KS), (maxci - KS))) ** 4, 1)
 			E2 = E2 * (1 - s) + maxi * s
 		return E2
 
@@ -3048,7 +3055,7 @@ class BT2390(object):
 			maxci = self.maxci
 		if normalize and mmini is not None and mmaxi is not None:
 			# Normalize PQ values based on mastering display black/white levels
-			E1 = min(max((v - mmini) / (mmaxi - mmini), 0), 1.0)
+			E1 = min(max(old_div((v - mmini), (mmaxi - mmini)), 0), 1.0)
 		else:
 			E1 = v
 		# BT.2390-3 suggests P[E1] if KS <= E1 <=1, but this results in
@@ -3218,15 +3225,15 @@ class Matrix3x3(list):
 		determinant = self.determinant()
 		matrix = self.adjoint()
 		instance = self.__class__()
-		instance.update([[matrix[0][0] / determinant,
-								matrix[0][1] / determinant,
-								matrix[0][2] / determinant],
-							   [matrix[1][0] / determinant,
-								matrix[1][1] / determinant,
-								matrix[1][2] / determinant],
-							   [matrix[2][0] / determinant,
-								matrix[2][1] / determinant,
-								matrix[2][2] / determinant]])
+		instance.update([[old_div(matrix[0][0], determinant),
+								old_div(matrix[0][1], determinant),
+								old_div(matrix[0][2], determinant)],
+							   [old_div(matrix[1][0], determinant),
+								old_div(matrix[1][1], determinant),
+								old_div(matrix[1][2], determinant)],
+							   [old_div(matrix[2][0], determinant),
+								old_div(matrix[2][1], determinant),
+								old_div(matrix[2][2], determinant)]])
 		self._inverted = instance
 		return instance
 	
@@ -3529,15 +3536,15 @@ def debug_caches():
 		c = getattr(globals()[cn], ck)
 		count = 0
 		seen = {}
-		for k, v in c.iteritems():
-			for kk, vv in c.iteritems():
+		for k, v in c.items():
+			for kk, vv in c.items():
 				# Check for equality, not identity
 				if k != kk and v == vv and not kk in seen:
 					count += 1
 					seen[kk] = True
 		safe_print(cache, len(c), "entries", max(count - 1, 0), "duplicates")
 		if count > 1:
-			for k, v in c.iteritems():
+			for k, v in c.items():
 				safe_print(k, v)
 
 

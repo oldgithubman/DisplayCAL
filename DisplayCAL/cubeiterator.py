@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
+from builtins import object
 class Cube3D(object):
 
 	def __init__(self, size=65, start=0, end=None):
@@ -10,7 +11,7 @@ class Cube3D(object):
 			end = numentries
 		for name in ("start", "end"):
 			v = locals()[name]
-			if not isinstance(v, (int, long)):
+			if not isinstance(v, (int, int)):
 				raise TypeError("integer %s argument expected, got %s" %
 								(name, v.__class__.__name__))
 		start = self._clamp(start, 0, numentries, -1)
@@ -94,7 +95,7 @@ class Cube3DIterator(Cube3D):
 	def __iter__(self):
 		return self
 
-	def next(self):
+	def __next__(self):
 		if self._next == self._len:
 			raise StopIteration
 		else:

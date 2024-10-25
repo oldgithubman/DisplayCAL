@@ -2,7 +2,10 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
-from StringIO import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from io import StringIO
 from .subprocess import call
 from os.path import basename, splitext
 import os
@@ -126,15 +129,13 @@ def postinstall(prefix=None):
 					traceback.print_exc()
 					return
 				else:
-					filenames = (filter(lambda filename:
-										not filename.endswith("-script.py") and
+					filenames = ([filename for filename in safe_glob(os.path.join(sys.prefix, "Scripts",
+															   name + "*")) if not filename.endswith("-script.py") and
 										not filename.endswith("-script.pyw") and
 										not filename.endswith(".manifest") and
 										not filename.endswith(".pyc") and
 										not filename.endswith(".pyo") and
-										not filename.endswith("_postinstall.py"),
-										safe_glob(os.path.join(sys.prefix, "Scripts",
-															   name + "*"))) +
+										not filename.endswith("_postinstall.py")] +
 								 ["LICENSE.txt", "README.html", "Uninstall"])
 					installed_shortcuts = []
 					for path in (startmenu_programs_common, 
@@ -155,17 +156,17 @@ def postinstall(prefix=None):
 							if os.path.exists(grppath):
 								print(("Created start menu group '%s' in "
 									   "%s") % (name, 
-											  (unicode(path, "MBCS", 
+											  (str(path, "MBCS", 
 													   "replace") if 
-											   type(path) != unicode else 
+											   type(path) != str else 
 											   path).encode("MBCS", 
 															   "replace")))
 							else:
 								print(("Failed to create start menu group '%s' in "
 									   "%s") % (name, 
-											  (unicode(path, "MBCS", 
+											  (str(path, "MBCS", 
 													   "replace") if 
-											   type(path) != unicode else 
+											   type(path) != str else 
 											   path).encode("MBCS", 
 															   "replace")))
 								continue
@@ -181,9 +182,9 @@ def postinstall(prefix=None):
 										# maybe insufficient privileges?
 										print(("Failed to create start menu entry '%s' in "
 											   "%s") % (lnkname, 
-													  (unicode(grppath, "MBCS", 
+													  (str(grppath, "MBCS", 
 															   "replace") if 
-													   type(grppath) != unicode else 
+													   type(grppath) != str else 
 													   grppath).encode("MBCS", 
 																	   "replace")))
 										continue
@@ -266,17 +267,17 @@ def postinstall(prefix=None):
 										# maybe insufficient privileges?
 										print(("Failed to create start menu entry '%s' in "
 											   "%s") % (lnkname, 
-													  (unicode(grppath, "MBCS", 
+													  (str(grppath, "MBCS", 
 															   "replace") if 
-													   type(grppath) != unicode else 
+													   type(grppath) != str else 
 													   grppath).encode("MBCS", 
 																	   "replace")))
 										continue
 									print(("Installed start menu entry '%s' to "
 										  "%s") % (lnkname, 
-												  (unicode(group, "MBCS", 
+												  (str(group, "MBCS", 
 														   "replace") if 
-												   type(group) != unicode else 
+												   type(group) != str else 
 												   group).encode("MBCS", 
 																 "replace")))
 								file_created(lnkpath)

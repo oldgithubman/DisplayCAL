@@ -10,11 +10,15 @@
 ##  Ported to Python by Florian Schulze
 
 from __future__ import print_function
+from builtins import chr
+from builtins import str
+from builtins import range
+from builtins import object
 import os, re, sys
 
 # a multi-pattern parser
 
-class Pattern:
+class Pattern(object):
     def __init__(self, expression, replacement, length):
         self.expression = expression
         self.replacement = replacement
@@ -27,7 +31,7 @@ class Patterns(list):
     def __str__(self):
         return '|'.join([str(e) for e in self])
 
-class ParseMaster:
+class ParseMaster(object):
     # constants
     EXPRESSION = 0
     REPLACEMENT = 1
@@ -108,7 +112,7 @@ class ParseMaster:
                 replacement = pattern.replacement
                 if callable(replacement):
                     return replacement(match, i)
-                elif isinstance(replacement, (int, long)):
+                elif isinstance(replacement, (int, int)):
                     return match.group(replacement+i)
                 else:
                     return replacement
@@ -154,7 +158,7 @@ class ParseMaster:
 
 ## http://dean.edwards.name/packer/
 
-class JavaScriptPacker:
+class JavaScriptPacker(object):
     def __init__(self):
         pass
 

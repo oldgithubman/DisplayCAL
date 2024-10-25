@@ -6,12 +6,14 @@ Re-implementation of Argyll's webwin in pure python.
 """
 from __future__ import absolute_import
 
-import BaseHTTPServer
-from StringIO import StringIO
+from future import standard_library
+standard_library.install_aliases()
+import http.server
+from io import StringIO
 import shutil
 import threading
 import time
-from urllib import unquote
+from urllib.parse import unquote
 
 from .meta import name as appname, version as appversion
 
@@ -100,7 +102,7 @@ window.onload = function() {
 """
 
 
-class WebWinHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class WebWinHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
 	"""
 	Simple HTTP request handler with GET and HEAD commands.

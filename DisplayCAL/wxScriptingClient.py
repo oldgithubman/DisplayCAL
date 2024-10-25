@@ -261,7 +261,7 @@ class ScriptingClientFrame(SimpleTerminal):
 
 	def get_common_commands(self):
 		cmds = SimpleTerminal.get_common_commands(self)
-		return filter(lambda cmd: not cmd.startswith("echo "), cmds)
+		return [cmd for cmd in cmds if not cmd.startswith("echo ")]
 
 	def get_last_line(self):
 		linecount = self.console.GetNumberOfLines()

@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import object
 import codecs
 import locale
 import os
@@ -26,14 +27,14 @@ def codec_register_alias(alias, name):
 
 def conditional_decode(text, encoding='UTF-8', errors='strict'):
     """ Decode text if not unicode """
-    if not isinstance(text, unicode):
+    if not isinstance(text, str):
         text = text.decode(encoding, errors)
     return text
 
 
 def conditional_encode(text, encoding='UTF-8', errors='strict'):
     """ Encode text if unicode """
-    if isinstance(text, unicode):
+    if isinstance(text, str):
         text = text.encode(encoding, errors)
     return text
 
@@ -54,7 +55,7 @@ def encodestdio(encodings=None, errors=None):
         encodings = {'stdin': None, 'stdout': None, 'stderr': None}
     if not errors:
         errors = {'stdin': 'strict', 'stdout': 'replace', 'stderr': 'replace'}
-    for stream_name in set(encodings.keys() + errors.keys()):
+    for stream_name in set(list(encodings.keys()) + list(errors.keys())):
         stream = getattr(sys, stream_name)
         encoding = encodings.get(stream_name)
         if not encoding:
@@ -113,7 +114,7 @@ class EncodedStream(object):
         else:
             object.__setattr__(self, name, value)
     
-    def next(self):
+    def __next__(self):
         return self.readline()
 
     def read(self, size=-1):

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import sys
 import os
 
@@ -46,7 +49,7 @@ if sys.platform == "win32":
 		return success and not aborted
 else:
 	from time import strftime
-	from urllib import quote
+	from urllib.parse import quote
 	import shutil
 
 from .util_os import getenvu, expanduseru
@@ -66,7 +69,7 @@ def trash(paths):
 	Return a list of successfully processed paths.
 	
 	"""
-	if isinstance(paths, (str, unicode)):
+	if isinstance(paths, (str, str)):
 		paths = [paths]
 	if not isinstance(paths, list):
 		raise TypeError(str(type(paths)) + " is not list")

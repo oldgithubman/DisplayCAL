@@ -34,6 +34,8 @@ STDOUT:  Special value that indicates that stderr should go to stdout
 """
 from __future__ import print_function
 
+from builtins import range
+from builtins import object
 from future.utils import raise_
 import sys
 mswindows = (sys.platform == "win32")
@@ -65,13 +67,13 @@ if mswindows:
     import threading
     import msvcrt
     import _subprocess
-    class STARTUPINFO:
+    class STARTUPINFO(object):
         dwFlags = 0
         hStdInput = None
         hStdOutput = None
         hStdError = None
         wShowWindow = 0
-    class pywintypes:
+    class pywintypes(object):
         error = IOError
 else:
     import select
@@ -162,7 +164,7 @@ def _args_from_interpreter_flags():
         'py3k_warning': '3',
     }
     args = []
-    for flag, opt in flag_opt_map.items():
+    for flag, opt in list(flag_opt_map.items()):
         v = getattr(sys.flags, flag)
         if v > 0:
             args.append('-' + opt * v)
@@ -351,7 +353,7 @@ class Popen(object):
         """Create new Popen instance."""
         _cleanup()
 
-        if not isinstance(bufsize, (int, long)):
+        if not isinstance(bufsize, (int, int)):
             raise TypeError("bufsize must be an integer")
 
         if mswindows:
@@ -523,7 +525,7 @@ class Popen(object):
                     p2cread, _ = _subprocess.CreatePipe(None, 0)
             elif stdin == PIPE:
                 p2cread, p2cwrite = _subprocess.CreatePipe(None, 0)
-            elif isinstance(stdin, (int, long)):
+            elif isinstance(stdin, (int, int)):
                 p2cread = msvcrt.get_osfhandle(stdin)
             else:
                 # Assuming file-like object
@@ -540,7 +542,7 @@ class Popen(object):
                     _, c2pwrite = _subprocess.CreatePipe(None, 0)
             elif stdout == PIPE:
                 c2pread, c2pwrite = _subprocess.CreatePipe(None, 0)
-            elif isinstance(stdout, (int, long)):
+            elif isinstance(stdout, (int, int)):
                 c2pwrite = msvcrt.get_osfhandle(stdout)
             else:
                 # Assuming file-like object
@@ -559,7 +561,7 @@ class Popen(object):
                 errread, errwrite = _subprocess.CreatePipe(None, 0)
             elif stderr == STDOUT:
                 errwrite = c2pwrite
-            elif isinstance(stderr, (int, long)):
+            elif isinstance(stderr, (int, int)):
                 errwrite = msvcrt.get_osfhandle(stderr)
             else:
                 # Assuming file-like object
@@ -817,7 +819,7 @@ class Popen(object):
             elif stdin == PIPE:
                 p2cread, p2cwrite = self.pipe_cloexec()
                 to_close.update((p2cread, p2cwrite))
-            elif isinstance(stdin, (int, long)):
+            elif isinstance(stdin, (int, int)):
                 p2cread = stdin
             else:
                 # Assuming file-like object
@@ -828,7 +830,7 @@ class Popen(object):
             elif stdout == PIPE:
                 c2pread, c2pwrite = self.pipe_cloexec()
                 to_close.update((c2pread, c2pwrite))
-            elif isinstance(stdout, (int, long)):
+            elif isinstance(stdout, (int, int)):
                 c2pwrite = stdout
             else:
                 # Assuming file-like object
@@ -844,7 +846,7 @@ class Popen(object):
                     errwrite = c2pwrite
                 else: # child's stdout is not set, use parent's stdout
                     errwrite = sys.__stdout__.fileno()
-            elif isinstance(stderr, (int, long)):
+            elif isinstance(stderr, (int, int)):
                 errwrite = stderr
             else:
                 # Assuming file-like object
@@ -885,7 +887,7 @@ class Popen(object):
                 os.closerange(3, but)
                 os.closerange(but + 1, MAXFD)
             else:
-                for i in xrange(3, MAXFD):
+                for i in range(3, MAXFD):
                     if i == but:
                         continue
                     try:

@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 from time import strftime
 import binascii
 import os
@@ -15,7 +18,7 @@ from DisplayCAL import ICCProfile as ICCP
 
 
 def prettyprint(iterable, level=1):
-	for key, value in iterable.iteritems():
+	for key, value in iterable.items():
 		if hasattr(value, "iteritems"):
 			print(" " * 4 * level, "%s:" % key.capitalize())
 			prettyprint(value, level + 1)
@@ -44,7 +47,7 @@ def profileinfo(profile):
 	prettyprint(profile.device)
 	print("Rendering Intent:", profile.intent)
 	print("Illuminant:", " ".join(str(n * 100) for n in 
-								  profile.illuminant.values()))
+								  list(profile.illuminant.values())))
 	print("Creator:", profile.creator)
 	print("ID:", binascii.hexlify(profile.ID).upper())
 	# Tags
@@ -58,7 +61,7 @@ def profileinfo(profile):
 	if "vued" in profile.tags:
 		print("Viewing Conditions Description:", end=' ') 
 		print(profile.getViewingConditionsDescription())
-	wtpt_profile_norm = tuple(n * 100 for n in profile.tags.wtpt.values())
+	wtpt_profile_norm = tuple(n * 100 for n in list(profile.tags.wtpt.values()))
 	if "chad" in profile.tags:
 		# undo chromatic adaption of profile whitepoint
 		X, Y, Z = wtpt_profile_norm
@@ -66,7 +69,7 @@ def profileinfo(profile):
 		XR = X * M[0][0] + Y * M[0][1] + Z * M[0][2]
 		YR = X * M[1][0] + Y * M[1][1] + Z * M[1][2]
 		ZR = X * M[2][0] + Y * M[2][1] + Z * M[2][2]
-		wtpt_profile_norm = tuple((n / YR) * 100.0 for n in (XR, YR, ZR))
+		wtpt_profile_norm = tuple((old_div(n, YR)) * 100.0 for n in (XR, YR, ZR))
 	if "lumi" in profile.tags and isinstance(profile.tags.lumi, ICCP.XYZType):
 		print("Luminance:", profile.tags.lumi.Y)
 	print("Actual Whitepoint XYZ:", " ".join(str(n) for n in wtpt_profile_norm))

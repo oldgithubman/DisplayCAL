@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from builtins import str
 import re
 
 def floatlist(alist):
@@ -22,7 +23,7 @@ def get(alist, index, default=None):
 
 def index_ignorecase(self, value, start = None, stop = None):
 	""" Case-insensitive version of list.index """
-	items = [(item.lower() if isinstance(item, (str, unicode)) else item) 
+	items = [(item.lower() if isinstance(item, (str, str)) else item) 
 			 for item in self]
 	return items.index(value, start or 0, stop or len(self))
 

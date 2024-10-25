@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 
+from builtins import chr
+from builtins import range
 from binascii import hexlify
 import sys
 
@@ -9,7 +11,7 @@ from DisplayCAL import ICCProfile as ICCP, xrandr
 from DisplayCAL.safe_print import safe_print
 from DisplayCAL.RealDisplaySizeMM import RealDisplaySizeMM as RDSMM
 
-for i in xrange(5):
+for i in range(5):
 	# Show ICC info for first five screens / outputs
 	try:
 		x_icc_c = xrandr.get_atom("_ICC_PROFILE" if i < 1 else 

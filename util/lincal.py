@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import math, os, sys
 from time import strftime
 
@@ -16,7 +20,7 @@ if __name__ == '__main__':
 		if start == end:
 			print("ERROR: start == end")
 		else:
-			step = (end - start) / (steps - 1)
+			step = old_div((end - start), (steps - 1))
 			i = start
 			for x in range(steps):
 				curve += [i]

@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import filter
+from builtins import range
+from past.builtins import basestring
+from builtins import object
 import fnmatch
 import ctypes
 import errno
@@ -70,11 +77,11 @@ _listdir = os.listdir
 if sys.platform == "win32":
 	# Add support for long paths (> 260 chars)
 	# and retry ERROR_SHARING_VIOLATION
-	import __builtin__
+	import builtins
 	import winerror
 	import win32api
 
-	_open = __builtin__.open
+	_open = builtins.open
 
 
 	def retry_sharing_violation_factory(fn, delay=0.25, maxretries=20):
@@ -100,7 +107,7 @@ if sys.platform == "win32":
 		return _open(make_win32_compatible_long_path(path), *args,
 								 **kwargs)
 
-	__builtin__.open = open
+	builtins.open = open
 
 
 	_access = os.access
@@ -206,9 +213,9 @@ if sys.platform == "win32":
 else:
 	def listdir(path):
 		paths = _listdir(path)
-		if isinstance(path, unicode):
+		if isinstance(path, str):
 			# Undecodable filenames will still be string objects. Ignore them.
-			paths = filter(lambda path: isinstance(path, unicode), paths)
+			paths = [path for path in paths if isinstance(path, str)]
 		return paths
 
 os.listdir = listdir
@@ -299,7 +306,7 @@ def expanduseru(path):
 			userhome = os.path.join(dirname(userhome), path[1:i])
 
 		return userhome + path[i:]
-	return unicode(os.path.expanduser(path), fs_enc)
+	return str(os.path.expanduser(path), fs_enc)
 
 
 def expandvarsu(path):
@@ -378,7 +385,7 @@ def expandvarsu(path):
 				res = res + c
 			index = index + 1
 		return res
-	return unicode(os.path.expandvars(path), fs_enc)
+	return str(os.path.expandvars(path), fs_enc)
 
 
 def fname_ext(path):
@@ -404,7 +411,7 @@ def get_program_file(name, foldername):
 def getenvu(name, default = None):
 	""" Unicode version of os.getenv """
 	if sys.platform == "win32":
-		name = unicode(name)
+		name = str(name)
 		# http://stackoverflow.com/questions/2608200/problems-with-umlauts-in-python-appdata-environvent-variable
 		length = ctypes.windll.kernel32.GetEnvironmentVariableW(name, None, 0)
 		if length == 0:
@@ -414,7 +421,7 @@ def getenvu(name, default = None):
 		return buffer.value
 	var = os.getenv(name, default)
 	if isinstance(var, basestring):
-		return var if isinstance(var, unicode) else unicode(var, fs_enc)
+		return var if isinstance(var, str) else str(var, fs_enc)
 
 
 def getgroups(username=None, names_only=False):
@@ -492,7 +499,7 @@ def listdir_re(path, rex = None):
 	files = os.listdir(path)
 	if rex:
 		rex = re.compile(rex, re.IGNORECASE)
-		files = filter(rex.search, files)
+		files = list(filter(rex.search, files))
 	return files
 
 
@@ -532,7 +539,7 @@ def mksfile(filename):
 
 	fname, ext = os.path.splitext(filename)
 
-	for seq in xrange(tempfile.TMP_MAX):
+	for seq in range(tempfile.TMP_MAX):
 		if not seq:
 			pth = filename
 		else:
@@ -567,8 +574,8 @@ def movefile(src, dst, overwrite=True):
 
 def putenvu(name, value):
 	""" Unicode version of os.putenv (also correctly updates os.environ) """
-	if sys.platform == "win32" and isinstance(value, unicode):
-		ctypes.windll.kernel32.SetEnvironmentVariableW(unicode(name), value)
+	if sys.platform == "win32" and isinstance(value, str):
+		ctypes.windll.kernel32.SetEnvironmentVariableW(str(name), value)
 	else:
 		os.environ[name] = value.encode(fs_enc)
 
@@ -649,7 +656,7 @@ def readlink(path):
 		raise OSError(22, 'Invalid argument', path)
 
 	# Open the file correctly depending on the string type.
-	if type(path) is unicode:
+	if type(path) is str:
 		createfilefn = CreateFileW
 	else:
 		createfilefn = CreateFile
@@ -761,15 +768,15 @@ def safe_iglob(pathname):
 def safe_glob1(dirname, pattern):
 	if not dirname:
 		dirname = os.curdir
-	if isinstance(pattern, unicode) and not isinstance(dirname, unicode):
-		dirname = unicode(dirname, sys.getfilesystemencoding() or
+	if isinstance(pattern, str) and not isinstance(dirname, str):
+		dirname = str(dirname, sys.getfilesystemencoding() or
 								   sys.getdefaultencoding())
 	try:
 		names = os.listdir(dirname)
 	except os.error:
 		return []
 	if pattern[0] != '.':
-		names = filter(lambda x: x[0] != '.', names)
+		names = [x for x in names if x[0] != '.']
 	return safe_shell_filter(names, pattern)
 
 
@@ -985,7 +992,7 @@ class FileLock(object):
 
 
 if sys.platform == "win32" and sys.getwindowsversion() >= (6, ):
-	class win64_disable_file_system_redirection:
+	class win64_disable_file_system_redirection(object):
 
 		# http://code.activestate.com/recipes/578035-disable-file-system-redirector/
 

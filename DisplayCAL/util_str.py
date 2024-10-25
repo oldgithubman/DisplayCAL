@@ -2,6 +2,14 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import chr
+from builtins import str
+from builtins import zip
+from builtins import hex
+from builtins import range
+from past.builtins import basestring
+from past.utils import old_div
 import codecs
 import exceptions
 import locale
@@ -29,7 +37,7 @@ ascii_printable = "".join([getattr(string, name) for name in ("digits",
 
 # Control chars are defined as charcodes in the decimal range 0-31 (inclusive) 
 # except whitespace characters, plus charcode 127 (DEL)
-control_chars = "".join([chr(i) for i in range(0, 9) + range(14, 32) + [127]])
+control_chars = "".join([chr(i) for i in list(range(0, 9)) + list(range(14, 32)) + [127]])
 
 # Safe character substitution - can be used for filenames
 # i.e. no \/:*?"<>| will be added through substitution
@@ -411,12 +419,12 @@ def ellipsis(text, maxlen=64, pos="r"):
 	if pos == "r":
 		return text[:maxlen - 1] + u"\u2026"
 	elif pos == "m":
-		return text[:maxlen / 2] + u"\u2026" + text[-maxlen / 2 + 1:]
+		return text[:old_div(maxlen, 2)] + u"\u2026" + text[old_div(-maxlen, 2) + 1:]
 
 
 def hexunescape(match):
 	""" To be used with re.sub """
-	return unichr(int(match.group(1), 16))
+	return chr(int(match.group(1), 16))
 
 
 def indent(text, prefix, predicate=None):
@@ -454,7 +462,7 @@ def replace_control_chars(txt, replacement=" ", collapse=False):
 	replacement characters are collapsed to a single one.
 	
 	"""
-	txt = strtr(txt, dict(zip(control_chars, [replacement] * len(control_chars))))
+	txt = strtr(txt, dict(list(zip(control_chars, [replacement] * len(control_chars)))))
 	if collapse:
 		while replacement * 2 in txt:
 			txt = txt.replace(replacement * 2, replacement)
@@ -512,7 +520,7 @@ def safe_basestring(obj):
 	oobj = obj
 	if not isinstance(obj, basestring):
 		try:
-			obj = unicode(obj)
+			obj = str(obj)
 		except UnicodeDecodeError:
 			try:
 				obj = str(obj)
@@ -524,16 +532,16 @@ def safe_basestring(obj):
 		module = getattr(oobj, "__module__", "")
 		package = safe_basestring.__module__.split(".")[0]  # Our own package
 		if not module.startswith(package + "."):
-			clspth = ".".join(filter(None, [module, oobj.__class__.__name__]))
+			clspth = ".".join([_f for _f in [module, oobj.__class__.__name__] if _f])
 			if not obj.startswith(clspth + ":") and obj != clspth:
-				obj = ": ".join(filter(None, [clspth, obj]))
+				obj = ": ".join([_f for _f in [clspth, obj] if _f])
 	return obj
 
 
 def safe_str(obj, enc=fs_enc, errors="replace"):
 	""" Return string representation of obj """
 	obj = safe_basestring(obj)
-	if isinstance(obj, unicode):
+	if isinstance(obj, str):
 		return obj.encode(enc, errors)
 	else:
 		return obj
@@ -542,7 +550,7 @@ def safe_str(obj, enc=fs_enc, errors="replace"):
 def safe_unicode(obj, enc=fs_enc, errors="replace"):
 	""" Return unicode representation of obj """
 	obj = safe_basestring(obj)
-	if isinstance(obj, unicode):
+	if isinstance(obj, str):
 		return obj
 	else:
 		return obj.decode(enc, errors)
@@ -557,7 +565,7 @@ def strtr(txt, replacements):
 	
 	"""
 	if hasattr(replacements, "iteritems"):
-		replacements = replacements.iteritems()
+		replacements = iter(replacements.items())
 	elif isinstance(replacements, basestring):
 		for srch in replacements:
 			txt = txt.replace(srch, "")
@@ -585,7 +593,7 @@ def wrap(text, width = 70):
 
 
 def test():
-	for k, v in subst.iteritems():
+	for k, v in subst.items():
 		print(k, v)
 
 if __name__ == "__main__":

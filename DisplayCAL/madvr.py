@@ -4,8 +4,17 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
-from ConfigParser import RawConfigParser
-from StringIO import StringIO
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import chr
+from builtins import str
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
+from configparser import RawConfigParser
+from io import StringIO
 from binascii import unhexlify
 from time import sleep, time
 from zlib import crc32
@@ -19,7 +28,7 @@ import struct
 import sys
 import threading
 if sys.platform == "win32":
-	import _winreg
+	import winreg
 
 if sys.platform == "win32":
 	import win32api
@@ -171,13 +180,13 @@ def icc_device_link_to_madvr(icc_device_link_filename, unity=False,
 	if unity:
 		logfile.write("Writing unity madVR 3D LUT...\n")
 		prevperc = -1
-		for a in xrange(clutres):
-			for b in xrange(clutres):
-				for c in xrange(clutres):
+		for a in range(clutres):
+			for b in range(clutres):
+				for c in range(clutres):
 					# Optimize for speed
 					B, G, R = chr(c), chr(b), chr(a)
 					raw.write(B + B + G + G + R + R)
-			perc = round(a / clutmax * 100)
+			perc = round(old_div(a, clutmax) * 100)
 			if perc > prevperc:
 				logfile.write("\r%i%%" % perc)
 				prevperc = perc
@@ -217,8 +226,8 @@ def icc_device_link_to_madvr(icc_device_link_filename, unity=False,
 		raw.write(struct.pack('<I', 256))
 		raw.write(struct.pack('<I', 2))
 		# Linear (unity) calibration
-		for i in xrange(3):
-			for j in xrange(256):
+		for i in range(3):
+			for j in range(256):
 				raw.write(struct.pack('<H', j * 257))
 
 	raw.close()
@@ -327,7 +336,7 @@ class H3DLUT(object):
 	@property
 	def data(self):
 		parametersData = []
-		for key, values in self.parametersData.iteritems():
+		for key, values in self.parametersData.items():
 			if isinstance(values, basestring):
 				value = values
 			else:
@@ -431,16 +440,16 @@ class H3DLUT(object):
 		A2B0 = ICCP.LUT16Type()
 		A2B0.matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
 		A2B0.input = []
-		for i in xrange(3):
+		for i in range(3):
 			A2B0.input.append([])
-			for j in xrange(4096):
+			for j in range(4096):
 				A2B0.input[-1].append(min(max(j / 4095. * (256 / 255.) - (256 / 255. - 1), 0), 1) * 65535)
 		input_bytes = len(A2B0.input) * len(A2B0.input[0]) * 2
-		A2B0.clut = [[[0] * 3 for i in xrange(clut_grid_steps)]]  # Fake cLUT
+		A2B0.clut = [[[0] * 3 for i in range(clut_grid_steps)]]  # Fake cLUT
 		A2B0.output = []
-		for i in xrange(3):
+		for i in range(3):
 			A2B0.output.append([])
-			for j in xrange(4096):
+			for j in range(4096):
 				A2B0.output[-1].append(min(max(j / 4095. * (256 / 255.), 0), 1) * 65535)
 		output_bytes = len(A2B0.output) * len(A2B0.output[0]) * 2
 		tagData = A2B0.tagData[:52 + input_bytes]  # Exclude cLUT and output curves
@@ -448,20 +457,20 @@ class H3DLUT(object):
 		# Write actual cLUT
 		# XXX Currently only 16 bit RGB data is supported
 		samples_per_pixel = 3  # RGB
-		bytes_per_sample = self.outputBitDepth / 8
+		bytes_per_sample = old_div(self.outputBitDepth, 8)
 		bytes_per_pixel = samples_per_pixel * bytes_per_sample
 		io = StringIO(tagData)
 		io.seek(0, 2)  # Position cursor at end
 		i = 0
-		for R in xrange(input_grid_steps):
+		for R in range(input_grid_steps):
 			if not R:
 				i += input_grid_steps * input_grid_steps
 				continue
-			for G in xrange(input_grid_steps):
+			for G in range(input_grid_steps):
 				if not G:
 					i += input_grid_steps
 					continue
-				for B in xrange(input_grid_steps):
+				for B in range(input_grid_steps):
 					if not B:
 						i += 1
 						continue
@@ -489,14 +498,14 @@ class H3DLUT(object):
 		# Write image data
 		# XXX Currently only 8 or 16 bit RGB data is supported
 		samples_per_pixel = 3  # RGB
-		bytes_per_sample = self.outputBitDepth / 8
+		bytes_per_sample = old_div(self.outputBitDepth, 8)
 		bytes_per_pixel = samples_per_pixel * bytes_per_sample
 		w = 2 ** self.inputBitDepth[0]  # Assume equal bitdepth for R, G, B
 		h = w * w
 		stream.write(tiff_get_header(w, h, samples_per_pixel,
 									 self.outputBitDepth))
-		entries = self.lutUncompressedSize / samples_per_pixel / bytes_per_sample
-		for i in xrange(entries):
+		entries = old_div(old_div(self.lutUncompressedSize, samples_per_pixel), bytes_per_sample)
+		for i in range(entries):
 			index = i * samples_per_pixel * bytes_per_sample
 			BGR = self.LUTDATA[index:index + bytes_per_pixel]
 			RGB = BGR[::-1]  # BGR little-endian to RGB big-endian byte order
@@ -541,9 +550,9 @@ class MadTPG(MadTPGBase):
 		# Find madHcNet32.dll
 		clsid = "{E1A8B82A-32CE-4B0D-BE0D-AA68C772E423}"
 		try:
-			key = _winreg.OpenKey(_winreg.HKEY_CLASSES_ROOT,
+			key = winreg.OpenKey(winreg.HKEY_CLASSES_ROOT,
 								  r"CLSID\%s\InprocServer32" % clsid)
-			value, valuetype = _winreg.QueryValueEx(key, "")
+			value, valuetype = winreg.QueryValueEx(key, "")
 		except:
 			raise RuntimeError(lang.getstr("madvr.not_found"))
 		if platform.architecture()[0] == "64bit":
@@ -655,7 +664,7 @@ class MadTPG(MadTPGBase):
 		                               2 = APL - linear light
 		Black border width in pixels   0-100
 		"""
-		area, bglvl, bgmode, border = [ctypes.c_long() for i in xrange(4)]
+		area, bglvl, bgmode, border = [ctypes.c_long() for i in range(4)]
 		result = self.mad.madVR_GetPatternConfig(*[ctypes.byref(v) for v in
 												   (area, bglvl, bgmode,
 												    border)])
@@ -1078,7 +1087,7 @@ class MadTPG_Net(MadTPGBase):
 				timeout4=0, parentwindow=None):
 		""" Find or select a madTPG instance on the network and connect to it """
 		listened = self.listening
-		for i in xrange(1, 5):
+		for i in range(1, 5):
 			method = locals()["method%i" % i]
 			timeout = locals()["timeout%i" % i] / 1000.0
 			if method in (CM_ConnectToLanInstance, CM_ShowListDialog):
@@ -1192,7 +1201,7 @@ class MadTPG_Net(MadTPGBase):
 				self.clients[addr] = client
 				if self._is_master(conn):
 					# Prevent duplicate connections
-					for c_addr, c_client in self.clients.iteritems():
+					for c_addr, c_client in self.clients.items():
 						if (c_client.get("confirmed") and
 							c_client["processId"] == client["processId"] and
 							c_client["module"] == client["module"]):
@@ -1216,7 +1225,7 @@ class MadTPG_Net(MadTPGBase):
 				self._dispatch_event("on_client_confirmed",
 									 (addr, self.clients[addr]))
 				# Close duplicate connections
-				for c_addr, c_client in self.clients.iteritems():
+				for c_addr, c_client in self.clients.items():
 					if (c_addr != addr and
 						c_client["processId"] == client["processId"] and
 						c_client["module"] == client["module"]):
@@ -1308,7 +1317,7 @@ class MadTPG_Net(MadTPGBase):
 				if addr:
 					c_addrs = [addr]
 				else:
-					c_addrs = clients.keys()
+					c_addrs = list(clients.keys())
 				for c_addr in c_addrs:
 					client = clients.get(c_addr)
 					conn = self._client_sockets.get(c_addr)
@@ -1414,8 +1423,8 @@ class MadTPG_Net(MadTPGBase):
 					# Convert to ushort_Array_256_Array_3
 					ramp = ((ctypes.c_ushort * 256) * 3)()
 					if len(params) == 1536:
-						for j in xrange(3):
-							for i in xrange(256):
+						for j in range(3):
+							for i in range(256):
 								ramp[j][i] = int(round(struct.unpack("<H", params[:2])[0]))
 								params = params[2:]
 						params = ramp
@@ -1442,11 +1451,11 @@ class MadTPG_Net(MadTPGBase):
 				safe_print(record["processId"], record["module"],
 						   record["commandNo"], record["component"],
 						   record["instance"], record["command"])
-				for key, value in record.iteritems():
+				for key, value in record.items():
 					if key == "params" or self.debug > 2:
 						if isinstance(value, dict):
 							safe_print("  %s:" % key)
-							for subkey, subvalue in value.iteritems():
+							for subkey, subvalue in value.items():
 								if self.debug < 2 and subkey != "exeFile":
 									continue
 								safe_print("    %s = %s" % (subkey.ljust(16),
@@ -1572,8 +1581,8 @@ class MadTPG_Net_Sender(object):
 				params += struct.pack("<i", args[3])  # HDR to SDR?
 		elif self.command == "SetDeviceGammaRamp":
 			params = ""
-			for j in xrange(3):
-				for i in xrange(256):
+			for j in range(3):
+				for i in range(256):
 					if args[0] is None:
 						# Clear device gamma ramp
 						v = i * 257
@@ -1609,7 +1618,7 @@ class MadTPG_Net_Sender(object):
 				rgb += (bgr, bgg, bgb)
 			if None in (r, g, b):
 				raise TypeError("show_rgb() takes at least 4 arguments (%i given)" %
-								len(filter(lambda v: v, rgb)))
+								len([v for v in rgb if v]))
 			params = "|".join(str(v) for v in rgb)
 		else:
 			params = str(*args)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from builtins import str
 import os
 import sys
 
@@ -38,10 +39,10 @@ def ppdir(obj, types=None, level=1, stream=sys.stdout, repr=repr):
 			if not match:
 				continue
 		stream.write(("    " * level) + (
-			((repr(stuff) if level else unicode(stuff)) + ": ")
+			((repr(stuff) if level else str(stuff)) + ": ")
 			if item is not stuff else ""
 		))
-		if isinstance(item, (str, unicode, int, float)):
+		if isinstance(item, (str, str, int, float)):
 			#if isinstance(item, (str, unicode)) and "\n" in item:
 				#stream.write('"""' + item + '"""' + ("," if level else "") + '\n')
 			#else:

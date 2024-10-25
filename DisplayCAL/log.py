@@ -2,6 +2,7 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from builtins import object
 from codecs import EncodedFile
 from hashlib import md5
 import atexit
@@ -73,7 +74,7 @@ def wx_log(logwindow, msg):
 			logwindow.Log(msg)
 
 
-class DummyLogger():
+class DummyLogger(object):
 
 	def critical(self, msg, *args, **kwargs):
 		pass
@@ -97,7 +98,7 @@ class DummyLogger():
 		pass
 
 
-class Log():
+class Log(object):
 	
 	def __call__(self, msg, fn=None):
 		"""
@@ -135,7 +136,7 @@ class Log():
 log = Log()
 
 
-class LogFile():
+class LogFile(object):
 	
 	""" Logfile class. Default is to not rotate. """
 	

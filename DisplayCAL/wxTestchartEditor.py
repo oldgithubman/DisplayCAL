@@ -2,6 +2,10 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import csv
 import math
 import os
@@ -45,7 +49,7 @@ from .wxMeasureFrame import get_default_size
 
 
 def swap_dict_keys_values(mydict):
-	return dict([(v, k) for (k, v) in mydict.iteritems()])
+	return dict([(v, k) for (k, v) in mydict.items()])
 
 
 class TestchartEditor(BaseFrame):
@@ -108,7 +112,7 @@ class TestchartEditor(BaseFrame):
 			".txt": self.ti1_drop_handler
 		}
 
-		scale = getcfg("app.dpi") / config.get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 		if scale < 1:
 			scale = 1
 
@@ -202,7 +206,7 @@ class TestchartEditor(BaseFrame):
 		sizer.Add(self.tc_fullspread_patches, flag = wx.ALL | wx.ALIGN_CENTER_VERTICAL, border = border)
 
 		# algo
-		algos = self.tc_algos_ab.values()
+		algos = list(self.tc_algos_ab.values())
 		algos.sort()
 		sizer.Add(wx.StaticText(panel, -1, lang.getstr("tc.algo")), flag = wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, border = border)
 		self.tc_algo = wx.Choice(panel, -1, choices = algos, name = "tc_algo")
@@ -774,7 +778,7 @@ class TestchartEditor(BaseFrame):
 			# Scale to 0..100 if actual value range is different
 			if maxval > 100:
 				for i, row in enumerate(rows):
-					rows[i][1:] = [v / maxval * 100 for v in row[1:]]
+					rows[i][1:] = [old_div(v, maxval) * 100 for v in row[1:]]
 			# Create temporary TI1
 			ti1 = CGATS.CGATS("""CTI1  
 KEYWORD "COLOR_REP"
@@ -849,9 +853,9 @@ END_DATA""")
 		if not num_cols:
 			return
 		grid_w = self.grid.GetSize()[0] - self.grid.GetRowLabelSize() - self.grid.GetDefaultRowSize()
-		col_w = round(grid_w / (num_cols - 1))
+		col_w = round(old_div(grid_w, (num_cols - 1)))
 		last_col_w = grid_w - col_w * (num_cols - 2)
-		for i in xrange(num_cols):
+		for i in range(num_cols):
 			if i == 3:
 				w = self.grid.GetDefaultRowSize()
 			elif i == num_cols - 2:
@@ -869,8 +873,8 @@ END_DATA""")
 			grid_w = (self.preview.GetSize()[0] -
 					  self.preview.GetRowLabelSize() -
 					  wx.SystemSettings_GetMetric(wx.SYS_VSCROLL_X))
-			col_w = round(grid_w / num_cols)
-			for i in xrange(num_cols):
+			col_w = round(old_div(grid_w, num_cols))
+			for i in range(num_cols):
 				self.preview.SetColSize(i, col_w)
 			self.preview.SetMargins(0 - wx.SystemSettings_GetMetric(wx.SYS_VSCROLL_X),
 								    0)
@@ -893,7 +897,7 @@ END_DATA""")
 			wp = self.ti1.queryv1("APPROX_WHITE_POINT")
 			if wp:
 				wp = [float(v) for v in wp.split()]
-				wp = [(v / wp[1]) * 100.0 for v in wp]
+				wp = [(old_div(v, wp[1])) * 100.0 for v in wp]
 			else:
 				wp = colormath.get_standard_illuminant("D65", scale=100)
 			newdata = {
@@ -1059,7 +1063,7 @@ END_DATA""")
 		except ValueError as exception:
 			if not self.grid.GetBatchCount():
 				wx.Bell()
-			if label in self.ti1[0]["DATA_FORMAT"].values():
+			if label in list(self.ti1[0]["DATA_FORMAT"].values()):
 				strval = str(sample[label])
 				if "." in strval:
 					strval = strval.rstrip("0").rstrip(".")
@@ -1353,7 +1357,7 @@ END_DATA""")
 				row = rows[-1]
 			else:
 				row = self.grid.GetNumberRows() - 1
-			for i in xrange(maxv):
+			for i in range(maxv):
 				saturation = 1.0 / (maxv - 1) * i
 				RGB, xyY = colormath.RGBsaturation(R, G, B, 1.0 / (maxv - 1) * i,
 												   rgb_space)
@@ -1454,8 +1458,8 @@ END_DATA""")
 					chart.insert(1, 'KEYWORD "APPROX_WHITE_POINT"')
 					chart.insert(2, 'APPROX_WHITE_POINT "%.4f %.4f %.4f"' %
 									tuple(v * 100 for v in
-										  nclprof.tags.wtpt.ir.values()))
-				for k, v in nclprof.tags.ncl2.iteritems():
+										  list(nclprof.tags.wtpt.ir.values())))
+				for k, v in nclprof.tags.ncl2.items():
 					chart.insert(-1, "%.4f %.4f %.4f" % tuple(v.pcs.values()))
 				chart = "\n".join(chart)
 
@@ -1471,7 +1475,7 @@ END_DATA""")
 			show_result_dialog(result, self)
 		else:
 			chart = result
-			data_format = chart.queryv1("DATA_FORMAT").values()
+			data_format = list(chart.queryv1("DATA_FORMAT").values())
 			if getcfg("tc_add_ti3_relative"):
 				intent = "r"
 			else:
@@ -1496,7 +1500,7 @@ END_DATA""")
 				else:
 					chart = ti3
 			dataset = chart.queryi1("DATA")
-			data_format = dataset.queryv1("DATA_FORMAT").values()
+			data_format = list(dataset.queryv1("DATA_FORMAT").values())
 			# Returned CIE values are always either XYZ or Lab
 			if ("LAB_L" in data_format and "LAB_A" in data_format and
 				"LAB_B" in data_format):
@@ -1526,7 +1530,7 @@ END_DATA""")
 													dataset.DATA[i]["XYZ_Y"],
 													dataset.DATA[i]["XYZ_Z"],
 													"D50",
-													profile.tags.wtpt.values())
+													list(profile.tags.wtpt.values()))
 				entry = {"SAMPLE_ID": row + 2 + i}
 				for label in ("RGB_R", "RGB_G", "RGB_B",
 							  "XYZ_X", "XYZ_Y", "XYZ_Z"):
@@ -1541,8 +1545,8 @@ END_DATA""")
 			if isinstance(cwd, Exception):
 				return cwd
 			size = 70.0
-			scale = math.sqrt((img.Width * img.Height) / (size * size))
-			w, h = int(round(img.Width / scale)), int(round(img.Height / scale))
+			scale = math.sqrt(old_div((img.Width * img.Height), (size * size)))
+			w, h = int(round(old_div(img.Width, scale))), int(round(old_div(img.Height, scale)))
 			loresimg = img.Scale(w, h, wx.IMAGE_QUALITY_NORMAL)
 			if loresimg.CountColours() < img.CountColours(size * size):
 				# Assume a photo
@@ -1576,7 +1580,7 @@ END_DATA""")
 			if cmd:
 				ppath = getcfg("tc_precond_profile")
 				intent = "r" if getcfg("tc_add_ti3_relative") else "a"
-				for n in xrange(2 if ppath else 1):
+				for n in range(2 if ppath else 1):
 					if use_gamut:
 						res = 10 if imgpath == chart else 1
 						args = ["-d%s" % res, "-O", gam]
@@ -1660,8 +1664,8 @@ END_DATA""")
 						 "END_DATA_FORMAT",
 						 "BEGIN_DATA",
 						 "END_DATA"]
-				for y in xrange(h):
-					for x in xrange(w):
+				for y in range(h):
+					for x in range(w):
 						R, G, B = (img.GetRed(x, y) / 2.55,
 								   img.GetGreen(x, y) / 2.55,
 								   img.GetBlue(x, y) / 2.55)
@@ -1708,20 +1712,20 @@ END_DATA""")
 			demph = getcfg("tc_dark_emphasis")
 			# Select Lab color
 			data = chart.queryv1("DATA")
-			for sample in data.itervalues():
+			for sample in data.values():
 				if not use_gamut:
 					RGB = sample["RGB_R"],  sample["RGB_G"], sample["RGB_B"]
 				L, a, b = (sample["LAB_L"],
 						   sample["LAB_A"],
 						   sample["LAB_B"])
-				color = round(L / 10), round(a / 15), round(b / 15)
+				color = round(old_div(L, 10)), round(old_div(a, 15)), round(old_div(b, 15))
 				if not color in colorsets:
 					weights[color] = 0
 					colorsets[color] = []
 				if L >= 50:
-					weights[color] += L / 50 - demph
+					weights[color] += old_div(L, 50) - demph
 				else:
-					weights[color] += L / 50 + demph
+					weights[color] += old_div(L, 50) + demph
 				colorsets[color].append((L, a, b))
 				if not use_gamut:
 					colorsets[color][-1] += RGB
@@ -1735,9 +1739,8 @@ END_DATA""")
 					 "END_DATA_FORMAT",
 					 "BEGIN_DATA",
 					 "END_DATA"]
-			weight = bool(filter(lambda color: weights[color] >= threshold,
-								 colorsets.iterkeys()))
-			for color, colors in colorsets.iteritems():
+			weight = bool([color for color in iter(colorsets.keys()) if weights[color] >= threshold])
+			for color, colors in colorsets.items():
 				if weight and weights[color] < threshold:
 					continue
 				L, a, b = 0, 0, 0
@@ -1983,7 +1986,7 @@ END_DATA""")
 		if not hasattr(self, "preview"):
 			return
 		numcols = self.preview.GetNumberCols()
-		startrow = startindex / numcols
+		startrow = old_div(startindex, numcols)
 		startcol = startindex % numcols
 		i = 0
 		row = startrow
@@ -1993,9 +1996,9 @@ END_DATA""")
 			self.preview.AppendRows(neededrows)
 		while True:
 			if row == startrow:
-				cols = xrange(startcol, numcols)
+				cols = range(startcol, numcols)
 			else:
-				cols = xrange(numcols)
+				cols = range(numcols)
 			for col in cols:
 				if startindex + i < self.grid.GetNumberRows():
 					color = self.grid.GetCellBackgroundColour(startindex + i, 3)
@@ -2080,7 +2083,7 @@ END_DATA""")
 			return
 		if filter_index < 5:
 			# Image format
-			scale = getcfg("app.dpi") / config.get_default_dpi()
+			scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 			if scale < 1:
 				scale = 1
 			dlg = ConfirmDialog(self, title=lang.getstr("export"),
@@ -2177,9 +2180,9 @@ END_DATA""")
 				display_size = [int(item) for item in match.groups()]
 			else:
 				display_size = self.display_size
-			w, h = [min(size / v, 1.0) for v in display_size]
-			x = (display_size[0] - size) * x / display_size[0]
-			y = (display_size[1] - size) * y / display_size[1]
+			w, h = [min(old_div(size, v), 1.0) for v in display_size]
+			x = old_div((display_size[0] - size) * x, display_size[0])
+			y = old_div((display_size[1] - size) * y, display_size[1])
 			x, y, w, h = [max(v, 0) for v in (x, y, w, h)]
 			x, w = [int(round(v * sw)) for v in (x, w)]
 			y, h = [int(round(v * sh)) for v in (y, h)]
@@ -2191,7 +2194,7 @@ END_DATA""")
 					  7: 1023}[filter_index]
 		is_winnt6 = sys.platform == "win32" and sys.getwindowsversion() >= (6, )
 		use_winnt6_symlinks = is_winnt6 and is_superuser()
-		for i in xrange(maxlen):
+		for i in range(maxlen):
 			if self.worker.thread_abort:
 				break
 			self.worker.lastmsg.write("%d%%\n" % (100.0 / maxlen * (i + 1)))
@@ -2238,7 +2241,7 @@ END_DATA""")
 					count += repeat - 1
 					secs += repeat - 1
 					continue
-				for j in xrange(repeat - 1):
+				for j in range(repeat - 1):
 					count += 1
 					filecopyname = filenameformat % (name, count, ext)
 					if format == "DPX":
@@ -2601,7 +2604,7 @@ END_DATA""")
 					# Missing XYZ, add via simple sRGB-like model
 					data = ti1_1.queryv1("DATA")
 					data.parent.DATA_FORMAT.add_data(("XYZ_X", "XYZ_Y", "XYZ_Z"))
-					for sample in data.itervalues():
+					for sample in data.values():
 						XYZ = argyll_RGB2XYZ(*[sample["RGB_" + channel] / 100.0
 											   for channel in "RGB"])
 						for i, component in enumerate("XYZ"):
@@ -2941,7 +2944,7 @@ END_DATA""")
 
 			algo = None
 
-			for key in fullspread_ba.keys():
+			for key in list(fullspread_ba.keys()):
 				if self.ti1.queryv1(key) > 0:
 					algo = fullspread_ba[key]
 					break
@@ -2973,7 +2976,7 @@ END_DATA""")
 		channel.sort()
 		increments = {"0": 0}
 		for i, v in enumerate(channel):
-			for j in reversed(xrange(i, len(channel))):
+			for j in reversed(range(i, len(channel))):
 				inc = round(float(str(channel[j] - v)), vmaxlen)
 				if inc > 0:
 					inc = str(inc)
@@ -3070,7 +3073,7 @@ END_DATA""")
 					# Collect all fixed point datasets not in data
 					fixed_data.vmaxlen = data.vmaxlen
 					fixed_datasets = []
-					for i, dataset in fixed_data.iteritems():
+					for i, dataset in fixed_data.items():
 						if not str(dataset) in rgbdata:
 							fixed_datasets.append(dataset)
 					if fixed_datasets:
@@ -3136,10 +3139,10 @@ END_DATA""")
 			if hasattr(self, "preview"):
 				self.preview.BeginBatch()
 				w = self.grid.GetDefaultRowSize()
-				numcols = (self.sizer.Size[0] -
-						   wx.SystemSettings_GetMetric(wx.SYS_VSCROLL_X)) / w
+				numcols = old_div((self.sizer.Size[0] -
+						   wx.SystemSettings_GetMetric(wx.SYS_VSCROLL_X)), w)
 				self.preview.AppendCols(numcols)
-				for i in xrange(numcols):
+				for i in range(numcols):
 					self.preview.SetColLabelValue(i, str(i + 1))
 
 			grid = self.grid
@@ -3199,9 +3202,9 @@ END_DATA""")
 			self.preview.BeginBatch()
 		data_format = self.ti1.queryv1("DATA_FORMAT")
 		data.moveby1(row + 1, len(newdata))
-		for i in xrange(len(newdata)):
+		for i in range(len(newdata)):
 			dataset = CGATS.CGATS()
-			for label in data_format.itervalues():
+			for label in data_format.values():
 				if not label in newdata[i]:
 					newdata[i][label] = 0.0
 				dataset[label] = newdata[i][label]
@@ -3248,7 +3251,7 @@ END_DATA""")
 		if hasattr(self, "preview"):
 			style, colour, labeltext, labelcolour = self.tc_getcolorlabel(sample)
 			numcols = self.preview.GetNumberCols()
-			row = sample.key / numcols
+			row = old_div(sample.key, numcols)
 			col = sample.key % numcols
 			if row > self.preview.GetNumberRows() - 1:
 				self.preview.AppendRows(1)

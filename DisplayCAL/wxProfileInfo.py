@@ -2,6 +2,10 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import re
 from . import subprocess as sp
 import math
@@ -197,7 +201,7 @@ class GamutCanvas(LUTCanvas):
 		# Add color temp graph
 		if whitepoint == 1:
 			colortemps = []
-			for kelvin in xrange(4000, 25001, 40):
+			for kelvin in range(4000, 25001, 40):
 				colortemps.append(convert2coords(*colormath.CIEDCCT2XYZ(kelvin)))
 			polys.append(plot.PolyLine(colortemps,
 										 colour=wx.Colour(255, 255, 255, 204),
@@ -205,7 +209,7 @@ class GamutCanvas(LUTCanvas):
 		elif whitepoint == 2:
 			colortemps = []
 			# Stepsize 38 = endpoint 24999
-			for kelvin in xrange(1667, 25001, 38):
+			for kelvin in range(1667, 25001, 38):
 				colortemps.append(convert2coords(*colormath.planckianCT2XYZ(kelvin)))
 			polys.append(plot.PolyLine(colortemps,
 										 colour=wx.Colour(255, 255, 255, 204),
@@ -302,8 +306,8 @@ class GamutCanvas(LUTCanvas):
 		xy_range = max(abs(min_x), abs(min_y)) + max(max_x, max_y)
 		if center or not self.last_draw:
 			self.axis_x = self.axis_y = (min(min_x, min_y), max(max_x, max_y))
-			self.spec_x = xy_range / step
-			self.spec_y = xy_range / step
+			self.spec_x = old_div(xy_range, step)
+			self.spec_y = old_div(xy_range, step)
 
 		if polys:
 			graphics = plot.PlotGraphics(polys, title, label_x, label_y)
@@ -372,14 +376,14 @@ class GamutCanvas(LUTCanvas):
 			if (profile.profileClass == "nmcl" and "ncl2" in profile.tags and
 				isinstance(profile.tags.ncl2, ICCP.NamedColor2Type) and
 				profile.connectionColorSpace in ("Lab", "XYZ")):
-				for k, v in profile.tags.ncl2.iteritems():
-					color = v.pcs.values()
+				for k, v in profile.tags.ncl2.items():
+					color = list(v.pcs.values())
 					if profile.connectionColorSpace == "Lab":
 						# Need to convert to XYZ
 						color = colormath.Lab2XYZ(*color)
 					if intent == "a" and "wtpt" in profile.tags:
 						color = colormath.adapt(color[0], color[1], color[2],
-												whitepoint_destination=profile.tags.wtpt.ir.values())
+												whitepoint_destination=list(profile.tags.wtpt.ir.values()))
 					pcs_triplets.append(color)
 				pcs_triplets.sort()
 			elif (profile.version >= 4 and
@@ -430,13 +434,13 @@ class GamutCanvas(LUTCanvas):
 				else:
 					minv = 0.0
 					maxv = 1.0
-				step = (maxv - minv) / (self.size - 1)
-				for j in xrange(min(3, channels)):
-					for k in xrange(min(3, channels)):
+				step = old_div((maxv - minv), (self.size - 1))
+				for j in range(min(3, channels)):
+					for k in range(min(3, channels)):
 						device_value = [0.0] * channels
 						device_value[j] = maxv
 						if j != k or channels == 1:
-							for l in xrange(self.size):
+							for l in range(self.size):
 								device_value[k] = minv + step * l
 								device_values.append(list(device_value))
 				if profile.colorSpace in ("HLS", "HSV", "Lab", "Luv", "YCbr", "Yxy"):
@@ -474,7 +478,7 @@ class GamutCanvas(LUTCanvas):
 						device_values.append([100.0, 0.0, 0.0])
 				elif profile.colorSpace in ("XYZ", "Yxy"):
 					if profile.colorSpace == "XYZ":
-						device_values.append(profile.tags.wtpt.pcs.values())
+						device_values.append(list(profile.tags.wtpt.pcs.values()))
 					else:
 						device_values.append(profile.tags.wtpt.pcs.xyY)
 				elif profile.colorSpace != "GRAY":
@@ -530,7 +534,7 @@ class GamutCanvas(LUTCanvas):
 class GamutViewOptions(wx_Panel):
 	
 	def __init__(self, *args, **kwargs):
-		scale = getcfg("app.dpi") / config.get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 		if scale < 1:
 			scale = 1
 
@@ -760,7 +764,7 @@ class GamutViewOptions(wx_Panel):
 
 	@property
 	def comparison_profile(self):
-		return self.comparison_profiles.values()[self.comparison_profile_select.GetSelection()]
+		return list(self.comparison_profiles.values())[self.comparison_profile_select.GetSelection()]
 
 	def comparison_profile_drop_handler(self, path):
 		try:
@@ -771,7 +775,7 @@ class GamutViewOptions(wx_Panel):
 			desc = profile.getDescription()
 			self.comparison_profiles[desc] = profile
 			self.comparison_profiles_sort()
-			self.comparison_profile_select.SetSelection(self.comparison_profiles.keys().index(desc))
+			self.comparison_profile_select.SetSelection(list(self.comparison_profiles.keys()).index(desc))
 			self.comparison_profile_select_handler(None)
 
 	def comparison_profile_select_handler(self, event):
@@ -789,7 +793,7 @@ class GamutViewOptions(wx_Panel):
 		comparison_profiles.sort(cmp, key=lambda s: s.lower())
 		self.comparison_profiles = self.comparison_profiles[:2]
 		self.comparison_profiles.update(comparison_profiles)
-		self.comparison_profile_select.SetItems(self.comparison_profiles.keys())
+		self.comparison_profile_select.SetItems(list(self.comparison_profiles.keys()))
 
 	@property
 	def direction(self):
@@ -1273,7 +1277,7 @@ class ProfileInfoFrame(LUTFrame):
 			label = label.replace("\0", "")
 			if value is None:
 				value = ""
-			elif not isinstance(value, unicode):
+			elif not isinstance(value, str):
 				value = safe_unicode(value, "ascii")
 			value = wrap(universal_newlines(value.strip()).replace("\t", "\n"),
 						 52).replace("\0", "").split("\n")
@@ -1283,7 +1287,7 @@ class ProfileInfoFrame(LUTFrame):
 			label = universal_newlines(label).split("\n")
 			while len(label) < linecount:
 				label.append("")
-			lines.extend(zip(label, value))
+			lines.extend(list(zip(label, value)))
 		for i, line in enumerate(lines):
 			line = list(line)
 			indent = re.match("\s+", line[0])

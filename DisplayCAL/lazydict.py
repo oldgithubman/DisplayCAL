@@ -3,6 +3,11 @@
 from __future__ import with_statement
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from past.utils import old_div
 import codecs
 import json
 import os
@@ -600,7 +605,7 @@ class LazyDict_YAML_Lite(LazyDict_YAML_UltraLite):
 
 
 def test():
-	from StringIO import StringIO
+	from io import StringIO
 	from time import time
 
 	from .jsondict import JSONDict
@@ -682,14 +687,14 @@ def test():
 
 	d = JSONDict()
 	ts = time()
-	for i in xrange(10000):
+	for i in range(10000):
 		d.parse(io)
 		io.seek(0)
 	jt = time() - ts
 
 	d = LazyDict_JSON()
 	ts = time()
-	for i in xrange(10000):
+	for i in range(10000):
 		d.parse(io)
 		io.seek(0)
 	ljt = time() - ts
@@ -707,34 +712,34 @@ def test():
 
 	d = LazyDict_YAML_UltraLite()
 	ts = time()
-	for i in xrange(10000):
+	for i in range(10000):
 		d.parse(io)
 		io.seek(0)
 	yult = time() - ts
 
 	d = LazyDict_YAML_Lite()
 	ts = time()
-	for i in xrange(10000):
+	for i in range(10000):
 		d.parse(io)
 		io.seek(0)
 	ylt = time() - ts
 
 	ts = time()
-	for i in xrange(10000):
+	for i in range(10000):
 		yaml.safe_load(io)
 		io.seek(0)
 	yt = time() - ts
 
 	ts = time()
-	for i in xrange(10000):
+	for i in range(10000):
 		yaml.load(io, Loader=CSafeLoader)
 		io.seek(0)
 	yct = time() - ts
 
 	print("JSONDict(demjson): %.3fs" % jt)
 	print("LazyDict_JSON: %.3fs" % ljt)
-	print("LazyDict_YAML_UltraLite: %.3fs," % yult, "vs JSONDict: %.1fx speed," % round(jt / yult, 1), "vs YAML_Lite: %.1fx speed," % round(ylt / yult, 1), "vs PyYAML: %.1fx speed," % round(yt / yult, 1))
-	print("LazyDict_YAML_Lite: %.3fs," % ylt, "vs JSONDict: %.1fx speed," % round(jt / ylt, 1), "vs PyYAML: %.1fx speed," % round(yt / ylt, 1))
+	print("LazyDict_YAML_UltraLite: %.3fs," % yult, "vs JSONDict: %.1fx speed," % round(old_div(jt, yult), 1), "vs YAML_Lite: %.1fx speed," % round(old_div(ylt, yult), 1), "vs PyYAML: %.1fx speed," % round(old_div(yt, yult), 1))
+	print("LazyDict_YAML_Lite: %.3fs," % ylt, "vs JSONDict: %.1fx speed," % round(old_div(jt, ylt), 1), "vs PyYAML: %.1fx speed," % round(old_div(yt, ylt), 1))
 	print("yaml.safe_load: %.3fs" % yt)
 	print("yaml.load(CSafeLoader): %.3fs" % yct)
 

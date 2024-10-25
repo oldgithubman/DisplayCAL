@@ -3,6 +3,7 @@
 
 from __future__ import with_statement
 from __future__ import print_function
+from builtins import str
 from glob import glob
 from subprocess import call
 from tempfile import mkdtemp

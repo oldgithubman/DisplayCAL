@@ -8,6 +8,8 @@ This one won't stop showing updates to the icon like wx.TaskBarIcon
 """
 from __future__ import absolute_import
 
+from builtins import str
+from builtins import object
 import ctypes
 import os
 import sys
@@ -53,7 +55,7 @@ class Menu(wx.EvtHandler):
 				flags |= win32con.MF_DISABLED
 		# Use ctypes instead of win32gui.AppendMenu for unicode support
 		ctypes.windll.User32.AppendMenuW(self.hmenu, flags, item.Id,
-										 unicode(item.ItemLabel))
+										 str(item.ItemLabel))
 		self.MenuItems.append(item)
 		self._menuitems[item.Id] = item
 		if item.Checked:
@@ -117,7 +119,7 @@ class Menu(wx.EvtHandler):
 		self._destroyed = True
 		wx.EvtHandler.Destroy(self)
 
-	def __nonzero__(self):
+	def __bool__(self):
 		return not self._destroyed
 
 	def Enable(self, id, enable=True):
@@ -278,7 +280,7 @@ class SysTrayIcon(wx.EvtHandler):
 		self._destroyed = True
 		wx.EvtHandler.Destroy(self)
 
-	def __nonzero__(self):
+	def __bool__(self):
 		return not self._destroyed
 
 	def OnRightUp(self, event):

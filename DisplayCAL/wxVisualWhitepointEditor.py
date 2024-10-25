@@ -11,6 +11,12 @@ License: wxPython license
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import colorsys
 import os
 import re
@@ -65,7 +71,7 @@ def rad2deg(x):
     :param `x`: a float representing an angle in radians.    
     """
     
-    return 180.0*x/pi
+    return old_div(180.0*x,pi)
 
 
 def deg2rad(x):
@@ -83,7 +89,7 @@ def s(i):
     Scale for HiDPI if necessary
     
     """
-    return i * max(getcfg("app.dpi") / get_default_dpi(), 1)
+    return i * max(old_div(getcfg("app.dpi"), get_default_dpi()), 1)
 
 
 def update_patterngenerator(self):
@@ -239,11 +245,11 @@ class AuiDarkDockArt(aui.dockart.AuiDefaultDockArt):
 
         if isVertical:
             old_x = rect.x
-            rect.x = rect.x + (rect.width/2) - (bmp.GetWidth()/2)
+            rect.x = rect.x + (old_div(rect.width,2)) - (old_div(bmp.GetWidth(),2))
             rect.width = old_x + rect.width - rect.x - 1
         else:
             old_y = rect.y
-            rect.y = rect.y + (rect.height/2) - (bmp.GetHeight()/2)
+            rect.y = rect.y + (old_div(rect.height,2)) - (old_div(bmp.GetHeight(),2))
             rect.height = old_y + rect.height - rect.y - 1
 
         if button_state == aui.dockart.AUI_BUTTON_STATE_PRESSED:
@@ -421,11 +427,11 @@ class AuiManager_LRDocking(aui.AuiManager):
                 new_row_pixels_x = s(20)
                 new_row_pixels_y = 0
 
-                if new_row_pixels_x > (part.rect.width*20)/100:
-                    new_row_pixels_x = (part.rect.width*20)/100
+                if new_row_pixels_x > old_div((part.rect.width*20),100):
+                    new_row_pixels_x = old_div((part.rect.width*20),100)
 
-                if new_row_pixels_y > (part.rect.height*20)/100:
-                    new_row_pixels_y = (part.rect.height*20)/100
+                if new_row_pixels_y > old_div((part.rect.height*20),100):
+                    new_row_pixels_y = old_div((part.rect.height*20),100)
 
                 # determine if the mouse pointer is in a location that
                 # will cause a new row to be inserted.  The hot spot positions
@@ -473,7 +479,7 @@ class AuiManager_LRDocking(aui.AuiManager):
 
         # if we are in the top/left part of the pane,
         # insert the pane before the pane being hovered over
-        if offset <= size/2:
+        if offset <= old_div(size,2):
 
             drop_position = part.pane.dock_pos
             panes = aui.DoInsertPane(panes,
@@ -484,7 +490,7 @@ class AuiManager_LRDocking(aui.AuiManager):
 
         # if we are in the bottom/right part of the pane,
         # insert the pane before the pane being hovered over
-        if offset > size/2:
+        if offset > old_div(size,2):
 
             drop_position = part.pane.dock_pos+1
             panes = aui.DoInsertPane(panes,
@@ -599,7 +605,7 @@ class Colour(object):
         
         else:
         
-            temp = delta/maxVal
+            temp = old_div(delta,maxVal)
             self.s = int(round(temp*255.0))
 
             if self.r == int(round(maxVal)):
@@ -980,7 +986,7 @@ class HSVWheel(BasePyControl):
         :param `pt`: an instance of :class:`Point`.
         """
 
-        return Distance(pt, self._mainFrame._centre) <= (self._bitmap.Size[0]) / 2
+        return Distance(pt, self._mainFrame._centre) <= old_div((self._bitmap.Size[0]), 2)
 
 
     def TrackPoint(self, pt):
@@ -1000,7 +1006,7 @@ class HSVWheel(BasePyControl):
         if colour.h < 0:
             colour.h += 360
 
-        colour.s = int(round(Distance(pt, mainFrame._centre)*255.0/((self._bitmap.Size[0] - s(12)) / 2)*0.2))
+        colour.s = int(round(Distance(pt, mainFrame._centre)*255.0/(old_div((self._bitmap.Size[0] - s(12)), 2))*0.2))
         if colour.s > 255:
             colour.s = 255
 
@@ -1205,7 +1211,7 @@ class BrightCtrl(BaseLineCtrl):
         h, s, v = colorsys.rgb_to_hsv(target_red / 255.0, target_green / 255.0,
                                       target_blue / 255.0)
         v = .8
-        vstep = v/(brightRect.height-1)
+        vstep = old_div(v,(brightRect.height-1))
         
         for y_pos in range(brightRect.y, brightRect.height+brightRect.y):
             r, g, b = [round(c * 255.0) for c in colorsys.hsv_to_rgb(h, s, v)]
@@ -1472,7 +1478,7 @@ class HSlider(BaseLineCtrl):
 
 
     def _spin(self, direction):
-        inc = (self.maxval - self.minval) / self.ClientSize[0]
+        inc = old_div((self.maxval - self.minval), self.ClientSize[0])
         if direction > 0:
             if self.Value < self.maxval:
                 self.Value += inc
@@ -1672,7 +1678,7 @@ class ProfileManager(object):
                                   ICCP.VideoCardGammaType):
                         values = profile.tags.vcgt.getNormalizedValues()
                         RGB = []
-                        for i in xrange(3):
+                        for i in range(3):
                             RGB.append(int(round(values[-1][i] * 255)))
                         (self._window._colour.r,
                          self._window._colour.g,
@@ -2176,7 +2182,7 @@ class VisualWhitepointEditor(wx.Frame):
         """ Initialize the :class:`VisualWhitepointEditor`. """
 
         hsvRect = self.hsvBitmap.GetClientRect()
-        self._centre = wx.Point(hsvRect.x + hsvRect.width/2, hsvRect.y + hsvRect.height/2)
+        self._centre = wx.Point(hsvRect.x + old_div(hsvRect.width,2), hsvRect.y + old_div(hsvRect.height,2))
 
         self.CalcRects()
 
@@ -2337,8 +2343,8 @@ class VisualWhitepointEditor(wx.Frame):
         """
 
         angle = deg2rad(angle)
-        sat = min(sat*((self.hsvBitmap._bitmap.Size[0] - s(12)) / 2)/51.0,
-                  ((self.hsvBitmap._bitmap.Size[0] - s(12)) / 2))
+        sat = min(sat*(old_div((self.hsvBitmap._bitmap.Size[0] - s(12)), 2))/51.0,
+                  (old_div((self.hsvBitmap._bitmap.Size[0] - s(12)), 2)))
 
         x = sat*cos(angle)
         y = sat*sin(angle)
@@ -2496,10 +2502,10 @@ class VisualWhitepointEditor(wx.Frame):
 
     def float_pane_handler(self, event):
         if event.GetEventType() == aui.EVT_AUI_PANE_FLOATED.evtType[0]:
-            pos = [self.Position[i] + (self.Size[i] - self.ClientSize[i]) /
-                                      {0: 2, 1: 1}[i] + s(10) for i in (0, 1)]
+            pos = [self.Position[i] + old_div((self.Size[i] - self.ClientSize[i]),
+                                      {0: 2, 1: 1}[i]) + s(10) for i in (0, 1)]
             pos[0] += self.mainPanel.Position[0]
-            pos[1] -= (self.Size[0] - self.ClientSize[0]) / 2
+            pos[1] -= old_div((self.Size[0] - self.ClientSize[0]), 2)
             self._mgr.GetPane("mainPanel").FloatingPosition(pos).CloseButton(True)
             wx.CallAfter(self.area_handler)
         else:
@@ -2615,7 +2621,7 @@ class VisualWhitepointEditor(wx.Frame):
         geometry = self.GetDisplay().Geometry.Get()
         size_mm = self.display_size_mm.get(geometry)
         if size_mm:
-            px_per_mm = max(geometry[2] / size_mm[0], geometry[3] / size_mm[1])
+            px_per_mm = max(old_div(geometry[2], size_mm[0]), old_div(geometry[3], size_mm[1]))
             self.default_size = px_per_mm * 100
         else:
             self.default_size = 300

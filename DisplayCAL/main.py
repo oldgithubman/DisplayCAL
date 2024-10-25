@@ -2,6 +2,11 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from builtins import object
 from time import sleep
 import atexit
 import errno
@@ -71,7 +76,7 @@ def _main(module, name, applockfilename, probe_ports=True):
 		safe_print("Mac OS X %s %s" % (mac_ver()[0], mac_ver()[-1]))
 	elif sys.platform == "win32":
 		machine = platform.machine()
-		safe_print(*filter(lambda v: v, win_ver()) +
+		safe_print(*[v for v in win_ver() if v] +
 				   ({"AMD64": "x86_64"}.get(machine, machine), ))
 	else:
 		# Linux
@@ -347,7 +352,7 @@ def _main(module, name, applockfilename, probe_ports=True):
 			sys._appsocket = appsocket.socket
 			if getcfg("app.allow_network_clients"):
 				host = ""
-			used_ports = [pid_port[1] for pids_ports in lock2pids_ports.values() for pid_port in pids_ports]
+			used_ports = [pid_port[1] for pids_ports in list(lock2pids_ports.values()) for pid_port in pids_ports]
 			candidate_ports = [0]
 			if not defaultport in used_ports:
 				candidate_ports.insert(0, defaultport)
@@ -507,7 +512,7 @@ def _update_lockfile(lockfilename, oport, lock):
 
 			# Determine if instances still running. If not still running,
 			# remove from list of ports
-			for i in reversed(xrange(len(pids_ports))):
+			for i in reversed(range(len(pids_ports))):
 				pid_port = pids_ports[i]
 				if ":" in pid_port:
 					# DisplayCAL >= 3.8.8.2 with localhost blocked
@@ -542,7 +547,7 @@ def _update_lockfile(lockfilename, oport, lock):
 					pids_ports[i] = ""
 				appsocket.close()
 			# Filtered PIDs & ports (only used for checking)
-			filtered_pids_ports = filter(lambda pid_port: pid_port, pids_ports)
+			filtered_pids_ports = [pid_port for pid_port in pids_ports if pid_port]
 			if filtered_pids_ports:
 				# Write updated lockfile
 				try:
@@ -604,7 +609,7 @@ class AppLock(object):
 	def __iter__(self):
 		return self._lockfile
 
-	def __nonzero__(self):
+	def __bool__(self):
 		return bool(self._lock)
 
 	def lock(self):
@@ -671,7 +676,7 @@ class AppSocket(object):
 	def __getattr__(self, name):
 		return getattr(self.socket, name)
 
-	def __nonzero__(self):
+	def __bool__(self):
 		return hasattr(self, "socket")
 
 	def connect(self, host, port):

@@ -6,6 +6,8 @@
 """
 from __future__ import absolute_import
 
+from builtins import chr
+from builtins import str
 import re
 import sys
 

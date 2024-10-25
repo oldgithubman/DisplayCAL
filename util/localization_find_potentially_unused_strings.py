@@ -1,7 +1,11 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from builtins import input
+from past.builtins import basestring
+import io
 import os
 import re
 import sys
@@ -69,8 +73,8 @@ def main():
 	for langfile in listdir_re(os.path.join(root, "DisplayCAL", "lang"),
 							   r"^\w+\.json$"):
 		if langfile != "en.json":
-			find_potentially_unused_strings(os.path.join("lang", langfile), keys.keys())
-			raw_input("Press any key to continue")
+			find_potentially_unused_strings(os.path.join("lang", langfile), list(keys.keys()))
+			input("Press any key to continue")
 			safe_print("")
 
 

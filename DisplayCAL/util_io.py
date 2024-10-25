@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import chr
+from past.builtins import basestring
+from builtins import object
 import copy
 import gzip
 import operator
 import os
 import sys
 import tarfile
-from StringIO import StringIO
+from io import StringIO
 from time import time
 
 from .safe_print import safe_print
@@ -35,14 +40,14 @@ class EncodedWriter(object):
 		return getattr(self.file, name)
 
 	def write(self, data):
-		if self.data_encoding and not isinstance(data, unicode):
+		if self.data_encoding and not isinstance(data, str):
 			data = data.decode(self.data_encoding, self.errors)
-		if self.file_encoding and isinstance(data, unicode):
+		if self.file_encoding and isinstance(data, str):
 			data = data.encode(self.file_encoding, self.errors)
 		self.file.write(data)
 
 
-class Files():
+class Files(object):
 
 	"""
 	Read and/or write from/to several files at once.
@@ -115,7 +120,7 @@ class GzipFileProper(gzip.GzipFile):
 		if fname:
 			flags = gzip.FNAME
 		self.fileobj.write(chr(flags))
-		gzip.write32u(self.fileobj, long(time()))
+		gzip.write32u(self.fileobj, int(time()))
 		self.fileobj.write('\002')
 		self.fileobj.write('\377')
 		if fname:
@@ -134,7 +139,7 @@ class GzipFileProper(gzip.GzipFile):
 		self.close()
 
 
-class LineBufferedStream():
+class LineBufferedStream(object):
 	
 	""" Buffer lines and only write them to stream if line separator is 
 		detected """
@@ -161,7 +166,7 @@ class LineBufferedStream():
 	
 	def commit(self):
 		if self.buf:
-			if self.data_encoding and not isinstance(self.buf, unicode):
+			if self.data_encoding and not isinstance(self.buf, str):
 				self.buf = self.buf.decode(self.data_encoding, self.errors)
 			if self.file_encoding:
 				self.buf = self.buf.encode(self.file_encoding, self.errors)
@@ -182,7 +187,7 @@ class LineBufferedStream():
 					self.buf += char
 
 
-class LineCache():
+class LineCache(object):
 	
 	""" When written to it, stores only the last n + 1 lines and
 		returns only the last n non-empty lines when read. """
@@ -208,7 +213,7 @@ class LineCache():
 						break
 			if read and line:
 				lines.append(line)
-		return "\n".join(filter(lambda line: line, lines)[-self.maxlines:])
+		return "\n".join([line for line in lines if line][-self.maxlines:])
 	
 	def write(self, data):
 		cache = list(self.cache)
@@ -219,7 +224,7 @@ class LineCache():
 				cache.append("")
 			else:
 				cache[-1] += char
-		self.cache = (filter(lambda line: line, cache[:-1]) + 
+		self.cache = ([line for line in cache[:-1] if line] + 
 					  cache[-1:])[-self.maxlines - 1:]
 
 

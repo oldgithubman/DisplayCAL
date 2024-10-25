@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,8 +42,8 @@ def get_cal(num_cal_entries, target_whitepoint, gamma, profile, intent="r", dire
 
 	# Calibrated XYZ
 	idata = []
-	for i in xrange(num_cal_entries):
-		XYZ = cm.adapt(*[cm.specialpow(i / maxval, gamma, slope_limit)] * 3,
+	for i in range(num_cal_entries):
+		XYZ = cm.adapt(*[cm.specialpow(old_div(i, maxval), gamma, slope_limit)] * 3,
 						 whitepoint_source=(1, 1, 1),
 						 whitepoint_destination=XYZwp)
 		XYZ = cm.blend_blackpoint(*XYZ, bp_in=(0, 0, 0), bp_out=XYZbp, wp=XYZwp)
@@ -61,7 +64,7 @@ def get_cal(num_cal_entries, target_whitepoint, gamma, profile, intent="r", dire
 		do_low_clip = True
 		for i, values in enumerate(odata):
 			if values[3] is True or i == 0:
-				if do_low_clip and (i / maxval * 100 < Lbp or i == 0):
+				if do_low_clip and (old_div(i, maxval) * 100 < Lbp or i == 0):
 					# Set to black
 					values[:] = [0.0, 0.0, 0.0]
 				elif (i == maxval and
@@ -81,13 +84,13 @@ def get_interp(cal, inverse=False, smooth=False):
 	num_cal_entries = len(cal)
 	cal_entry_max = num_cal_entries - 1.0
 
-	linear = [(i / cal_entry_max,) * 3 for i in xrange(num_cal_entries)]
+	linear = [(old_div(i, cal_entry_max),) * 3 for i in range(num_cal_entries)]
 
 	if smooth:
 		for lower, row in enumerate(cal[1:], 1):
 			v = min(row) * cal_entry_max
-			print(lower / cal_entry_max * 255, "->", v / cal_entry_max * 255)
-			if lower + 1 >= v >= lower or lower / cal_entry_max * 255 >= 8:
+			print(old_div(lower, cal_entry_max) * 255, "->", old_div(v, cal_entry_max) * 255)
+			if lower + 1 >= v >= lower or old_div(lower, cal_entry_max) * 255 >= 8:
 				# Use max index of 4 (+ 2 = 6 = ~2% signal)
 				if lower == 1:
 					# First value already above threshold, disable smoothing
@@ -96,11 +99,11 @@ def get_interp(cal, inverse=False, smooth=False):
 					print("lower", lower)
 				break
 		t = num_cal_entries // 128
-		for i in xrange(3):
+		for i in range(3):
 			values = cm.make_monotonically_increasing([v[i] for v in cal])
 			if lower:
 				#values[:lower] = cm.smooth_avg(values[:lower], 3, (1,) * 3)
-				values[:lower] = [j / float(lower) * values[lower] for j in xrange(lower)]
+				values[:lower] = [j / float(lower) * values[lower] for j in range(lower)]
 				if lower < num_cal_entries:
 					# Smooth up to ~5% signal
 					start, end = max(lower - t * 2, 0), lower + t * 2
@@ -118,7 +121,7 @@ def get_interp(cal, inverse=False, smooth=False):
 		fp = cal
 
 	interp = []
-	for i in xrange(3):
+	for i in range(3):
 		interp.append(cm.Interp([v[i] for v in xp], [v[i] for v in fp],
 								use_numpy=True))
 
@@ -165,7 +168,7 @@ def main(icc_profile_filename, target_whitepoint=None, gamma=2.2, skip_cal=False
 	# the linear portion
 	applycal = False
 
-	applycal_inverse = not filter(lambda tagname: tagname.startswith("A2B") or tagname.startswith("B2A"), profile.tags)
+	applycal_inverse = not [tagname for tagname in profile.tags if tagname.startswith("A2B") or tagname.startswith("B2A")]
 	print("Use applycal to apply cal?", applycal)
 	print("Use applycal to apply inverse cal?", applycal_inverse)
 	print("Ensuring 256 entry TRC tags")
@@ -202,9 +205,9 @@ def main(icc_profile_filename, target_whitepoint=None, gamma=2.2, skip_cal=False
 
 		# Lookup scaled down white XYZ
 		logfiles.write("Looking for solution...\n")
-		for n in xrange(9):
+		for n in range(9):
 			XYZscaled = []
-			for i in xrange(2001):
+			for i in range(2001):
 				XYZscaled.append([v * (1 - (n * 2001 + i) / 20000.0) for v in target_whitepoint])
 			RGBscaled = worker.xicclu(profile, XYZscaled, intent, "if",
 									  pcs="x", get_clip=True)
@@ -286,28 +289,28 @@ def main(icc_profile_filename, target_whitepoint=None, gamma=2.2, skip_cal=False
 					j = "rgb".index(tagname[0])
 					cal = get_cal(num_cal_entries, None, gamma, profile, intent, "if", "r")
 					interp_i = get_interp(cal, True)
-					cinterp = cm.Interp([interp_i[j](i / (num_entries - 1.0)) for i in xrange(num_entries)],
+					cinterp = cm.Interp([interp_i[j](old_div(i, (num_entries - 1.0))) for i in range(num_entries)],
 										entries,
 										use_numpy=True)
-					entries[:] = [cinterp(i / (num_entries - 1.0)) for i in xrange(num_entries)]
+					entries[:] = [cinterp(old_div(i, (num_entries - 1.0))) for i in range(num_entries)]
 					continue
-				for j in xrange(3):
+				for j in range(3):
 					num_entries = len(entries[j])
 					if tagname.startswith("A2B"):
-						cinterp = cm.Interp([interp_i[j](i / (num_entries - 1.0)) for i in xrange(num_entries)],
+						cinterp = cm.Interp([interp_i[j](old_div(i, (num_entries - 1.0))) for i in range(num_entries)],
 											[v / 65535. for v in entries[j]],
 											use_numpy=True)
 					elif tagname.startswith("B2A"):
 						rinterp = cm.Interp([v / 65535. for v in entries[j]],
-											 [i / (num_entries - 1.0) for i in xrange(num_entries)],
+											 [old_div(i, (num_entries - 1.0)) for i in range(num_entries)],
 											 use_numpy=True)
-						cinterp = cm.Interp([rinterp(i / (num_entries - 1.0)) for i in xrange(num_entries)],
-											[interp_i[j](i / (num_entries - 1.0)) for i in xrange(num_entries)],
+						cinterp = cm.Interp([rinterp(old_div(i, (num_entries - 1.0))) for i in range(num_entries)],
+											[interp_i[j](old_div(i, (num_entries - 1.0))) for i in range(num_entries)],
 											use_numpy=True)
 					entries[j] = []
 					num_entries = max(num_entries, 256)
-					for i in xrange(num_entries):
-						entries[j].append(min(max(cinterp(i / (num_entries - 1.0)) * 65535, 0), 65535))
+					for i in range(num_entries):
+						entries[j].append(min(max(cinterp(old_div(i, (num_entries - 1.0))) * 65535, 0), 65535))
 
 			# Check for identical initial TRC tags, and force them identical again
 			if TRC and TRC.count(TRC[0]) == 3:
@@ -325,7 +328,7 @@ def main(icc_profile_filename, target_whitepoint=None, gamma=2.2, skip_cal=False
 			interp_i = get_interp(ccal, True)
 			ical = []
 			# Argyll can only deal with 256 cal entries
-			for i in xrange(256):
+			for i in range(256):
 				ical.append([cinterp(i / 255.) for cinterp in interp_i])
 
 			# Write inverse CAL
@@ -369,30 +372,30 @@ def main(icc_profile_filename, target_whitepoint=None, gamma=2.2, skip_cal=False
 
 			# Create CAL diff
 			cgats = cgats_header
-			for i in xrange(num_cal_entries):
-				RGB = [cinterp(i / cal_entry_max) for cinterp in interp]
+			for i in range(num_cal_entries):
+				RGB = [cinterp(old_div(i, cal_entry_max)) for cinterp in interp]
 				R, G, B = (min(max(v, 0), 1) for v in RGB)
-				cgats += "%.7f %.7f %.7f %.7f\n" % (i / cal_entry_max, R, G, B)
+				cgats += "%.7f %.7f %.7f %.7f\n" % (old_div(i, cal_entry_max), R, G, B)
 			cgats += "END_DATA\n"
 			with open(icc_profile_filename + owtpt + ".%s.diff.cal" % ogamma, "wb") as f:
 				f.write(cgats)
 
 			cgats_cal_interp = []
-			for i in xrange(3):
-				cgats_cal_interp.append(cm.Interp([v / cal_entry_max for v in xrange(num_cal_entries)], []))
-			for i, row in existing_cgats[0].DATA.iteritems():
+			for i in range(3):
+				cgats_cal_interp.append(cm.Interp([old_div(v, cal_entry_max) for v in range(num_cal_entries)], []))
+			for i, row in existing_cgats[0].DATA.items():
 				for j, channel in enumerate("RGB"):
 					cgats_cal_interp[j].fp.append(row["RGB_" + channel])
 
 		# Create CAL
 		cgats = cgats_header
-		for i in xrange(num_cal_entries):
+		for i in range(num_cal_entries):
 			if applycal:
-				RGB = [ccal[i][j] for j in xrange(3)]
+				RGB = [ccal[i][j] for j in range(3)]
 			else:
-				RGB = [cgats_cal_interp[j](cinterp(i / cal_entry_max)) for j, cinterp in enumerate(interp)]
+				RGB = [cgats_cal_interp[j](cinterp(old_div(i, cal_entry_max))) for j, cinterp in enumerate(interp)]
 			R, G, B = (min(max(v, 0), 1) for v in RGB)
-			cgats += "%.7f %.7f %.7f %.7f\n" % (i / cal_entry_max, R, G, B)
+			cgats += "%.7f %.7f %.7f %.7f\n" % (old_div(i, cal_entry_max), R, G, B)
 		cgats += "END_DATA\n"
 		with open(icc_profile_filename + owtpt + ".%s.cal" % ogamma, "wb") as f:
 			f.write(cgats)

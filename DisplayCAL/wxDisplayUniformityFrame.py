@@ -9,6 +9,12 @@ Interactive display calibration UI
 from __future__ import with_statement
 from __future__ import print_function
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import chr
+from builtins import str
+from builtins import range
+from builtins import object
 from time import sleep, strftime
 import os
 import re
@@ -74,7 +80,7 @@ class DisplayUniformityFrame(BaseFrame):
 		self.labels = {}
 		self.panels = []
 		self.buttons = []
-		for index in xrange(rows * cols):
+		for index in range(rows * cols):
 			panel = wx_Panel(self, style=wx.BORDER_SIMPLE)
 			panel.SetBackgroundColour(BGCOLOUR)
 			sizer = wx.BoxSizer(wx.VERTICAL)
@@ -102,15 +108,15 @@ class DisplayUniformityFrame(BaseFrame):
 			# Use an accelerator table for tab, space, 0-9, A-Z, numpad,
 			# navigation keys and processing keys
 			keycodes = [wx.WXK_TAB, wx.WXK_SPACE]
-			keycodes.extend(range(ord("0"), ord("9")))
-			keycodes.extend(range(ord("A"), ord("Z")))
+			keycodes.extend(list(range(ord("0"), ord("9"))))
+			keycodes.extend(list(range(ord("A"), ord("Z"))))
 			keycodes.extend(numpad_keycodes)
 			keycodes.extend(nav_keycodes)
 			keycodes.extend(processing_keycodes)
 			for keycode in keycodes:
 				self.id_to_keycode[wx.Window.NewControlId()] = keycode
 			accels = []
-			for id, keycode in self.id_to_keycode.iteritems():
+			for id, keycode in self.id_to_keycode.items():
 				self.Bind(wx.EVT_MENU, self.key_handler, id=id)
 				accels.append((wx.ACCEL_NORMAL, keycode, id))
 				if keycode == wx.WXK_TAB:
@@ -152,7 +158,7 @@ class DisplayUniformityFrame(BaseFrame):
 		self.stop_timer()
 		del self.timer
 		if hasattr(wx.Window, "UnreserveControlId"):
-			for id in self.id_to_keycode.iterkeys():
+			for id in self.id_to_keycode.keys():
 				if id < 0:
 					try:
 						wx.Window.UnreserveControlId(id)
@@ -212,7 +218,7 @@ class DisplayUniformityFrame(BaseFrame):
 		self.SetCursor(cursor)
 		for panel in self.panels:
 			panel.SetCursor(cursor)
-		for label in self.labels.values():
+		for label in list(self.labels.values()):
 			label.SetCursor(cursor)
 		for button in self.buttons:
 			button.SetCursor(cursor)
@@ -285,7 +291,7 @@ class DisplayUniformityFrame(BaseFrame):
 													 XYZ.groups()]})
 			self.last_error = None
 		loci = {"t": "Daylight", "T": "Planckian"}
-		for locus in loci.values():
+		for locus in list(loci.values()):
 			if locus in txt:
 				CT = re.search("Closest\s+%s\s+temperature\s+=\s+(\d+)K" % locus,
 							   txt, re.I)
@@ -404,7 +410,7 @@ class DisplayUniformityFrame(BaseFrame):
 		self.SetCursor(cursor)
 		for panel in self.panels:
 			panel.SetCursor(cursor)
-		for label in self.labels.values():
+		for label in list(self.labels.values()):
 			label.SetCursor(cursor)
 		for button in self.buttons:
 			button.SetCursor(cursor)
@@ -419,7 +425,7 @@ class DisplayUniformityFrame(BaseFrame):
 		wx.CallAfter(self.parse_txt, txt)
 
 
-class Event():
+class Event(object):
 
 	def __init__(self, evtobj):
 		self.evtobj = evtobj
@@ -429,9 +435,9 @@ class Event():
 
 
 if __name__ == "__main__":
-	from thread import start_new_thread
+	from _thread import start_new_thread
 	from time import sleep
-	class Subprocess():
+	class Subprocess(object):
 		def send(self, bytes):
 			start_new_thread(test, (bytes,))
 	class Worker(object):

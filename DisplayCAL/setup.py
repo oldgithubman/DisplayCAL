@@ -26,7 +26,14 @@ the wrapper script in the root directory of the source tar.gz/zip
 from __future__ import with_statement
 from __future__ import print_function
 from __future__ import absolute_import
-from ConfigParser import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import input
+from builtins import filter
+from builtins import str
+from builtins import object
+from configparser import ConfigParser
 from distutils.command.install import install
 from distutils.util import change_root, get_platform
 from fnmatch import fnmatch
@@ -54,7 +61,7 @@ def findall(dir=os.curdir):
 			base = base[2:]
 		if base:
 			files = [os.path.join(base, f) for f in files]
-		all_files.extend(filter(os.path.isfile, files))
+		all_files.extend(list(filter(os.path.isfile, files)))
 	return all_files
 
 import distutils.filelist
@@ -189,7 +196,7 @@ plist_dict = {"CFBundleDevelopmentRegion": "English",
 			  "LSMinimumSystemVersion": "10.6.0"}
 
 
-class Target:
+class Target(object):
 	def __init__(self, **kwargs):
 		self.__dict__.update(kwargs)
 
@@ -210,8 +217,7 @@ def create_app_symlinks(dist_dir, scripts):
 		os.symlink(os.path.join(maincontents_rel, "Resources", src), tgt)
 	# Create standalone tools app bundles by symlinking to the main bundle
 	scripts = [(script2pywname(script), desc) for script, desc in scripts]
-	toolscripts = filter(lambda script: script != name,
-						 [script for script, desc in scripts])
+	toolscripts = [script for script in [script for script, desc in scripts] if script != name]
 	for script, desc in scripts:
 		if (script in (name, name + "-apply-profiles",
 					   name + "-eeColor-to-madVR-converter") or
@@ -220,7 +226,7 @@ def create_app_symlinks(dist_dir, scripts):
 		toolname = desc.replace(name, "").strip()
 		toolapp = os.path.join(dist_dir, toolname + ".app")
 		if os.path.isdir(toolapp):
-			if raw_input('WARNING: The output directory "%s" and ALL ITS '
+			if input('WARNING: The output directory "%s" and ALL ITS '
                          'CONTENTS will be REMOVED! Continue? (y/n)' % toolapp).lower() == 'y':
 				print("Removing dir", toolapp)
 				shutil.rmtree(toolapp)
@@ -311,7 +317,7 @@ def get_data(tgt_dir, key, pkgname=None, subkey=None, excludes=None):
 				files = []
 	data = []
 	for pth in files:
-		if not filter(lambda exclude: fnmatch(pth, exclude), excludes or []):
+		if not [exclude for exclude in excludes or [] if fnmatch(pth, exclude)]:
 			data.append((os.path.normpath(os.path.join(tgt_dir, os.path.dirname(pth))),
 						 safe_glob(os.path.join(src_dir, pth))))
 	return data
@@ -343,7 +349,7 @@ def get_scripts(excludes=None):
 			desc = cfg.get("Desktop Entry", "Name").decode("UTF-8")
 		else:
 			desc = ""
-		if not filter(lambda exclude: fnmatch(script, exclude), excludes or []):
+		if not [exclude for exclude in excludes or [] if fnmatch(script, exclude)]:
 			scripts_with_desc.append((script, desc))
 	return scripts_with_desc
 
@@ -408,10 +414,9 @@ def setup():
 		# Fix traversing unneeded dirs which can take a long time (minutes)
 		def findall(dir=os.curdir, original=distutils.filelist.findall, listdir=os.listdir,
 					basename=os.path.basename):
-			os.listdir = lambda path: filter(lambda entry: entry not in ("build",
+			os.listdir = lambda path: [entry for entry in listdir(path) if entry not in ("build",
 																		 "dist") and
-														   not entry.startswith("."),
-											 listdir(path))
+														   not entry.startswith(".")]
 			try:
 				return original(dir)
 			finally:
@@ -863,10 +868,8 @@ setup(ext_modules=[Extension("%s.lib%s.RealDisplaySizeMM", sources=%r,
 	else:
 		attrs["scripts"].extend(os.path.join("scripts", script)
 								for script, desc in
-								filter(lambda script_desc:
-									   script_desc[0] != name.lower() + "-apply-profiles" or
-									   sys.platform != "darwin",
-									   scripts))
+								[script_desc for script_desc in scripts if script_desc[0] != name.lower() + "-apply-profiles" or
+									   sys.platform != "darwin"])
 	
 	if bdist_bbfreeze:
 		attrs["setup_requires"] = ["bbfreeze"]
@@ -932,10 +935,9 @@ setup(ext_modules=[Extension("%s.lib%s.RealDisplaySizeMM", sources=%r,
 			"other_resources": [(24, 1, manifest_xml)],
 			"copyright": u"© %s %s" % (strftime("%Y"), author),
 			"description": desc
-		}) for script, desc in filter(lambda script_desc1:
-									  script_desc1[0] != appname.lower() +
+		}) for script, desc in [script_desc1 for script_desc1 in scripts if script_desc1[0] != appname.lower() +
 									  "-eecolor-to-madvr-converter" and
-									  not script_desc1[0].endswith("-console"), scripts)]
+									  not script_desc1[0].endswith("-console")]]
 
 		# Add profile loader launcher
 		attrs["windows"].append(Target(**{
@@ -967,9 +969,7 @@ setup(ext_modules=[Extension("%s.lib%s.RealDisplaySizeMM", sources=%r,
 			"other_resources": [(24, 1, manifest_xml)],
 			"copyright": u"© %s %s" % (strftime("%Y"), author),
 			"description": desc
-		}) for script, desc in filter(lambda script_desc2:
-									  script2pywname(script_desc2[0]) in console_scripts,
-									  scripts)]
+		}) for script, desc in [script_desc2 for script_desc2 in scripts if script2pywname(script_desc2[0]) in console_scripts]]
 
 		# Programs without GUI
 		attrs["console"].append(Target(**{
@@ -1049,7 +1049,7 @@ setup(ext_modules=[Extension("%s.lib%s.RealDisplaySizeMM", sources=%r,
 			except ImportError:
 				pass
 			else:
-				ppdir(cmd, types=[dict, list, str, tuple, type, unicode])
+				ppdir(cmd, types=[dict, list, str, tuple, type, str])
 		if not install_data and sys.platform in ("darwin", "win32"):
 			# on Mac OS X and Windows, we want data files in the package dir
 			data_basedir = cmd.install_lib

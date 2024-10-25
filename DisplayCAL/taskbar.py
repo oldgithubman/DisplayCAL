@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from builtins import object
 import comtypes.gen.TaskbarLib as tbl
 import comtypes.client as cc
 

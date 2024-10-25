@@ -3,7 +3,14 @@
 
 from __future__ import with_statement
 from __future__ import print_function
-from ConfigParser import RawConfigParser
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import map
+from builtins import range
+from past.utils import old_div
+from configparser import RawConfigParser
 from distutils.sysconfig import get_python_lib
 from distutils.util import change_root, get_platform
 from hashlib import md5, sha1
@@ -238,7 +245,7 @@ def replace_placeholders(tmpl_path, out_path, lastmod_time=0, iterable=None):
 		"YEAR": strftime("%Y", gmtime(lastmod_time or 
 									  os.stat(tmpl_path).st_mtime))}
 	mapping.update(iterable or {})
-	for key, val in mapping.iteritems():
+	for key, val in mapping.items():
 		tmpl_data = tmpl_data.replace("${%s}" % key, val)
 	tmpl_data = tmpl_data.replace("%s-%s" % (mapping["YEAR"],
 											 mapping["YEAR"]), mapping["YEAR"])
@@ -334,8 +341,7 @@ def setup():
 	
 	lastmod_time = 0
 	
-	non_build_args = filter(lambda arg: arg in sys.argv[1:], 
-							["bdist_appdmg", "clean", "purge", "purge_dist", 
+	non_build_args = [arg for arg in ["bdist_appdmg", "clean", "purge", "purge_dist", 
 							 "uninstall", "-h", "--help", "--help-commands", 
 							 "--all", "--name", "--fullname", "--author", 
 							 "--author-email", "--maintainer", 
@@ -347,7 +353,7 @@ def setup():
 							 "--requires", "--obsoletes", "--quiet", "-q", 
 							 "register", "--list-classifiers", "upload",
 							 "--use-distutils", "--use-setuptools",
-							 "--verbose", "-v", "finalize_msi"])
+							 "--verbose", "-v", "finalize_msi"] if arg in sys.argv[1:]]
 
 	if os.path.isdir(os.path.join(pydir, ".svn")) and (which("svn") or
 													   which("svn.exe")) and (
@@ -591,7 +597,7 @@ def setup():
 				if key.startswith("*") and key != "*":
 					untranslated += 1
 			languages.append('<lang percentage="%i">%s</lang>' %
-							 (round((1 - untranslated / (len(tdict) - 1.0)) * 100),
+							 (round((1 - old_div(untranslated, (len(tdict) - 1.0))) * 100),
 							 code))
 		languages = "\n\t\t".join(languages)
 		tmpl_name = appstream_id + ".appdata.xml"
@@ -1045,7 +1051,7 @@ def setup():
 						implementation.appendChild(archive)
 					else:
 						digest = implementation.getElementsByTagName("manifest-digest")[0]
-						for attrname, value in digest.attributes.items():
+						for attrname, value in list(digest.attributes.items()):
 							# Remove existing hashes
 							digest.removeAttribute(attrname)
 						archive = implementation.getElementsByTagName("archive")[0]

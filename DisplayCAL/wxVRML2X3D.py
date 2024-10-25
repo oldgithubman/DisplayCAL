@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from builtins import input
 import os
 import sys
 
@@ -142,7 +143,7 @@ def main():
 		if result is None:
 			safe_print("No filename given.")
 		if sys.stdout.isatty() and not "--batch" in sys.argv[1:]:
-			raw_input("Press RETURN to exit")
+			input("Press RETURN to exit")
 		sys.exit(int(not result))
 	else:
 		view = not "--no-view" in sys.argv[1:]

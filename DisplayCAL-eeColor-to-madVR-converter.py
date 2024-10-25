@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from past.builtins import execfile
 import os
 
 execfile(os.path.join(os.path.dirname(__file__), "scripts",

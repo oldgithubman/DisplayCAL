@@ -2,6 +2,10 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from builtins import map
+from builtins import filter
+from past.builtins import basestring
+from builtins import object
 import os
 import sys
 if sys.platform not in ("darwin", "win32"):
@@ -163,25 +167,25 @@ elif sys.platform == "darwin":
 else:
 	# Linux
 
-	class XDG:
+	class XDG(object):
 
 		cache_home = getenvu("XDG_CACHE_HOME", expandvarsu("$HOME/.cache"))
 		config_home = getenvu("XDG_CONFIG_HOME", expandvarsu("$HOME/.config"))
 		config_dir_default = "/etc/xdg"
-		config_dirs = map(os.path.normpath,
+		config_dirs = list(map(os.path.normpath,
 						  getenvu("XDG_CONFIG_DIRS", 
-								  config_dir_default).split(os.pathsep))
+								  config_dir_default).split(os.pathsep)))
 		if not config_dir_default in config_dirs:
 			config_dirs.append(config_dir_default)
 		data_home_default = expandvarsu("$HOME/.local/share")
 		data_home = getenvu("XDG_DATA_HOME", data_home_default)
 		data_dirs_default = "/usr/local/share:/usr/share:/var/lib"
-		data_dirs = map(os.path.normpath,
+		data_dirs = list(map(os.path.normpath,
 						getenvu("XDG_DATA_DIRS",
-								data_dirs_default).split(os.pathsep))
-		data_dirs.extend(filter(lambda data_dir, data_dirs=data_dirs:
+								data_dirs_default).split(os.pathsep)))
+		data_dirs.extend(list(filter(lambda data_dir, data_dirs=data_dirs:
 								not data_dir in data_dirs,
-								data_dirs_default.split(os.pathsep)))
+								data_dirs_default.split(os.pathsep))))
 
 		@staticmethod
 		def set_translation(obj):

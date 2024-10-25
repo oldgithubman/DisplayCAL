@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from __future__ import division
+from builtins import input
+from builtins import str
+from builtins import chr
+from builtins import range
+from past.utils import old_div
 import math
 import os
 import re
@@ -43,7 +49,7 @@ def get_default_size():
 	"""
 	display_sizes = []
 	display_sizes_mm = []
-	for display_no in xrange(len(getcfg("displays"))):
+	for display_no in range(len(getcfg("displays"))):
 		display_no = get_display_number(display_no)
 		display_size = wx.Display(display_no).Geometry[2:]
 		display_size_mm = []
@@ -64,8 +70,8 @@ def get_default_size():
 				# use configurable screen diagonal
 				inch = 20.0
 				mm = inch * 25.4
-				f = mm / math.sqrt(math.pow(display_size[0], 2) + \
-					math.pow(display_size[1], 2))
+				f = old_div(mm, math.sqrt(math.pow(display_size[0], 2) + \
+					math.pow(display_size[1], 2)))
 				w_mm = math.sqrt(math.pow(mm, 2) - \
 					   math.pow(display_size[1] * f, 2))
 				h_mm = math.sqrt(math.pow(mm, 2) - \
@@ -77,23 +83,23 @@ def get_default_size():
 				display_size_mm = floatlist(wx.DisplaySizeMM())
 				if 0 in display_size_mm:
 					# bogus
-					display_size_mm = [display_size_1st[0] / ppi_def * 25.4,
-									   display_size_1st[1] / ppi_def * 25.4]
+					display_size_mm = [old_div(display_size_1st[0], ppi_def) * 25.4,
+									   old_div(display_size_1st[1], ppi_def) * 25.4]
 				if display_no > 0:
-					display_size_mm[0] = display_size[0] / (
-						display_size_1st[0] / display_size_mm[0])
-					display_size_mm[1] = display_size[1] / (
-						display_size_1st[1] / display_size_mm[1])
+					display_size_mm[0] = old_div(display_size[0], (
+						old_div(display_size_1st[0], display_size_mm[0])))
+					display_size_mm[1] = old_div(display_size[1], (
+						old_div(display_size_1st[1], display_size_mm[1])))
 			else:
 				# use assumed ppi
-				display_size_mm = (display_size[0] / ppi_def * 25.4, 
-								   display_size[1] / ppi_def * 25.4)
+				display_size_mm = (old_div(display_size[0], ppi_def) * 25.4, 
+								   old_div(display_size[1], ppi_def) * 25.4)
 		display_sizes.append(display_size)
 		display_sizes_mm.append(display_size_mm)
-	if sum(mm[0] for mm in display_sizes_mm) / \
-				 len(display_sizes_mm) == display_sizes_mm[0][0] and \
-	   sum(mm[1] for mm in display_sizes_mm) / \
-				 len(display_sizes_mm) == display_sizes_mm[0][1]:
+	if old_div(sum(mm[0] for mm in display_sizes_mm), \
+				 len(display_sizes_mm)) == display_sizes_mm[0][0] and \
+	   old_div(sum(mm[1] for mm in display_sizes_mm), \
+				 len(display_sizes_mm)) == display_sizes_mm[0][1]:
 		# display_size_mm is the same for all screens, use the 1st one
 		display_size = display_sizes[0]
 		display_size_mm = display_sizes_mm[0]
@@ -104,8 +110,8 @@ def get_default_size():
 			display_no = getcfg("display_lut.number") - 1
 		display_size = display_sizes[display_no]
 		display_size_mm = display_sizes_mm[display_no]
-	px_per_mm = (display_size[0] / display_size_mm[0],
-			     display_size[1] / display_size_mm[1])
+	px_per_mm = (old_div(display_size[0], display_size_mm[0]),
+			     old_div(display_size[1], display_size_mm[1]))
 	if debug:
 		safe_print("[D]  H px_per_mm:", px_per_mm[0])
 		safe_print("[D]  V px_per_mm:", px_per_mm[1])
@@ -422,10 +428,10 @@ class MeasureFrame(InvincibleFrame):
 		default_measureframe_size = get_default_size()
 		size = floatlist(self.GetSize())
 		x, y = None, None
-		self.place_n_zoom(x, y, scale=(display_size[0] / 
-									   default_measureframe_size) / 
-									  (display_size[0] / 
-									   size[0]) + .125)
+		self.place_n_zoom(x, y, scale=old_div((old_div(display_size[0], 
+									   default_measureframe_size)), 
+									  (old_div(display_size[0], 
+									   size[0]))) + .125)
 
 	def zoomout_handler(self, event):
 		if debug: safe_print("[D] measureframe_zoomout_handler")
@@ -435,10 +441,10 @@ class MeasureFrame(InvincibleFrame):
 		default_measureframe_size = get_default_size()
 		size = floatlist(self.GetSize())
 		x, y = None, None
-		self.place_n_zoom(x, y, scale=(display_size[0] / 
-									   default_measureframe_size) / 
-									  (display_size[0] / 
-									   size[0]) - .125)
+		self.place_n_zoom(x, y, scale=old_div((old_div(display_size[0], 
+									   default_measureframe_size)), 
+									  (old_div(display_size[0], 
+									   size[0]))) - .125)
 
 	def zoomnormal_handler(self, event):
 		if debug: safe_print("[D] measureframe_zoomnormal_handler")
@@ -602,8 +608,8 @@ class MeasureFrame(InvincibleFrame):
 			buf = img.GetDataBuffer()
 			buflen = len(buf)
 			# Intervals in pixels per each R, G and B
-			intervals = tuple((buflen / (buflen * (rgb[i] - floor[i]))
-							  if rgb[i] - floor[i] else 0) for i in xrange(3))
+			intervals = tuple((old_div(buflen, (buflen * (rgb[i] - floor[i])))
+							  if rgb[i] - floor[i] else 0) for i in range(3))
 			safe_print("Intervals %.6f %.6f %.6f" % intervals)
 			floorbytes = tuple(chr(v) for v in floor)
 			ceilbytes = tuple(chr(v) for v in ceil)
@@ -661,8 +667,8 @@ class MeasureFrame(InvincibleFrame):
 			scale = 50.0  # Argyll max is 50
 			measureframe_pos = [.5, .5]
 		else:
-			scale = (display_size[0] / default_measureframe_size) / \
-					(display_size[0] / size[0])
+			scale = old_div((old_div(display_size[0], default_measureframe_size)), \
+					(old_div(display_size[0], size[0])))
 			if debug: safe_print("[D]  scale:", scale)
 			if debug:
 				safe_print("[D]  scale_adjustment_factor:", 
@@ -673,8 +679,8 @@ class MeasureFrame(InvincibleFrame):
 			elif measureframe_pos[0] != 0:
 				if display_size[0] - size[0] < measureframe_pos[0]:
 					measureframe_pos[0] = display_size[0] - size[0]
-				measureframe_pos[0] = 1.0 / ((display_size[0] - size[0]) / 
-											 (measureframe_pos[0]))
+				measureframe_pos[0] = 1.0 / (old_div((display_size[0] - size[0]), 
+											 (measureframe_pos[0])))
 			if size[1] >= display_client_size[1]:
 				measureframe_pos[1] = .5
 			elif measureframe_pos[1] != 0:
@@ -684,8 +690,8 @@ class MeasureFrame(InvincibleFrame):
 					titlebar = 0  # size already includes window decorations
 				else:
 					titlebar = 25  # assume titlebar height of 25px
-				measureframe_pos[1] = 1.0 / ((display_size[1] - size[1]) / 
-											 (measureframe_pos[1] + titlebar))
+				measureframe_pos[1] = 1.0 / (old_div((display_size[1] - size[1]), 
+											 (measureframe_pos[1] + titlebar)))
 		if debug: safe_print("[D]  scale:", scale)
 		if debug: safe_print("[D]  measureframe_pos:", measureframe_pos)
 		measureframe_dimensions = ",".join(str(max(0, n)) for n in 
@@ -704,7 +710,7 @@ def test():
 				(51.2 / 255, 153.7 / 255, 127.4 / 255)]:
 		wx.CallAfter(wx.GetApp().TopWindow.show_rgb, rgb)
 		time.sleep(0.05)
-		raw_input("Press RETURN to continue\n")
+		input("Press RETURN to continue\n")
 		if not wx.GetApp().TopWindow:
 			break
 

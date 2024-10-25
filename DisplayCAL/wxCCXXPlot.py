@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import math
 import os
 import sys
@@ -49,7 +52,7 @@ def nicenum(x, do_round):
 	if x < 0.0:
 		x = -x
 	ex = math.floor(math.log10(x))
-	f = x / expt(10.0, ex)
+	f = old_div(x, expt(10.0, ex))
 	if do_round:
 		if f < 1.5:
 			nf = 1.0
@@ -156,18 +159,18 @@ class CCXXPlot(wx.Frame):
 				# 1nm intervals
 				steps = int(x_max - x_min) + 1
 				safe_print("Up-interpolating", bands, "spectral bands to", steps)
-				step = (x_max - x_min) / (steps - 1.)
+				step = old_div((x_max - x_min), (steps - 1.))
 			else:
-				step = (x_max - x_min) / (bands - 1.)
+				step = old_div((x_max - x_min), (bands - 1.))
 			y_min = 0
 			y_max = 1
 
 			Y_max = 0
-			for i, sample in data.iteritems():
+			for i, sample in data.items():
 				# Get nm and spectral power
 				values = []
 				x = x_min
-				for k in data_format.itervalues():
+				for k in data_format.values():
 					if k.startswith("SPEC_"):
 						y = sample[k]
 						y_min = min(y, y_min)
@@ -183,8 +186,8 @@ class CCXXPlot(wx.Frame):
 					numvalues = len(values)
 					interp = ICCP.CRInterpolation(values)
 					values = []
-					for i in xrange(steps):
-						values.append((x, interp(i / (steps - 1.) * (numvalues - 1.))))
+					for i in range(steps):
+						values.append((x, interp(old_div(i, (steps - 1.)) * (numvalues - 1.))))
 						x += step
 				# Get XYZ for colorization
 				XYZ = []
@@ -209,8 +212,8 @@ class CCXXPlot(wx.Frame):
 			y_min = 0
 
 			mtx = colormath.Matrix3x3([[sample[k]
-										for k in data_format.itervalues()]
-									   for sample in data.itervalues()])
+										for k in data_format.values()]
+									   for sample in data.values()])
 			imtx = mtx.inverted()
 
 			# Get XYZ that colorimeter would measure without matrix (sRGB ref,
@@ -238,14 +241,14 @@ class CCXXPlot(wx.Frame):
 				y_max = 100
 				y = -5
 				pos2rgb = []
-				for R in xrange(cube_size):
-					for G in xrange(cube_size):
+				for R in range(cube_size):
+					for G in range(cube_size):
 						x = -5
 						y += 10
-						for B in xrange(cube_size):
+						for B in range(cube_size):
 							x += 10
 							pos2rgb.append(((x, y),
-											(v / (cube_size - 1.0) for v in (R, G, B))))
+											(old_div(v, (cube_size - 1.0)) for v in (R, G, B))))
 				attrs_c = {'marker': 'square', 'size': 10}
 				attrs_r = {'marker': 'square', 'size': 5}
 			Y_max = (imtx * colormath.get_whitepoint("D65"))[1]
@@ -273,9 +276,9 @@ class CCXXPlot(wx.Frame):
 								math.ceil(x_max / 50.) * 50)
 			self.spec_x = (self.ccxx_axis_x[1] - self.ccxx_axis_x[0]) / 50.
 			graph_range = nicenum(y_max - y_zero, False)
-			d = nicenum(graph_range / (NTICK - 1.0), True)
-			self.spec_y = math.ceil(y_max / d)
-			self.ccxx_axis_y = (math.floor(y_zero / d) * d,
+			d = nicenum(old_div(graph_range, (NTICK - 1.0)), True)
+			self.spec_y = math.ceil(old_div(y_max, d))
+			self.ccxx_axis_y = (math.floor(old_div(y_zero, d)) * d,
 								self.spec_y * d)
 		else:
 			self.ccxx_axis_x = (math.floor(x_min / 20.) * 20,
@@ -290,7 +293,7 @@ class CCXXPlot(wx.Frame):
 					# Colorimeter XYZ
 					if Y_max > 1:
 						# Colorimeter brighter than ref
-						XYZ[:] = [v / Y_max for v in XYZ]
+						XYZ[:] = [old_div(v, Y_max) for v in XYZ]
 					else:
 						# Colorimeter dimmer than ref
 						XYZ[:] = [v * Y_max for v in XYZ]
@@ -298,7 +301,7 @@ class CCXXPlot(wx.Frame):
 					# Ref XYZ
 					if Y_max > 1:
 						# Colorimeter brighter than ref
-						XYZ[:] = [v / Y_max for v in XYZ]
+						XYZ[:] = [old_div(v, Y_max) for v in XYZ]
 				RGB = tuple(int(v) for v in colormath.XYZ2RGB(*XYZ, scale=255,
 															  round_=True))
 			else:
@@ -356,10 +359,10 @@ class CCXXPlot(wx.Frame):
 			x_label = u""
 			if ref:
 				x_label += ref + u", "
-			x_label += u"%.1fnm, %i-%inm" % ((x_max - x_min) / (bands - 1.0),
+			x_label += u"%.1fnm, %i-%inm" % (old_div((x_max - x_min), (bands - 1.0)),
 											 x_min, x_max)
 
-		scale = max(getcfg("app.dpi") / config.get_default_dpi(), 1)
+		scale = max(old_div(getcfg("app.dpi"), config.get_default_dpi()), 1)
 
 		style = wx.DEFAULT_FRAME_STYLE
 

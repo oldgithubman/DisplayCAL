@@ -1,7 +1,10 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from past.builtins import basestring
+import io
 import codecs
 import os
 import re
@@ -39,7 +42,7 @@ def langmerge(infilename1, infilename2, outfilename):
 	
 	added = []
 	same = []
-	for key, value in dictin2.iteritems():
+	for key, value in dictin2.items():
 		if not key in dictin1:
 			dictin1[key] = value
 			added.append(key.encode("UTF-8"))
@@ -105,18 +108,18 @@ def langmerge(infilename1, infilename2, outfilename):
 	merged = ordereddict.OrderedDict()
 	merged["*"] = dictin1["*"] = dictin2["*"]
 	
-	for key in natsort(dictin2.keys(), False):
+	for key in natsort(list(dictin2.keys()), False):
 		merged[key] = dictin1[key]
 	
-	for key in natsort(dictin1.keys(), False):
+	for key in natsort(list(dictin1.keys()), False):
 		if key not in dictin2 and not key.startswith("*") and dictin1[key]:
 			if not "ORPHANED KEY-VALUE PAIRS" in merged:
 				merged["ORPHANED KEY-VALUE PAIRS"] = "Note to translators: Key-value pairs below this point are no longer used. You may consider removing them."
 			merged[key] = dictin1[key]
 			safe_print("Orphan: '%s' '%s'" % (key, dictin1[key]))
 	
-	outstream = StringIO.StringIO()
-	for key, value in merged.iteritems():
+	outstream = io.StringIO()
+	for key, value in merged.items():
 		if not USE_INLINE or "\n" in value:
 			outstream.write('"%s": |-\n' % key.encode("UTF-8"))
 			for line in value.split("\n"):

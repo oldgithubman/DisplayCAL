@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from builtins import next
+from builtins import object
 from time import sleep
 
 # 0install: Make sure imported protobuf is from implementation to ensure

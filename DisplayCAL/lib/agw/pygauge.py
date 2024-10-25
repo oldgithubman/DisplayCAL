@@ -52,7 +52,10 @@ Latest Revision: Andrea Gavana @ 02 Aug 2010, 09.00 GMT
 
 Version 0.1
 """
+from __future__ import division
 
+from builtins import zip
+from past.utils import old_div
 import wx
 import copy
 
@@ -341,7 +344,7 @@ class PyGauge(wx.PyWindow):
                 raise Exception("ERROR:\n Gauge value must be between 0 and its range. ")
         
             self._update_value.append(value[i] + v)
-            self._update_step.append(float(value[i])/(time/50))
+            self._update_step.append(float(value[i])/(old_div(time,50)))
             
         #print self._update_
 
@@ -356,12 +359,12 @@ class PyGauge(wx.PyWindow):
         
         if self.GetBarGradient():
             tmp = sorted(zip(self._value,self._barGradient)); tmp.reverse()
-            a,b = zip(*tmp)
+            a,b = list(zip(*tmp))
             self._valueSorted       = list(a)
             self._barGradientSorted = list(b)
         else:
             tmp = sorted(zip(self._value,self._barColour)); tmp.reverse()
-            a,b = zip(*tmp)
+            a,b = list(zip(*tmp))
             self._valueSorted     = list(a)
             self._barColourSorted = list(b)
 

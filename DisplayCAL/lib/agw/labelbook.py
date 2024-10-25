@@ -125,7 +125,11 @@ Version 0.5.
 
 """
 from __future__ import absolute_import
+from __future__ import division
 
+from builtins import range
+from past.utils import old_div
+from builtins import object
 __docformat__ = "epytext"
 
 
@@ -712,7 +716,7 @@ class ImageContainerBase(wx.Panel):
             if self._pinBtnRect.Contains(pt):
                 return -1, IMG_OVER_PIN        
 
-        for i in xrange(len(self._pagesInfoVec)):
+        for i in range(len(self._pagesInfoVec)):
         
             if self._pagesInfoVec[i].GetPosition() == wx.Point(-1, -1):
                 break
@@ -1165,7 +1169,7 @@ class ImageContainer(ImageContainerBase):
 
         count = 0
         
-        for i in xrange(len(self._pagesInfoVec)):
+        for i in range(len(self._pagesInfoVec)):
 
             count = count + 1            
         
@@ -1277,13 +1281,13 @@ class ImageContainer(ImageContainerBase):
             
                 if bUseYcoord:
                 
-                    imgXcoord = self._nImgSize / 2
-                    imgYcoord = (style & INB_SHOW_ONLY_IMAGES and [pos + self._nImgSize / 2] or [pos + imgTopPadding])[0]
+                    imgXcoord = old_div(self._nImgSize, 2)
+                    imgYcoord = (style & INB_SHOW_ONLY_IMAGES and [pos + old_div(self._nImgSize, 2)] or [pos + imgTopPadding])[0]
                 
                 else:
                 
-                    imgXcoord = pos + (rectWidth / 2) - (self._nImgSize / 2)
-                    imgYcoord = (style & INB_SHOW_ONLY_IMAGES and [self._nImgSize / 2] or [imgTopPadding])[0]
+                    imgXcoord = pos + (old_div(rectWidth, 2)) - (old_div(self._nImgSize, 2))
+                    imgYcoord = (style & INB_SHOW_ONLY_IMAGES and [old_div(self._nImgSize, 2)] or [imgTopPadding])[0]
 
                 self._ImageList.Draw(self._pagesInfoVec[i].GetImageIndex(), dc,
                                      imgXcoord, imgYcoord,
@@ -1306,15 +1310,15 @@ class ImageContainer(ImageContainerBase):
                 
                 if bUseYcoord:
                 
-                    textOffsetX = ((rectWidth - textWidth) / 2 )
+                    textOffsetX = (old_div((rectWidth - textWidth), 2) )
                     textOffsetY = (not style & INB_SHOW_ONLY_TEXT  and [pos + self._nImgSize  + imgTopPadding + 3] or \
-                                       [pos + ((self._nImgSize * 2 - textHeight) / 2 )])[0]
+                                       [pos + (old_div((self._nImgSize * 2 - textHeight), 2) )])[0]
                 
                 else:
                 
-                    textOffsetX = (rectWidth - textWidth) / 2  + pos + nTextPaddingLeft
+                    textOffsetX = old_div((rectWidth - textWidth), 2)  + pos + nTextPaddingLeft
                     textOffsetY = (not style & INB_SHOW_ONLY_TEXT and [self._nImgSize + imgTopPadding + 3] or \
-                                       [((self._nImgSize * 2 - textHeight) / 2 )])[0]
+                                       [(old_div((self._nImgSize * 2 - textHeight), 2) )])[0]
                 
                 dc.SetTextForeground(wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT))
                 dc.DrawText(fixedText, textOffsetX, textOffsetY)
@@ -1326,7 +1330,7 @@ class ImageContainer(ImageContainerBase):
             pos += rectWidth
         
         # Update all buttons that can not fit into the screen as non-visible
-        for ii in xrange(count, len(self._pagesInfoVec)):
+        for ii in range(count, len(self._pagesInfoVec)):
             self._pagesInfoVec[ii].SetPosition(wx.Point(-1, -1))
 
         # Draw the pin button
@@ -1488,8 +1492,8 @@ class LabelContainer(ImageContainerBase):
             # Draw graident in the background area
             startColour = self._coloursMap[INB_TAB_AREA_BACKGROUND_COLOUR]
             endColour   = ArtManager.Get().LightColour(self._coloursMap[INB_TAB_AREA_BACKGROUND_COLOUR], 50)
-            ArtManager.Get().PaintStraightGradientBox(dc, wx.Rect(0, 0, size.x / 2, size.y), startColour, endColour, False)
-            ArtManager.Get().PaintStraightGradientBox(dc, wx.Rect(size.x / 2, 0, size.x / 2, size.y), endColour, startColour, False)
+            ArtManager.Get().PaintStraightGradientBox(dc, wx.Rect(0, 0, old_div(size.x, 2), size.y), startColour, endColour, False)
+            ArtManager.Get().PaintStraightGradientBox(dc, wx.Rect(old_div(size.x, 2), 0, old_div(size.x, 2), size.y), endColour, startColour, False)
         
         else:
         
@@ -1527,7 +1531,7 @@ class LabelContainer(ImageContainerBase):
         posy = 20 
         count = 0
         
-        for i in xrange(len(self._pagesInfoVec)):
+        for i in range(len(self._pagesInfoVec)):
             count = count+1        
             # Default values for the surronounding rectangle 
             # around a button
@@ -1566,7 +1570,7 @@ class LabelContainer(ImageContainerBase):
             posy += rectHeight
         
         # Update all buttons that can not fit into the screen as non-visible
-        for ii in xrange(count, len(self._pagesInfoVec)):
+        for ii in range(count, len(self._pagesInfoVec)):
             self._pagesInfoVec[i].SetPosition(wx.Point(-1, -1))
 
         if bUsePin:
@@ -1957,7 +1961,7 @@ class LabelContainer(ImageContainerBase):
 
         # Text bounding rectangle
         textRect.x += nPadding
-        textRect.y = rect.y + (rect.height - h)/2
+        textRect.y = rect.y + old_div((rect.height - h),2)
         textRect.width = rect.width - 2 * nPadding
 
         if bmp.Ok() and not self.HasAGWFlag(INB_SHOW_ONLY_TEXT):
@@ -1974,7 +1978,7 @@ class LabelContainer(ImageContainerBase):
         
             imgRect.x += nPadding
             imgRect.width = bmp.GetWidth()
-            imgRect.y = rect.y + (rect.height - bmp.GetHeight())/2
+            imgRect.y = rect.y + old_div((rect.height - bmp.GetHeight()),2)
             imgRect.height = bmp.GetHeight()
         
         # Draw bounding rectangle
@@ -2390,7 +2394,7 @@ class FlatBookBase(wx.Panel):
             dc.SetFont(font)
             maxW = 0
             
-            for page in xrange(self.GetPageCount()):
+            for page in range(self.GetPageCount()):
                 caption = self._pages.GetPageText(page)
                 w, h = dc.GetTextExtent(caption)
                 maxW = max(maxW, w)

@@ -7,6 +7,8 @@ Collect modules from site-packages used by DisplayCAL
 """
 from __future__ import print_function
 
+from builtins import input
+from builtins import str
 import glob
 import os
 import shutil
@@ -42,7 +44,7 @@ if len(wxversions_candidates) > 1:
 		print('%2i: %s' % (i + 1, os.path.basename(pth)))
 	print('')
 	while choice:
-		choice = raw_input('Please select (1..%i) and press <ENTER>,\n'
+		choice = input('Please select (1..%i) and press <ENTER>,\n'
 						   'or press just <ENTER> to abort: '
 						   % len(wxversions_candidates))
 		if not choice:
@@ -56,7 +58,7 @@ if len(wxversions_candidates) > 1:
 			break
 	wx_pth = wxversions_candidates[choice - 1]
 	print('Your choice: %s' % wx_pth)
-	if raw_input('Press <ENTER> to continue, X <ENTER> to abort: ').upper() == 'X':
+	if input('Press <ENTER> to continue, X <ENTER> to abort: ').upper() == 'X':
 		sys.exit()
 elif wxversions_candidates:
 	wx_pth = wxversions_candidates[0]
@@ -115,9 +117,9 @@ def copy(src, dst):
 
 # Collect packages
 python_lib = get_python_lib(True)
-for pkg_name, data in pkgs.iteritems():
+for pkg_name, data in pkgs.items():
 	print('Checking for package: %s' % pkg_name)
-	dylibs = filter(lambda entry: entry.endswith('.dylib'), data)
+	dylibs = [entry for entry in data if entry.endswith('.dylib')]
 	fromlist = pkg_name.split(".")
 	try:
 		pkg = __import__(pkg_name, fromlist=fromlist)

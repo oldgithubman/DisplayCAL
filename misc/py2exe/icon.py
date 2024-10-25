@@ -8,6 +8,9 @@
 #-----------------------------------------------------------------------------
 
 
+from builtins import map
+from builtins import range
+from builtins import object
 from future.utils import raise_
 RT_ICON = 3
 RT_GROUP_ICON = 14
@@ -23,7 +26,7 @@ except AttributeError:
 import logging
 logger = logging.getLogger()
 
-class Structure:
+class Structure(object):
     def __init__(self):
         size = self._sizeInBytes = struct.calcsize(self._format_)
         self._fields_ = list(struct.unpack(self._format_, '\000' * size))
@@ -79,7 +82,7 @@ class GRPICONDIRENTRY(Structure):
                "wBitCount", "dwBytesInRes", "nID")
     _format_ = "bbbbhhih"
 
-class IconFile:
+class IconFile(object):
     def __init__(self, path):
         self.path = path
         file = open(path, "rb")
@@ -112,7 +115,7 @@ class IconFile:
 
 def CopyIcons_FromIco(dstpath, srcpath, id=1):
     import win32api #, win32con
-    icons = map(IconFile, srcpath)
+    icons = list(map(IconFile, srcpath))
     logger.info("Updating icons from %s to %s", srcpath, dstpath)
 
     hdst = win32api.BeginUpdateResource(dstpath, 0)
@@ -143,7 +146,7 @@ def CopyIcons(dstpath, srcpath):
         except ValueError:
             return s, None
 
-    srcpath = map(splitter, srcpath)
+    srcpath = list(map(splitter, srcpath))
     logger.info("SRCPATH %s", srcpath)
 
     if len(srcpath) > 1:

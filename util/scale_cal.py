@@ -12,7 +12,7 @@ from DisplayCAL import CGATS
 
 def main(calfilename, caloutfilename, r_max, g_max, b_max):
 	cal = CGATS.CGATS(calfilename)
-	for values in cal[0].DATA.itervalues():
+	for values in cal[0].DATA.values():
 		for label in "RGB":
 			values["RGB_" + label] *= float(locals()[label.lower() + "_max"])
 	cal.write(caloutfilename)

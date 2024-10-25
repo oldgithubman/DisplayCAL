@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from builtins import range
 import os
 import subprocess
 import sys
@@ -22,12 +23,12 @@ def create_testcharts(overwrite=False):
 			   "sRGB": (config.get_data_path("ref/sRGB.icm"), 1.6)}
 	worker = Worker()
 	targen = get_argyll_util("targen")
-	for bcc_steps in xrange(min_bcc_steps, max_bcc_steps + 1):
+	for bcc_steps in range(min_bcc_steps, max_bcc_steps + 1):
 		single_channel = bcc_steps * 4 - 3
 		gray_channel = single_channel * 3 - 2
 		total = config.get_total_patches(4, 4, single_channel, gray_channel,
 										 bcc_steps, bcc_steps, 0)
-		for name, (filename, demphasis) in precond.iteritems():
+		for name, (filename, demphasis) in precond.items():
 			cwd = os.path.join(root, meta.name, "ti1")
 			outname = "d3-e4-s%i-g%i-m0-f%i-c%s" % (single_channel,
 													gray_channel,

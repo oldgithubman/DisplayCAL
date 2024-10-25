@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from past.builtins import basestring
+from builtins import object
 import locale
 import os
 import sys
@@ -37,7 +39,7 @@ def _get_console_width():
 	return _conwidth
 
 
-class SafePrinter():
+class SafePrinter(object):
 	
 	def __init__(self, pad=False, padchar=" ", sep=" ", end="\n", 
 				 file_=sys.stdout, fn=None, encoding=None):
@@ -88,11 +90,11 @@ class SafePrinter():
 		if encoding:
 			cls = basestring
 		else:
-			cls = unicode
+			cls = str
 		for arg in args:
 			if not isinstance(arg, cls):
 				arg = safe_unicode(arg)
-			if isinstance(arg, unicode) and encoding:
+			if isinstance(arg, str) and encoding:
 				arg = arg.encode(encoding, "asciize")
 			strargs.append(arg)
 		line = sep.join(strargs).rstrip(end)

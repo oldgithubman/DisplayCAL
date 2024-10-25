@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-from Queue import Empty
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
+from queue import Empty
 import atexit
 import errno
 import logging
@@ -37,7 +44,7 @@ def cpu_count(limit_by_total_vmem=True):
 			# smart enough to swap memory used by inactive processes to disk to
 			# free up more physical RAM for active processes.
 			try:
-				max_cpus = int(psutil.virtual_memory().total / (1024 ** 3) - 1)
+				max_cpus = int(old_div(psutil.virtual_memory().total, (1024 ** 3)) - 1)
 			except:
 				pass
 	try:
@@ -126,7 +133,7 @@ def pool_slice(func, data_in, args=(), kwds={}, num_workers=None,
 					eof_count += 1
 					if eof_count == num_workers:
 						break
-				perc = round(progress / num_workers)
+				perc = round(old_div(progress, num_workers))
 				if perc > prevperc:
 					logfile.write("\r%i%%" % perc)
 					prevperc = perc
@@ -139,8 +146,8 @@ def pool_slice(func, data_in, args=(), kwds={}, num_workers=None,
 	pool = Pool(num_workers)
 	results = []
 	start = 0
-	for batch in xrange(num_batches):
-		for i in xrange(batch * num_workers, (batch + 1) * num_workers):
+	for batch in range(num_batches):
+		for i in range(batch * num_workers, (batch + 1) * num_workers):
 			end = int(math.ceil(chunksize * (i + 1)))
 			results.append(pool.apply_async(WorkerFunc(func,
 													   batch == num_batches - 1),

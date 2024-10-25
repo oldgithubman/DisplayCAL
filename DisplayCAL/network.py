@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
 import errno
 import os
 import socket
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from . import localization as lang
 from .log import safe_print
@@ -55,7 +57,7 @@ def get_valid_host(hostname=None):
 			return hostname, addr
 
 
-class LoggingHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+class LoggingHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
 
 	""" Like urllib2.HTTPRedirectHandler, but logs redirections """
 
@@ -84,14 +86,14 @@ class LoggingHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
 			safe_print(req.get_full_url(), end=" ")
 		safe_print(u"\u2192", newurl)
 
-		return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
+		return urllib.request.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
 
 	http_error_301 = http_error_303 = http_error_307 = http_error_302
 
-	inf_msg = urllib2.HTTPRedirectHandler.inf_msg
+	inf_msg = urllib.request.HTTPRedirectHandler.inf_msg
 
 
-class NoHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+class NoHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
 
 	""" Like urllib2.HTTPRedirectHandler, but does not allow redirections """
 
@@ -105,7 +107,7 @@ class NoHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
 		else:
 			return
 
-		raise urllib2.HTTPError(newurl, code,
+		raise urllib.error.HTTPError(newurl, code,
 								msg + " - Redirection to url '%s' is not allowed" %
 								newurl,
 								headers, fp)

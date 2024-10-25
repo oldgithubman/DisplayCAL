@@ -5,9 +5,19 @@ Runtime configuration and user settings parser
 """
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
 
-import ConfigParser
-ConfigParser.DEFAULTSECT = "Default"
+from future import standard_library
+standard_library.install_aliases()
+from builtins import filter
+from builtins import map
+from builtins import str
+from builtins import hex
+from builtins import range
+from past.builtins import basestring
+from past.utils import old_div
+import configparser
+configparser.DEFAULTSECT = "Default"
 from decimal import Decimal
 import locale
 import math
@@ -17,7 +27,7 @@ import string
 import sys
 from time import gmtime, strftime, timezone
 if sys.platform == "win32":
-	import _winreg
+	import winreg
 
 from .argyll_names import observers, viewconds, intents, video_encodings
 from .defaultpaths import appdata, commonappdata
@@ -46,7 +56,7 @@ from . import encodedstdio
 if ascii:
 	enc = "ASCII"
 
-exe = unicode(sys.executable, fs_enc)
+exe = str(sys.executable, fs_enc)
 exedir = os.path.dirname(exe)
 exename = os.path.basename(exe)
 
@@ -57,7 +67,7 @@ if isexe and os.getenv("_MEIPASS2"):
 
 pyfile = (exe if isexe else (os.path.isfile(sys.argv[0]) and sys.argv[0]) or
 		  os.path.join(os.path.dirname(__file__), "main.py"))
-pypath = exe if isexe else os.path.abspath(unicode(pyfile, fs_enc))
+pypath = exe if isexe else os.path.abspath(str(pyfile, fs_enc))
 # Mac OS X: isapp should only be true for standalone, not 0install
 isapp = sys.platform == "darwin" and \
 		exe.split(os.path.sep)[-3:-1] == ["Contents", "MacOS"] and \
@@ -68,7 +78,7 @@ if isapp:
 else:
 	pyname, pyext = os.path.splitext(os.path.basename(pypath))
 	pydir = os.path.dirname(exe if isexe
-							else os.path.abspath(unicode(__file__, fs_enc)))
+							else os.path.abspath(str(__file__, fs_enc)))
 
 data_dirs = [pydir]
 extra_data_dirs = []
@@ -249,13 +259,13 @@ def getbitmap(name, display_missing_icon=True, scale=True, use_mask=False):
 			size = parts[-2].split("x")
 			if len(size) == 2:
 				try:
-					w, h = map(int, size)
+					w, h = list(map(int, size))
 				except ValueError:
 					size = []
 		ow, oh = w, h
 		set_default_app_dpi()
 		if scale:
-			scale = getcfg("app.dpi") / get_default_dpi()
+			scale = old_div(getcfg("app.dpi"), get_default_dpi())
 		else:
 			scale = 1
 		if scale > 1:
@@ -286,7 +296,7 @@ def getbitmap(name, display_missing_icon=True, scale=True, use_mask=False):
 			name2x = oname + "@2x"
 			name4x = oname + "@4x"
 			path = None
-			for i in xrange(5):
+			for i in range(5):
 				if scale > 1:
 					if len(size) == 2:
 						# Icon
@@ -343,7 +353,7 @@ def getbitmap(name, display_missing_icon=True, scale=True, use_mask=False):
 					rescale = False
 					if i in (1, 2):
 						# HighDPI support. 4x/2x version, determine scaled size
-						w, h = [int(round(v / (2 * (3 - i)) * scale)) for v in bmp.Size]
+						w, h = [int(round(old_div(v, (2 * (3 - i))) * scale)) for v in bmp.Size]
 						rescale = True
 					elif len(size) == 2:
 						# HighDPI support. Icon
@@ -514,7 +524,7 @@ def get_display_number(display_no):
 	else:
 		if display.endswith(" [PRIMARY]"):
 			display = " ".join(display.split(" ")[:-1])
-		for i in xrange(wx.Display.GetCount()):
+		for i in range(wx.Display.GetCount()):
 			geometry = "%i, %i, %ix%i" % tuple(wx.Display(i).Geometry)
 			if display.endswith("@ " + geometry):
 				if debug:
@@ -677,8 +687,8 @@ def runtimeconfig(pyfile):
 			data_dirs.insert(1, pydir_parent)
 		runtype = pyext
 	for dir_ in sys.path:
-		if not isinstance(dir_, unicode):
-			dir_ = unicode(dir_, fs_enc)
+		if not isinstance(dir_, str):
+			dir_ = str(dir_, fs_enc)
 		dir_ = os.path.abspath(os.path.join(dir_, appname))
 		if dir_ not in data_dirs and os.path.isdir(dir_):
 			data_dirs.append(dir_)
@@ -704,7 +714,7 @@ def runtimeconfig(pyfile):
 
 # User settings
 
-cfg = ConfigParser.RawConfigParser()
+cfg = configparser.RawConfigParser()
 cfg.optionxform = str
 
 valid_ranges = {
@@ -761,8 +771,7 @@ valid_values = {
 	"3dlut.bitdepth.output": [8, 10, 12, 14, 16],
 	"3dlut.encoding.input": list(video_encodings),
 	# collink: xvYCC output encoding is not supported
-	"3dlut.encoding.output": filter(lambda v: v not in ("T", "x", "X"),
-									video_encodings),
+	"3dlut.encoding.output": [v for v in video_encodings if v not in ("T", "x", "X")],
 	"3dlut.format": ["3dl", "cube", "dcl", "eeColor", "icc", "madVR", "mga",
 					 "png", "ReShade", "spi3d"],
 	"3dlut.hdr_display": [0, 1],
@@ -812,7 +821,7 @@ valid_values = {
 							   "IPT", "LCH(ab)", "LCH(uv)", "Lab", "Lpt", "Luv",
 							   "Lu'v'", "xyY"],
 	"tc_vrml_device_colorspace": ["HSI", "HSL", "HSV", "RGB"],
-	"testchart.auto_optimize": range(19),
+	"testchart.auto_optimize": list(range(19)),
 	"testchart.patch_sequence": ["optimize_display_response_delay",
 								 "maximize_lightness_difference",
 								 "maximize_rec709_luma_difference",
@@ -1253,8 +1262,8 @@ testchart_defaults = {
 }
 
 def _init_testcharts():
-	for testcharts in testchart_defaults.values():
-		for chart in filter(lambda value: value != "auto", testcharts.values()):
+	for testcharts in list(testchart_defaults.values()):
+		for chart in [value for value in list(testcharts.values()) if value != "auto"]:
 			resfiles.append(os.path.join("ti1", chart))
 	testchart_defaults["G"] = testchart_defaults["g"]
 	testchart_defaults["S"] = testchart_defaults["s"]
@@ -1277,9 +1286,9 @@ def getcfg(name, fallback=True, raw=False, cfg=cfg):
 	if hasdef:
 		defval = defaults[name]
 		deftype = type(defval)
-	if cfg.has_option(ConfigParser.DEFAULTSECT, name):
+	if cfg.has_option(configparser.DEFAULTSECT, name):
 		try:
-			value = unicode(cfg.get(ConfigParser.DEFAULTSECT, name), "UTF-8")
+			value = str(cfg.get(configparser.DEFAULTSECT, name), "UTF-8")
 		except UnicodeDecodeError:
 			pass
 		else:
@@ -1398,7 +1407,7 @@ def hascfg(name, fallback=True, cfg=cfg):
 	check defaults also.
 	
 	"""
-	if cfg.has_option(ConfigParser.DEFAULTSECT, name):
+	if cfg.has_option(configparser.DEFAULTSECT, name):
 		return True
 	elif fallback:
 		return name in defaults
@@ -1706,7 +1715,7 @@ def initcfg(module=None, cfg=cfg, force_load=False):
 				   "\n".join(cfgfiles))
 		# Fix Python 2.7 ConfigParser option values being lists instead of
 		# strings in case of a ParsingError. http://bugs.python.org/issue24142
-		all_sections = [ConfigParser.DEFAULTSECT]
+		all_sections = [configparser.DEFAULTSECT]
 		all_sections.extend(cfg.sections())
 		for section in all_sections:
 			for name, val in cfg.items(section):
@@ -1871,14 +1880,14 @@ def get_hidpi_scaling_factor():
 def setcfg(name, value, cfg=cfg):
 	""" Set an option value in the configuration. """
 	if value is None:
-		cfg.remove_option(ConfigParser.DEFAULTSECT, name)
+		cfg.remove_option(configparser.DEFAULTSECT, name)
 	else:
 		if name in ("displays", "instruments") and isinstance(value, (list,
 																	  tuple)):
 			value = os.pathsep.join(strtr(v, [("%", "%25"),
 											  (os.pathsep,
 											   "%" + hex(ord(os.pathsep))[2:].upper())]) for v in value)
-		cfg.set(ConfigParser.DEFAULTSECT, name, unicode(value).encode("UTF-8"))
+		cfg.set(configparser.DEFAULTSECT, name, str(value).encode("UTF-8"))
 
 
 def setcfg_cond(condition, name, value, set_if_backup_exists=False,
@@ -1922,7 +1931,7 @@ def writecfg(which="user", worker=None, module=None, options=(), cfg=cfg):
 	else:
 		cfgbasename = appbasename
 	# Remove unknown options
-	for name, val in cfg.items(ConfigParser.DEFAULTSECT):
+	for name, val in cfg.items(configparser.DEFAULTSECT):
 		if not name in defaults:
 			safe_print("Removing unknown option:", name)
 			setcfg(name, None)

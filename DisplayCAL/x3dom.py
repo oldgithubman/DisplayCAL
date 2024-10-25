@@ -2,12 +2,17 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
-import httplib
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from past.utils import old_div
+from builtins import object
+import http.client
 import os
 import re
 import socket
 import string
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from .config import get_data_path
 from .defaultpaths import cache as cachepath
@@ -40,7 +45,7 @@ class Tag(object):
 	def markup(self, allow_empty_element_tag=False, x3dom=False):
 		markup = ["<%s" % self.tagname]
 		attrs = []
-		for key, value in self.attributes.iteritems():
+		for key, value in self.attributes.items():
 			value = value.strip().replace("<",
 										  "&lt;").replace(">",
 														  "&gt;").replace("&",
@@ -127,9 +132,9 @@ class Tag(object):
 				for url in (url, url.replace("https://", "http://")):
 					_safe_print("Requesting:", url)
 					try:
-						response = urllib2.urlopen(url)
-					except (socket.error, urllib2.URLError,
-							httplib.HTTPException) as exception:
+						response = urllib.request.urlopen(url)
+					except (socket.error, urllib.error.URLError,
+							http.client.HTTPException) as exception:
 						_safe_print(exception)
 					else:
 						body = response.read()
@@ -316,8 +321,8 @@ def get_vrml_axes(xlabel="X", ylabel="Y", zlabel="Z", offsetx=0,
 					}
 				}
 			]
-		}""" % dict(locals().items() +
-					{"xaxisx": maxx / 2.0 + offsetx,
+		}""" % dict(list(locals().items()) +
+					list({"xaxisx": maxx / 2.0 + offsetx,
 					 "yaxisy": maxy / 2.0 + offsety,
 					 "xyaxisz": offsetz - maxz / 2.0,
 					 "zlabelx": offsetx - 10,
@@ -330,7 +335,7 @@ def get_vrml_axes(xlabel="X", ylabel="Y", zlabel="Z", offsetx=0,
 					 "zerolabel": "0" if zero else "",
 					 "zerox": offsetx - 10,
 					 "zeroy": offsety - 10,
-					 "zeroz": offsetz - maxz / 2.0 - 5}.items())
+					 "zeroz": offsetz - maxz / 2.0 - 5}.items()))
 
 
 def safe_print(*args, **kwargs):
@@ -534,7 +539,7 @@ def vrml2x3dom(vrml, worker=None):
 	maxi = len(vrml) - 1.0
 	lastprogress = 0
 	for i, c in enumerate(vrml):
-		curprogress = int(i / maxi * 100)
+		curprogress = int(old_div(i, maxi) * 100)
 		if worker:
 			if curprogress > lastprogress:
 				worker.lastmsg.write("%i%%\n" % curprogress)

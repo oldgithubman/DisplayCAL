@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import math
 import os
 import re
@@ -99,8 +103,8 @@ class CoordinateType(list):
 			fp.append(y)
 		interp = colormath.Interp(xp, fp, use_numpy=True)
 		otrc = ICCP.CurveType(profile=self.profile)
-		for i in xrange(len(self)):
-			otrc.append(interp(i / (len(self) - 1.0) * 255) / 100 * 65535)
+		for i in range(len(self)):
+			otrc.append(old_div(interp(old_div(i, (len(self) - 1.0)) * 255), 100) * 65535)
 		match = otrc.get_transfer_function(best, slice, outoffset=outoffset)
 		self._transfer_function[(best, slice)] = match
 		return match
@@ -115,7 +119,7 @@ class CoordinateType(list):
 		
 		"""
 		self[:] = [[y, x] for y, x in values]
-		for i in xrange(len(self)):
+		for i in range(len(self)):
 			self[i][0] = vmin + colormath.specialpow(self[i][1] / 255.0, power) * (vmax - vmin)
 
 
@@ -233,13 +237,13 @@ class LUTCanvas(plot.PlotCanvas):
 		points = {}
 		if not channels:
 			channels = {}
-		for channel, channel_name in channels.iteritems():
+		for channel, channel_name in channels.items():
 			if channel_name:
 				self.point_grid[channel] = {}
 				points[channel] = []
 
 		if not vcgt:
-			irange = range(0, 256)
+			irange = list(range(0, 256))
 		elif "data" in vcgt: # table
 			data = list(vcgt['data'])
 			while len(data) < len(channels):
@@ -247,27 +251,27 @@ class LUTCanvas(plot.PlotCanvas):
 			if (not isinstance(vcgt, ICCP.VideoCardGammaTableType) and
 				not isinstance(data[0], ICCP.CurveType)):
 				# Coordinate list
-				irange = range(0, len(data[0]))
+				irange = list(range(0, len(data[0])))
 				set_linear_points = True
-				for channel in xrange(len(data)):
+				for channel in range(len(data)):
 					if channel in points:
 						for n, y in data[channel]:
 							if not detect_increments and set_linear_points:
 								linear_points.append([n, n])
 							if connection_colorspace == "Lab":
-								n = colormath.XYZ2Lab(0, n / axis_x * 100, 0)[0] * (axis_x / 100.0)
+								n = colormath.XYZ2Lab(0, old_div(n, axis_x) * 100, 0)[0] * (axis_x / 100.0)
 							points[channel].append([n, y])
 							idx = int(round(n / 255.0 * 4095))
 							self.point_grid[channel][idx] = y
 						set_linear_points = False
 			else:
-				irange = range(0, vcgt['entryCount'])
+				irange = list(range(0, vcgt['entryCount']))
 				maxv = math.pow(256, vcgt['entrySize']) - 1
 				for i in irange:
-					j = i * (axis_y / (vcgt['entryCount'] - 1))
+					j = i * (old_div(axis_y, (vcgt['entryCount'] - 1)))
 					if not detect_increments:
 						linear_points.append([j, j])
-					for channel, values in points.iteritems():
+					for channel, values in points.items():
 						n = float(data[channel][i]) / maxv * axis_x
 						if not detect_increments or not values or \
 						   i == vcgt['entryCount'] - 1 or n != i:
@@ -276,7 +280,7 @@ class LUTCanvas(plot.PlotCanvas):
 							   values[-1][0] == values[-1][1]:
 								values.append([i - 1, i - 1])
 							if connection_colorspace == "Lab":
-								n = colormath.XYZ2Lab(0, n / axis_x * 100, 0)[0] * (axis_x / 100.0)
+								n = colormath.XYZ2Lab(0, old_div(n, axis_x) * 100, 0)[0] * (axis_x / 100.0)
 							if connection_colorspace in ("Lab", "XYZ"):
 								values.append([n, j])
 								idx = int(round(n / 255.0 * 4095))
@@ -286,7 +290,7 @@ class LUTCanvas(plot.PlotCanvas):
 								idx = int(round(j / 255.0 * 4095))
 								self.point_grid[channel][idx] = n
 		else: # formula
-			irange = range(0, 256)
+			irange = list(range(0, 256))
 			step = 100.0 / axis_y
 			for i in irange:
 				# float2dec(v) fixes miniscule deviations in the calculated gamma
@@ -319,7 +323,7 @@ class LUTCanvas(plot.PlotCanvas):
 		linear = [[0, 0], [irange[-1], irange[-1]]]
 		
 		if not vcgt:
-			for values in points.itervalues():
+			for values in points.values():
 				if detect_increments:
 					values[:] = linear
 				else:
@@ -328,7 +332,7 @@ class LUTCanvas(plot.PlotCanvas):
 		# Note: We need to make sure each point is a float because it
 		# might be a decimal.Decimal, which can't be divided by floats!
 		self.unique = {}
-		for channel, values in points.iteritems():
+		for channel, values in points.items():
 			self.unique[channel] = len(set(round(float(y) / axis_y * irange[-1])
 										   for x, y in values))
 
@@ -336,27 +340,27 @@ class LUTCanvas(plot.PlotCanvas):
 		color = 'white'
 			
 		if len(points) > 1:
-			values0 = points.values()[0]
+			values0 = list(points.values())[0]
 			# identical = all(values == values0
 							# for values in points.itervalues())
 			identical = (all(all(x == values0[i][0] and
 								 abs(y - values0[i][1]) < 0.005
 								 for i, (x, y) in enumerate(values))
-							 for values in points.itervalues()))
+							 for values in points.values()))
 		else:
 			identical = False
 
 		if identical:
-			channels_label = "".join(channels.values())
+			channels_label = "".join(list(channels.values()))
 			color = self.get_color(channels_label, color)
-		for channel_name in channels.values():
+		for channel_name in list(channels.values()):
 			if channel_name:
 				legend.append(channel_name)
-		linear_points = [(i, int(round(v / axis_y * maxv))) for i, v in
+		linear_points = [(i, int(round(old_div(v, axis_y) * maxv))) for i, v in
 						 linear_points]
 		seen_values = []
 		seen_labels = []
-		for channel, values in points.iteritems():
+		for channel, values in points.items():
 			channel_label = channels[channel]
 			if not identical:
 				color = self.colors.get(colorspace + "_" + channel_label,
@@ -375,7 +379,7 @@ class LUTCanvas(plot.PlotCanvas):
 				label = channel_label
 				suffix = ''
 				if channel_label in ("a*", "b*") and len(values) > 1:
-					half = len(values) / 2
+					half = old_div(len(values), 2)
 					values2 = values[:half]
 					values = values[half:]
 					center_x = (values[0][0] + values2[-1][0]) / 2.0
@@ -558,8 +562,8 @@ class LUTCanvas(plot.PlotCanvas):
 			w -= 45
 		if h > 20:
 			h -= 20
-		ratio = [w / h,
-				 h / w]
+		ratio = [old_div(w, h),
+				 old_div(h, w)]
 		axis_x, axis_y = self.axis_x, self.axis_y
 		spec_x = self.spec_x
 		spec_y = self.spec_y
@@ -592,8 +596,8 @@ class LUTCanvas(plot.PlotCanvas):
 		x, y = self.center_x, self.center_y
 		w = (axis_x[1] - axis_x[0]) * self._zoomfactor
 		h = (axis_y[1] - axis_y[0]) * self._zoomfactor
-		axis_x = (x - w / 2, x + w / 2)
-		axis_y = (y - h / 2, y + h / 2)
+		axis_x = (x - old_div(w, 2), x + old_div(w, 2))
+		axis_y = (y - old_div(h, 2), y + old_div(h, 2))
 		self.Draw(graphics, axis_x, axis_y)
 	
 	def _set_center(self):
@@ -661,16 +665,16 @@ class LUTCanvas(plot.PlotCanvas):
 				w -= 45
 			if h > 20:
 				h -= 20
-			ratio = [w / h,
-					 h / w]
+			ratio = [old_div(w, h),
+					 old_div(h, w)]
 			if ratio[0] > 1:
 				max_abs_axis_x *= ratio[0]
 			if ratio[1] > 1:
 				max_abs_axis_y *= ratio[1]
-			if max_abs_x / max_abs_y > max_abs_axis_x / max_abs_axis_y:
-				self._zoomfactor = max_abs_x / max_abs_axis_x
+			if old_div(max_abs_x, max_abs_y) > old_div(max_abs_axis_x, max_abs_axis_y):
+				self._zoomfactor = old_div(max_abs_x, max_abs_axis_x)
 			else:
-				self._zoomfactor = max_abs_y / max_abs_axis_y
+				self._zoomfactor = old_div(max_abs_y, max_abs_axis_y)
 	
 	def zoom(self, direction=1):
 		_zoomfactor = .025 * direction
@@ -1176,12 +1180,12 @@ class LUTFrame(BaseFrame):
 		XYZ_triplets = []
 		Lab_triplets = []
 		devicevalues = []
-		for i in xrange(0, size):
+		for i in range(0, size):
 			if direction in ("b", "if"):
 				if intent == "a":
 					# For display profiles, identical to relcol
 					# For print profiles, makes max L* match paper white
-					XYZwp_ir = profile.tags.wtpt.ir.values()
+					XYZwp_ir = list(profile.tags.wtpt.ir.values())
 					Labwp_ir = profile.tags.wtpt.ir.Lab
 					XYZwp_D50 = colormath.Lab2XYZ(Labwp_ir[0], 0, 0)
 					X, Y, Z = colormath.Lab2XYZ(min(i * (100.0 / (size - 1)), Labwp_ir[0]), 0, 0)
@@ -1247,7 +1251,7 @@ class LUTFrame(BaseFrame):
 				mono_end = 0
 				for i, values in enumerate(odata):
 					if values[3] is True or i == 0:
-						if (do_low_clip and (i / maxval * 100 < Lbp or
+						if (do_low_clip and (old_div(i, maxval) * 100 < Lbp or
 											 i == 0)) or (make_mono and i == 0):
 							# Set to black
 							values[:] = [0.0, 0.0, 0.0]
@@ -1255,7 +1259,7 @@ class LUTFrame(BaseFrame):
 							  [round(v, 4) for v in values[:3]] == [1, 1, 1]):
 							# Set to white
 							values[:] = [1.0, 1.0, 1.0]
-						elif i / maxval * 100 < Lbp:
+						elif old_div(i, maxval) * 100 < Lbp:
 							mono_end = i + 2
 					else:
 						# First non-clipping value disables low clipping
@@ -1268,7 +1272,7 @@ class LUTFrame(BaseFrame):
 					# monotonically increasing
 					mono = [[], [], []]
 					for i, values in enumerate(odata):
-						for j in xrange(3):
+						for j in range(3):
 							mono[j].append(values[j])
 					for j, values in enumerate(mono):
 						for i, v in enumerate(values):
@@ -1279,9 +1283,9 @@ class LUTFrame(BaseFrame):
 						if i + 2 < mono_end:
 							mono[j][i:mono_end] = colormath.make_monotonically_increasing(values[i:mono_end])
 					odata = []
-					for i in xrange(len(mono[0])):
+					for i in range(len(mono[0])):
 						values = []
-						for j in xrange(3):
+						for j in range(3):
 							values.append(mono[j][i])
 						odata.append(values)
 
@@ -1305,7 +1309,7 @@ class LUTFrame(BaseFrame):
 					continue
 				v *= maxv
 				if profile.connectionColorSpace == "RGB":
-					x = j / (size - 1.0) * maxv
+					x = old_div(j, (size - 1.0)) * maxv
 					if i == 0:
 						self.rTRC.append([x, v])
 					elif i == 1:
@@ -1317,10 +1321,10 @@ class LUTFrame(BaseFrame):
 					if direction in ("b", "if"):
 						X = Z = Y
 					elif intent == "a":
-						wp = profile.tags.wtpt.ir.values()
+						wp = list(profile.tags.wtpt.ir.values())
 						X, Y, Z = colormath.adapt(X, Y, Z, wp, (1, 1, 1))
 					elif intent != "a":
-						wp = profile.tags.wtpt.ir.values()
+						wp = list(profile.tags.wtpt.ir.values())
 						X, Y, Z = colormath.adapt(X, Y, Z, "D50", (1, 1, 1))
 					if i == 0:
 						self.rTRC.append([X, v])
@@ -1352,9 +1356,9 @@ class LUTFrame(BaseFrame):
 				continue
 			# Second, interpolate to given size and use the same y axis 
 			# for all channels
-			for i in xrange(size):
-				x.append(i / (size - 1.0) * maxv)
-				y.append(colormath.Lab2XYZ(i / (size - 1.0) * 100, 0, 0)[1] * 100)
+			for i in range(size):
+				x.append(old_div(i, (size - 1.0)) * maxv)
+				y.append(colormath.Lab2XYZ(old_div(i, (size - 1.0)) * 100, 0, 0)[1] * 100)
 			xi = numpy.interp(y, yp, xp)
 			yi = numpy.interp(x, xi, y)
 			prev = getattr(self, "tf_" + sig)
@@ -1506,7 +1510,7 @@ class LUTFrame(BaseFrame):
 	def add_toggles(self, parent, sizer):
 		# Add toggle checkboxes for up to 16 channels
 		self.toggles = []
-		for i in xrange(16):
+		for i in range(16):
 			toggle = CustomCheckBox(parent, -1, "",
 									name="toggle_channel_%i" % i)
 			toggle.SetForegroundColour(FGCOLOUR)
@@ -1535,36 +1539,36 @@ class LUTFrame(BaseFrame):
 					if 2 in self.client.unique:  # Blue
 						unique.append(self.client.unique[2])
 					unique = min(unique)
-					legend[-1] += " %.1f%% (%i/%i)" % (unique / 
+					legend[-1] += " %.1f%% (%i/%i)" % (old_div(unique, 
 													   (self.client.entryCount / 
-														100.0), unique, 
+														100.0)), unique, 
 													   self.client.entryCount)
 				else:
 					if 0 in self.client.unique:  # Red
-						legend[-1] += " %.1f%% (%i/%i)" % (self.client.unique[0] / 
+						legend[-1] += " %.1f%% (%i/%i)" % (old_div(self.client.unique[0], 
 														   (self.client.entryCount / 
-															100.0), 
+															100.0)), 
 														   self.client.unique[0], 
 														   self.client.entryCount)
 					if 1 in self.client.unique:  # Green
-						legend[-1] += " %.1f%% (%i/%i)" % (self.client.unique[1] / 
+						legend[-1] += " %.1f%% (%i/%i)" % (old_div(self.client.unique[1], 
 														   (self.client.entryCount / 
-															100.0), 
+															100.0)), 
 														   self.client.unique[1], 
 														   self.client.entryCount)
 					if 2 in self.client.unique:  # Blue
-						legend[-1] += " %.1f%% (%i/%i)" % (self.client.unique[2] / 
+						legend[-1] += " %.1f%% (%i/%i)" % (old_div(self.client.unique[2], 
 														   (self.client.entryCount / 
-															100.0), 
+															100.0)), 
 														   self.client.unique[2], 
 														   self.client.entryCount)
-				unique = self.client.unique.values()
+				unique = list(self.client.unique.values())
 				if not 0 in unique and not "R=G=B" in colorants:
 					unique = min(unique)
 					legend[-1] += ", %s %.1f%% (%i/%i)" % (lang.getstr("grayscale"), 
-														   unique / 
+														   old_div(unique, 
 														   (self.client.entryCount / 
-															100.0), unique, 
+															100.0)), unique, 
 														   self.client.entryCount)
 		elif (self.plot_mode_select.GetStringSelection() == lang.getstr('[rgb]TRC') and
 			  isinstance(self.tf_rTRC, (ICCP.CurveType, CoordinateType)) and
@@ -1578,13 +1582,13 @@ class LUTFrame(BaseFrame):
 				len(self.tf_rTRC) == len(self.tf_gTRC) == len(self.tf_bTRC)):
 				if isinstance(self.tf_rTRC, ICCP.CurveType):
 					self.trc = ICCP.CurveType(profile=self.profile)
-					for i in xrange(len(self.tf_rTRC)):
+					for i in range(len(self.tf_rTRC)):
 						self.trc.append((self.tf_rTRC[i] +
 										 self.tf_gTRC[i] +
 										 self.tf_bTRC[i]) / 3.0)
 				else:
 					self.trc = CoordinateType(self.profile)
-					for i in xrange(len(self.tf_rTRC)):
+					for i in range(len(self.tf_rTRC)):
 						self.trc.append([(self.tf_rTRC[i][0] +
 										  self.tf_gTRC[i][0] +
 										  self.tf_bTRC[i][0]) / 3.0,
@@ -1719,7 +1723,7 @@ class LUTFrame(BaseFrame):
 					maxv = 100
 				else:
 					maxv = 255
-				lin = [v / (entry_count - 1.0) * maxv for v in xrange(entry_count)]
+				lin = [old_div(v, (entry_count - 1.0)) * maxv for v in range(entry_count)]
 				data = []
 				for i, table in enumerate(tables):
 					xp = lin
@@ -1727,7 +1731,7 @@ class LUTFrame(BaseFrame):
 						if to_pcs:
 							table = [v / 65280.0 * 65535.0 for v in table]
 						else:
-							xp = [min(v / (entry_count - 1.0) * (100 + 25500 / 65280.0), maxv) for v in range(entry_count)]
+							xp = [min(old_div(v, (entry_count - 1.0)) * (100 + 25500 / 65280.0), maxv) for v in range(entry_count)]
 					yp = [v / 65535.0 * maxv for v in table]
 					if curves_colorspace == "Lab" and i == 0:
 						# Interpolate to given size and use the same y axis 
@@ -2027,7 +2031,7 @@ class LUTFrame(BaseFrame):
 				identical = len(value) > 1 and all(v[1] == value[0][1] for v in value)
 				if 1:
 					joiner = u" \u2192 "
-					label = filter(None, channels.values())
+					label = [_f for _f in list(channels.values()) if _f]
 					if (self.plot_mode_select.GetStringSelection() == lang.getstr('[rgb]TRC') and
 						self.profile.connectionColorSpace != "RGB"):
 						if self.show_as_L.GetValue():
@@ -2058,8 +2062,7 @@ class LUTFrame(BaseFrame):
 							#RGB = "R=G=B %.2f" % value[0][1]
 					else:
 						RGB = " ".join([format[1] % (v, s) for v, s in
-										filter(lambda v: v[1] is not None,
-											   value)])
+										[v for v in value if v[1] is not None]])
 					vin = pointXY[0]
 					if not "L*" in label and ("a*" in label or "b*" in label):
 						vin = -128 + pointXY[0] / 100.0 * (255 + 255 / 256.0)
@@ -2094,11 +2097,10 @@ class LUTFrame(BaseFrame):
 							continue
 						if identical:
 							label = "=".join(["%s" % s for s, v in
-											  filter(lambda s_v: s_v[1] is not None,
-													 value)])
+											  [s_v for s_v in value if s_v[1] is not None]])
 						# Note: We need to make sure each point is a float because it
 						# might be a decimal.Decimal, which can't be divided by floats!
-						gamma.append(label + " %.2f" % round(math.log(float(y) / axis_y) / math.log(x / axis_x), 2))
+						gamma.append(label + " %.2f" % round(old_div(math.log(float(y) / axis_y), math.log(old_div(x, axis_x))), 2))
 						if "=" in label:
 							break
 					if gamma:

@@ -2,6 +2,10 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import str
+from past.utils import old_div
 import exceptions
 import os
 import re
@@ -1288,7 +1292,7 @@ class LUT3DFrame(BaseFrame):
 						  fileMask=lang.getstr("filetype.icc")
 								   + "|*.icc;*.icm")
 			ctrl = getattr(self, "%s_profile_ctrl" % which)
-			for name, value in kwargs.iteritems():
+			for name, value in kwargs.items():
 				setattr(ctrl, name, value)
 
 		self.lut3d_setup_language()
@@ -1376,9 +1380,7 @@ class LUT3DFrame(BaseFrame):
 			encodings.insert(2, "T")
 		config.valid_values["3dlut.encoding.input"] = encodings
 		# collink: xvYCC output encoding is not supported
-		config.valid_values["3dlut.encoding.output"] = filter(lambda v:
-															  v not in ("T", "x", "X"),
-															  encodings)
+		config.valid_values["3dlut.encoding.output"] = [v for v in encodings if v not in ("T", "x", "X")]
 		self.encoding_input_ab = {}
 		self.encoding_input_ba = {}
 		self.encoding_output_ab = {}
@@ -1420,7 +1422,7 @@ class LUT3DFrame(BaseFrame):
 								  self.getcfg("3dlut.hdr_maxmll"),
 								  self.getcfg("3dlut.hdr_maxmll_alt_clip"))
 		diffuse_ref_cdm2 = 94.37844
-		diffuse_PQ = colormath.specialpow(diffuse_ref_cdm2 / 10000, 1.0 / -2084)
+		diffuse_PQ = colormath.specialpow(old_div(diffuse_ref_cdm2, 10000), 1.0 / -2084)
 		# Determine white cd/m2 after roll-off
 		diffuse_tgt_cdm2 = colormath.specialpow(bt2390.apply(diffuse_PQ),
 												  -2084) * 10000

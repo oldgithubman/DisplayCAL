@@ -2,10 +2,18 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import chr
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
 from future.utils import raise_
 from __future__ import with_statement
 from datetime import datetime
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 htmlparser = HTMLParser()
 from time import gmtime, sleep, strftime, time
 import errno
@@ -180,8 +188,7 @@ class AboutDialog(wx.Dialog):
 		for item in items:
 			if (not isinstance(item, wx.Window) and
 				hasattr(item, "__iter__") and
-				filter(lambda subitem: not isinstance(subitem, (int, float)),
-					   item)):
+				[subitem for subitem in item if not isinstance(subitem, (int, float))]):
 				sizer = wx.BoxSizer(wx.HORIZONTAL)
 				self.add_item(sizer, self.panel.Sizer)
 				for subitem in item:
@@ -223,7 +230,7 @@ class AnimatedBitmap(wx.PyControl):
 		-1 means last frame.
 		
 		"""
-		self.dpiscale = getcfg("app.dpi") / get_default_dpi()
+		self.dpiscale = old_div(getcfg("app.dpi"), get_default_dpi())
 		if self.dpiscale > 1:
 			size = tuple(int(round(v * self.dpiscale)) if v != -1 else v
 						 for v in size)
@@ -365,7 +372,7 @@ class AuiBetterTabArt(AuiDefaultTabArt):
 		# we'll just use a rectangle for the clipping region for now --
 		dc.SetClippingRegion(tab_x, tab_y, clip_width+1, tab_height-3)
 
-		border_points = [wx.Point() for i in xrange(6)]
+		border_points = [wx.Point() for i in range(6)]
 		agwFlags = self.GetAGWFlags()
 		
 		if agwFlags & aui.AUI_NB_BOTTOM:
@@ -413,7 +420,7 @@ class AuiBetterTabArt(AuiDefaultTabArt):
 			dc.DrawPoint(r.x+r.width-2, r.y+1)
 
 			# set rectangle down a bit for gradient drawing
-			r.SetHeight(r.GetHeight()/2)
+			r.SetHeight(old_div(r.GetHeight(),2))
 			r.x += 2
 			r.width -= 3
 			r.y += r.height
@@ -493,7 +500,7 @@ class AuiBetterTabArt(AuiDefaultTabArt):
 			# draw bitmap
 			dc.DrawBitmap(pagebitmap,
 						  bitmap_offset,
-						  drawn_tab_yoff + (drawn_tab_height/2) - (pagebitmap.GetHeight()/2),
+						  drawn_tab_yoff + (old_div(drawn_tab_height,2)) - (old_div(pagebitmap.GetHeight(),2)),
 						  True)
 
 			text_offset = bitmap_offset + pagebitmap.GetWidth()
@@ -506,7 +513,7 @@ class AuiBetterTabArt(AuiDefaultTabArt):
 		
 		draw_text = aui.ChopText(dc, caption, tab_width - (text_offset-tab_x) - close_button_width)
 
-		ypos = drawn_tab_yoff + (drawn_tab_height)/2 - (texty/2) - 1
+		ypos = drawn_tab_yoff + old_div((drawn_tab_height),2) - (old_div(texty,2)) - 1
 
 		offset_focus = text_offset     
 
@@ -561,11 +568,11 @@ class AuiBetterTabArt(AuiDefaultTabArt):
 			shift = (agwFlags & aui.AUI_NB_BOTTOM and [1] or [0])[0]
 
 			if agwFlags & aui.AUI_NB_CLOSE_ON_TAB_LEFT:
-				rect = wx.Rect(tab_x + 4, tab_y + (tab_height - bmp.GetHeight())/2 - shift,
+				rect = wx.Rect(tab_x + 4, tab_y + old_div((tab_height - bmp.GetHeight()),2) - shift,
 							   close_button_width, tab_height)
 			else:
 				rect = wx.Rect(tab_x + tab_width - close_button_width - 1,
-							   tab_y + (tab_height - bmp.GetHeight())/2 - shift,
+							   tab_y + old_div((tab_height - bmp.GetHeight()),2) - shift,
 							   close_button_width, tab_height)
 
 			rect = aui.IndentPressedBitmap(rect, close_button_state)
@@ -1050,7 +1057,7 @@ class BaseFrame(wx.Frame):
 														 ("values",
 														  config.valid_values)):
 									valid = response[section] = []
-									for name, values in options.iteritems():
+									for name, values in options.items():
 										valid.append({"name": name,
 													  "values": values})
 							else:
@@ -1058,9 +1065,9 @@ class BaseFrame(wx.Frame):
 											"values": config.valid_values}
 							if responseformats[conn] == "plain":
 								valid = []
-								for section, options in response.iteritems():
+								for section, options in response.items():
 									valid.append("[%s]" % section)
-									for name, values in options.iteritems():
+									for name, values in options.items():
 										valid.append("%s = %s" %
 													 (name,
 													  " ".join(demjson.encode(value)
@@ -1395,9 +1402,9 @@ class BaseFrame(wx.Frame):
 				if (child and isinstance(child, wx.grid.Grid) and
 					child.IsShownOnScreen()):
 					response = []
-					for row in xrange(child.GetNumberRows()):
+					for row in range(child.GetNumberRows()):
 						values = []
-						for col in xrange(child.GetNumberCols()):
+						for col in range(child.GetNumberCols()):
 							values.append(child.GetCellValue(row, col))
 						if responseformats[conn] == "plain":
 							values = demjson.encode(values).strip("[]").replace('","', '" "')
@@ -1504,7 +1511,7 @@ class BaseFrame(wx.Frame):
 			else:
 				response = "invalid"
 		elif data[0] == "getwindows" and len(data) == 1:
-			windows = filter(lambda win: win.IsShown(), wx.GetTopLevelWindows())
+			windows = [win for win in wx.GetTopLevelWindows() if win.IsShown()]
 			response = [format_ui_element(win, responseformats[conn])
 						for win in windows]
 			win = None
@@ -1563,7 +1570,7 @@ class BaseFrame(wx.Frame):
 						elif isinstance(child, (aui.AuiNotebook,
 												labelbook.FlatBookBase,
 												wx.Notebook)):
-							for page_idx in xrange(child.GetPageCount()):
+							for page_idx in range(child.GetPageCount()):
 								if child.GetPageText(page_idx) == value:
 									child.SetSelection(page_idx)
 									event = wx.EVT_NOTEBOOK_PAGE_CHANGED
@@ -1587,9 +1594,9 @@ class BaseFrame(wx.Frame):
 								else:
 									response = "forbidden"
 						elif isinstance(child, wx.ListCtrl):
-							for row in xrange(child.GetItemCount()):
+							for row in range(child.GetItemCount()):
 								item = []
-								for col in xrange(child.GetColumnCount()):
+								for col in range(child.GetColumnCount()):
 									item.append(child.GetItem(row, col).GetText())
 								if " ".join(item) == value:
 									state = child.GetItemState(row, wx.LIST_STATE_SELECTED)
@@ -1753,7 +1760,7 @@ class BaseFrame(wx.Frame):
 		else:
 			if isinstance(response, dict):
 				response = ["%s = %s" % (name, value) for name, value in
-							response.iteritems()]
+							response.items()]
 			if isinstance(response, list):
 				response = "\n".join(response)
 		try:
@@ -2046,7 +2053,7 @@ class BaseFrame(wx.Frame):
 		"""
 		if not parent:
 			parent = self
-		scale = getcfg("app.dpi") / get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), get_default_dpi())
 		for child in parent.GetAllChildren():
 			if debug:
 				safe_print(child.__class__, child.Name)
@@ -2185,7 +2192,7 @@ class BaseInteractiveDialog(wx.Dialog):
 							   base_appid + "-testchart-editor": "testchart.edit",
 							   base_appid + "-vrml-to-x3d-converter": "vrml_to_x3d_converter"}
 				title = lang.getstr(appid2title.get(appid, "window.title"))
-		scale = getcfg("app.dpi") / get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), get_default_dpi())
 		if scale > 1 and size == (400, -1):
 			size = size[0] * scale, size[1]
 		wx.Dialog.__init__(self, parent, id, title, pos, size, style, name)
@@ -2433,7 +2440,7 @@ class HtmlInfoDialog(BaseInteractiveDialog):
 									   bitmap, pos, size, False, log,
 									   bitmap_margin=bitmap_margin)
 
-		scale = getcfg("app.dpi") / config.get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), config.get_default_dpi())
 		if scale < 1:
 			scale = 1
 		htmlwnd = HtmlWindow(self, -1, size=(332 * scale, 200 * scale),
@@ -2452,7 +2459,7 @@ class HtmlWindow(wx.html.HtmlWindow):
 
 	def __init__(self, *args, **kwargs):
 		wx.html.HtmlWindow.__init__(self, *args, **kwargs)
-		scale = max(getcfg("app.dpi") / config.get_default_dpi(), 1)
+		scale = max(old_div(getcfg("app.dpi"), config.get_default_dpi()), 1)
 		if "gtk3" in wx.PlatformInfo:
 			size = int(round(wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT).PointSize * scale))
 		else:
@@ -2831,14 +2838,14 @@ class FileBrowseBitmapButtonWithChoiceHistory(filebrowse.FileBrowseButtonWithHis
 
 			# Find smallest display client area height
 			max_height = sys.maxsize
-			for i in xrange(wx.Display.GetCount()):
+			for i in range(wx.Display.GetCount()):
 				max_height = min(wx.Display(i).ClientArea[3], max_height)
 
 			# Check if combined height of items exceeds available client area.
 			# Account for possible current value which is not in list and
 			# for GNOME top bar (assume item height for the latter).
 			if line_height * len(value) + 2 > max_height:
-				max_entries = int(max_height / line_height) - 2
+				max_entries = int(old_div(max_height, line_height)) - 2
 				safe_print("Discarding entries to work around wxGTK Wayland "
 						   "dropdown popup menu bug:",
 						   ", ".join(value[max_entries:]))
@@ -3013,7 +3020,7 @@ class FlatShadedButton(GradientButton):
 				 pos=wx.DefaultPosition, size=wx.DefaultSize,
 				 style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				 name="gradientbutton", bgcolour=None, fgcolour=None):
-		self.dpiscale = getcfg("app.dpi") / get_default_dpi()
+		self.dpiscale = old_div(getcfg("app.dpi"), get_default_dpi())
 		GradientButton.__init__(self, parent, id, bitmap, label, pos, size,
 								style, validator, name)
 		self._bgcolour = bgcolour  # Original bgcolour
@@ -3182,13 +3189,13 @@ class FlatShadedButton(GradientButton):
 		else:
 			bw = bh = 0
 			
-		pos_x = (width-bw-tw)/2+shadowOffset      # adjust for bitmap and text to centre        
+		pos_x = old_div((width-bw-tw),2)+shadowOffset      # adjust for bitmap and text to centre        
 		if bitmap:
-			pos_y =  (height-bh)/2+shadowOffset
+			pos_y =  old_div((height-bh),2)+shadowOffset
 			gc.DrawBitmap(bitmap, pos_x, pos_y, bw, bh) # draw bitmap if available
 			pos_x = pos_x + 5   # extra spacing from bitmap
 
-		gc.DrawText(label, pos_x + bw + shadowOffset, (height-th)/2-.5+shadowOffset) 
+		gc.DrawText(label, pos_x + bw + shadowOffset, old_div((height-th),2)-.5+shadowOffset) 
 
 	BitmapLabel = property(lambda self: self._bitmap,
 						   lambda self, bitmap: self.SetBitmap(bitmap))
@@ -3259,7 +3266,7 @@ class BorderGradientButton(GradientButton):
 				 pos=wx.DefaultPosition, size=wx.DefaultSize,
 				 style=wx.NO_BORDER, validator=wx.DefaultValidator,
 				 name="gradientbutton"):
-		self.dpiscale = getcfg("app.dpi") / get_default_dpi()
+		self.dpiscale = old_div(getcfg("app.dpi"), get_default_dpi())
 		self.use_sierra_style = sys.platform == "darwin"
 		GradientButton.__init__(self, parent, id, bitmap, label, pos, size,
 								style, validator, name)
@@ -3299,9 +3306,9 @@ class BorderGradientButton(GradientButton):
 
 		# We take the percent way of the colour from colour -. black
 		i = percent
-		r = ((i*rd*100)/high)/100
-		g = ((i*gd*100)/high)/100
-		b = ((i*bd*100)/high)/100
+		r = old_div((old_div((i*rd*100),high)),100)
+		g = old_div((old_div((i*gd*100),high)),100)
+		b = old_div((old_div((i*bd*100),high)),100)
 
 		return wx.Colour(r, g, b)
 	
@@ -3369,7 +3376,7 @@ class BorderGradientButton(GradientButton):
 
 		x, y, width, height = clientRect        
 		
-		gradientRect.SetHeight(gradientRect.GetHeight()/2 + ((capture==self and [1] or [0])[0]))
+		gradientRect.SetHeight(old_div(gradientRect.GetHeight(),2) + ((capture==self and [1] or [0])[0]))
 
 		fgcolor = self.ForegroundColour
 
@@ -3518,7 +3525,7 @@ class BorderGradientButton(GradientButton):
 		else:
 			bw = bh = 0
 			
-		pos_x = (width-bw-tw)/2+shadowOffset      # adjust for bitmap and text to centre        
+		pos_x = old_div((width-bw-tw),2)+shadowOffset      # adjust for bitmap and text to centre        
 		if self.IsEnabled():
 			if capture == self and self._mouseAction in (CLICK, HOVER):
 				bitmap = self._bitmapselected
@@ -3531,7 +3538,7 @@ class BorderGradientButton(GradientButton):
 		else:
 			bitmap = self._bitmapdisabled
 		if bitmap:
-			pos_y =  (height-bh)/2+shadowOffset
+			pos_y =  old_div((height-bh),2)+shadowOffset
 			gc.DrawBitmap(bitmap, pos_x, pos_y, bw, bh) # draw bitmap if available
 			pos_x = pos_x + 4   # extra spacing from bitmap
 
@@ -3969,8 +3976,8 @@ class CustomGrid(wx.grid.Grid):
 			if shift:
 				self.BeginBatch()
 				rows = self.GetSelectionRows()
-				sel = range(min(self._anchor_row, row),
-							max(self._anchor_row, row) + 1)
+				sel = list(range(min(self._anchor_row, row),
+							max(self._anchor_row, row) + 1))
 				desel = []
 				add = []
 				for i in rows:
@@ -4661,7 +4668,7 @@ class HyperLinkCtrl(hyperlink.HyperLinkCtrl):
 
 	if sys.platform not in ("darwin", "win32") and "gtk3" in wx.PlatformInfo:
 		def SetFont(self, font):
-			scale = (getcfg("app.dpi") / get_default_dpi()) or 1
+			scale = (old_div(getcfg("app.dpi"), get_default_dpi())) or 1
 			font.PointSize *= scale
 			hyperlink.HyperLinkCtrl.SetFont(self, font)
 
@@ -4677,7 +4684,7 @@ def fancytext_Renderer_getCurrentFont(self):
 	if "size" in font:
 		_font.SetPointSize(font["size"])
 	if "gtk3" in wx.PlatformInfo:
-		scale = getcfg("app.dpi") / get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), get_default_dpi())
 		_font.SetPointSize(_font.GetPointSize() * scale)
 	if "style" in font:
 		_font.SetStyle(font["style"])
@@ -4720,7 +4727,7 @@ class BetterPyGauge(pygauge.PyGauge):
 	def __init__(self, parent, id=wx.ID_ANY, range=100, pos=wx.DefaultPosition,
                  size=(-1,30), style=0, pd=None):
 		self.pd = pd
-		self.dpiscale = getcfg("app.dpi") / get_default_dpi()
+		self.dpiscale = old_div(getcfg("app.dpi"), get_default_dpi())
 		if self.dpiscale > 1:
 			size = tuple(int(round(v * self.dpiscale)) if v != -1 else v
 						 for v in size)
@@ -4760,7 +4767,7 @@ class BetterPyGauge(pygauge.PyGauge):
 		gc.SetBrush(wx.Brush(self.BackgroundColour))
 		gc.DrawRoundedRectangle(rect.X, rect.Y, rect.Width - 1 * self.dpiscale,
 								rect.Height - 1 * self.dpiscale,
-								(rect.Height - 1 * self.dpiscale) / 2)
+								old_div((rect.Height - 1 * self.dpiscale), 2))
 
 		pad = self.GetBorderPadding()
 		if self._border_colour:
@@ -4779,7 +4786,7 @@ class BetterPyGauge(pygauge.PyGauge):
 														 rect.Y, c1, c2))
 				gc.SetPen(wx.TRANSPARENT_PEN)
 				gc.DrawRoundedRectangle(rect.X, rect.Y, w, rect.Height,
-										(rect.Height) / 2)
+										old_div((rect.Height), 2))
 
 	def OnTimer(self, event):
 		gradient = self._barGradient
@@ -4872,7 +4879,7 @@ class BetterPyGauge(pygauge.PyGauge):
 					value[i] = self._range
 		
 			self._update_value.append(value[i])
-			self._update_step.append((float(value[i]) - v)/(time/50))
+			self._update_step.append(old_div((float(value[i]) - v),(old_div(time,50))))
 
 
 class BetterStaticFancyTextBase(object):
@@ -5592,12 +5599,12 @@ class ProgressDialog(wx.Dialog):
 		self.buttonpanel.Layout()
 		
 		# Use an accelerator table for 0-9, a-z, numpad
-		keycodes = range(48, 58) + range(97, 123) + numpad_keycodes
+		keycodes = list(range(48, 58)) + list(range(97, 123)) + numpad_keycodes
 		self.id_to_keycode = {}
 		for keycode in keycodes:
 			self.id_to_keycode[wx.Window.NewControlId()] = keycode
 		accels = []
-		for id, keycode in self.id_to_keycode.iteritems():
+		for id, keycode in self.id_to_keycode.items():
 			self.Bind(wx.EVT_MENU, keyhandler or self.key_handler, id=id)
 			accels.append((wx.ACCEL_NORMAL, keycode, id))
 		self.SetAcceleratorTable(wx.AcceleratorTable(accels))
@@ -5655,7 +5662,7 @@ class ProgressDialog(wx.Dialog):
 		self.stop_timer()
 		del self.timer
 		if hasattr(wx.Window, "UnreserveControlId"):
-			for id in self.id_to_keycode.iterkeys():
+			for id in self.id_to_keycode.keys():
 				if id < 0:
 					try:
 						wx.Window.UnreserveControlId(id)
@@ -5826,7 +5833,7 @@ class ProgressDialog(wx.Dialog):
 		if getattr(self, "time2", 0) and value:
 			t = time()
 			if self.time2 < t:
-				remaining = ((t - self.time2) / value *
+				remaining = (old_div((t - self.time2), value) *
 								  (self.gauge.GetRange() - value))
 				if remaining >= 0:
 					self.remaining_time.Label = strftime("%H:%M:%S",
@@ -5855,7 +5862,7 @@ class ProgressDialog(wx.Dialog):
 					bitmaps.append(im)
 				# Needs to be exactly 17 images
 				if bitmaps and len(bitmaps) == 17:
-					for i in xrange(7):
+					for i in range(7):
 						bitmaps.extend(bitmaps[9:17])
 					bitmaps.extend(bitmaps[9:13])
 					# Fade in
@@ -5867,7 +5874,7 @@ class ProgressDialog(wx.Dialog):
 					for i, im in enumerate(bitmaps[:9]):
 						bitmaps[i] = im.ConvertToBitmap()
 					# Normal
-					for i in xrange(41):
+					for i in range(41):
 						im = bitmaps[i + 19].Copy()
 						im.RotateHue(.05 * (i / 50.0))
 						bitmaps[i + 19] = im.ConvertToBitmap()
@@ -5896,7 +5903,7 @@ class ProgressDialog(wx.Dialog):
 						bitmaps.append(im)
 				# Needs to be exactly 9 images
 				if bitmaps and len(bitmaps) == 9:
-					for i in xrange(3):
+					for i in range(3):
 						bitmaps.extend(bitmaps[:9])
 					# Fade in
 					for i, im in enumerate(bitmaps[:27]):
@@ -5906,7 +5913,7 @@ class ProgressDialog(wx.Dialog):
 					for i, im in enumerate(bitmaps[27:]):
 						bitmaps[i + 27] = im.ConvertToBitmap()
 					# Fade out
-					for i in xrange(3):
+					for i in range(3):
 						bitmaps.extend(bitmaps[27:36])
 					for i, bmp in enumerate(bitmaps[36:]):
 						im = bmp.ConvertToImage().AdjustChannels(1, 1, 1, 1 - i / 26.0)
@@ -6261,7 +6268,7 @@ class TabButton(PlateButton):
 
 	def __init__(self, *args, **kwargs):
 		from .config import get_default_dpi, getcfg
-		self.dpiscale = max(getcfg("app.dpi") / get_default_dpi(), 1.0)
+		self.dpiscale = max(old_div(getcfg("app.dpi"), get_default_dpi()), 1.0)
 		PlateButton.__init__(self, *args, **kwargs)
 		self.Unbind(wx.EVT_PAINT)
 		self.Bind(wx.EVT_PAINT, self.OnPaint)
@@ -6409,7 +6416,7 @@ class TabButton(PlateButton):
 		if self._style & platebtn.PB_STYLE_SQUARE:
 			rad = 0
 		else:
-			rad = (height - 3) / 2
+			rad = old_div((height - 3), 2)
 
 		gc.SetPen(wx.TRANSPARENT_PEN)
 
@@ -6639,7 +6646,7 @@ class TooltipWindow(InvincibleFrame):
 					    wx.FRAME_FLOAT_ON_PARENT) &
 					   ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX), wrap=70,
 				 use_header=True, show=True, scrolled=False):
-		scale = getcfg("app.dpi") / get_default_dpi()
+		scale = old_div(getcfg("app.dpi"), get_default_dpi())
 		if scale > 1 and size == (400, -1):
 			size = size[0] * scale, size[1]
 		InvincibleFrame.__init__(self, parent, id, title, pos, size, style)
@@ -6764,7 +6771,7 @@ class TwoWaySplitter(FourWaySplitter):
 		
 		if self._expanded < 0:
 			totw = width - barSize - 2*border
-			self._splitx = max((self._fhor*totw)/10000, self._minimum_pane_size)
+			self._splitx = max(old_div((self._fhor*totw),10000), self._minimum_pane_size)
 			self._splity = height
 			rightw = max(totw - self._splitx, 0)
 			if win0:
@@ -6816,7 +6823,7 @@ class TwoWaySplitter(FourWaySplitter):
 		
 		dc.DrawRectangle(splitx, 0, sashwidth, height)
 		
-		dc.DrawBitmap(self._sashbitmap, splitx, height / 2 - sashheight / 2, True)
+		dc.DrawBitmap(self._sashbitmap, splitx, old_div(height, 2) - old_div(sashheight, 2), True)
 	
 	def GetExpandedSize(self):
 		return self._expandedsize
@@ -6966,7 +6973,7 @@ class TwoWaySplitter(FourWaySplitter):
 				self._offx += 1
 			elif self._expanded > -1 and pt.x > self._minimum_pane_size:
 				self._fhor = int((pt.x - barSize - 2*border) / float(totw) * 10000)
-				self._splitx = (self._fhor*totw)/10000
+				self._splitx = old_div((self._fhor*totw),10000)
 				self._offx = pt.x - self._splitx + 1
 				self._expanded = -1
 
@@ -7072,7 +7079,7 @@ def get_html_colors(allow_alpha=False):
 			linkcolor = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 	vlinkcolor = wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
 	if not allow_alpha:
-		for key, value in locals().items():
+		for key, value in list(locals().items()):
 			if isinstance(value, wx.Colour):
 				locals()[key].Set(*value[:3])
 	return bgcolor, text, linkcolor, vlinkcolor
@@ -7132,7 +7139,7 @@ def format_ui_element(child, format="plain"):
 	if child.TopLevelParent:
 		if not hasattr(child.TopLevelParent, "_win2name"):
 			child.TopLevelParent._win2name = {}
-			for name, attr in child.TopLevelParent.__dict__.iteritems():
+			for name, attr in child.TopLevelParent.__dict__.items():
 				if isinstance(attr, wx.Window):
 					child.TopLevelParent._win2name[attr] = name
 		name = child.TopLevelParent._win2name.get(child, child.Name)
@@ -7141,9 +7148,9 @@ def format_ui_element(child, format="plain"):
 	items = getattr(child, "Items", [])
 	value = None
 	if not items and isinstance(child, wx.ListCtrl):
-		for row in xrange(child.GetItemCount()):
+		for row in range(child.GetItemCount()):
 			item = []
-			for col in xrange(child.GetColumnCount()):
+			for col in range(child.GetColumnCount()):
 				item.append(child.GetItem(row, col).GetText())
 			items.append(" ".join(item))
 		row = child.GetFirstSelected()
@@ -7151,14 +7158,14 @@ def format_ui_element(child, format="plain"):
 			value = items[row]
 	elif isinstance(child, (aui.AuiNotebook, labelbook.FlatBookBase,
 							wx.Notebook)):
-		for page_idx in xrange(child.GetPageCount()):
+		for page_idx in range(child.GetPageCount()):
 			items.append(child.GetPageText(page_idx))
 		page_idx = child.GetSelection()
 		if page_idx != wx.NOT_FOUND:
 			value = child.GetPageText(page_idx)
 	cols = []
 	if isinstance(child, wx.grid.Grid):
-		for col in xrange(child.GetNumberCols()):
+		for col in range(child.GetNumberCols()):
 			cols.append(child.GetColLabelValue(col))
 	if format != "plain":
 		uielement = {"class": child.__class__.__name__, "name": name,
@@ -7276,11 +7283,11 @@ def test():
 	lang.init()
 	def key_handler(self, event):
 		if event.GetEventType() == wx.EVT_CHAR_HOOK.typeId:
-			print("Received EVT_CHAR_HOOK", event.GetKeyCode(), repr(unichr(event.GetKeyCode())))
+			print("Received EVT_CHAR_HOOK", event.GetKeyCode(), repr(chr(event.GetKeyCode())))
 		elif event.GetEventType() == wx.EVT_KEY_DOWN.typeId:
-			print("Received EVT_KEY_DOWN", event.GetKeyCode(), repr(unichr(event.GetKeyCode())))
+			print("Received EVT_KEY_DOWN", event.GetKeyCode(), repr(chr(event.GetKeyCode())))
 		elif event.GetEventType() == wx.EVT_MENU.typeId:
-			print("Received EVT_MENU", self.id_to_keycode.get(event.GetId()), repr(unichr(self.id_to_keycode.get(event.GetId()))))
+			print("Received EVT_MENU", self.id_to_keycode.get(event.GetId()), repr(chr(self.id_to_keycode.get(event.GetId()))))
 		event.Skip()
 			
 	ProgressDialog.key_handler = key_handler

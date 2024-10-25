@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 from time import gmtime, strftime
 import math
 import os
@@ -292,7 +295,7 @@ class ReportFrame(BaseFrame):
 			accurate = cgats.queryv1("ACCURATE_EXPECTED_VALUES") == "true"
 			if data_format:
 				basename, ext = os.path.splitext(chart)
-				for column in data_format.itervalues():
+				for column in data_format.values():
 					column_prefix = column.split("_")[0]
 					if (column_prefix in ("CMYK", "LAB", "RGB", "XYZ") and
 						column_prefix not in values and
@@ -550,7 +553,7 @@ class ReportFrame(BaseFrame):
 						  dialogTitle=lang.getstr(msg), 
 						  fileMask=wildcard)
 			ctrl = getattr(self, "%s_ctrl" % which)
-			for name, value in kwargs.iteritems():
+			for name, value in kwargs.items():
 				setattr(ctrl, name, value)
 
 		items = []
@@ -818,7 +821,7 @@ class ReportFrame(BaseFrame):
 			else:
 				settle_mult = 1.0
 			tpp = [v + min_delay_s + .145 * settle_mult for v in tpp]
-			avg_delay = sum(tpp) / (8 / 3.0)
+			avg_delay = old_div(sum(tpp), (8 / 3.0))
 			seconds = avg_delay * patches
 			oseconds = seconds
 			if getcfg("drift_compensation.blacklevel"):
@@ -847,7 +850,7 @@ class ReportFrame(BaseFrame):
 				else:
 					dur = 0
 				ffp_delay = max(0.8 - dur, 0)
-				seconds += seconds / max(interval, avg_delay) * (duration + ffp_delay)
+				seconds += old_div(seconds, max(interval, avg_delay)) * (duration + ffp_delay)
 			timestamp = gmtime(seconds)
 			hours = int(strftime("%H", timestamp))
 			minutes = int(strftime("%M", timestamp))

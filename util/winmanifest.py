@@ -93,6 +93,8 @@ Updates or adds manifest <xmlpath> as resource in Win32 PE file <dstpath>.
 """
 from __future__ import print_function
 
+from builtins import str
+from builtins import object
 try:
     import hashlib
 except ImportError as detail:
@@ -168,7 +170,7 @@ if hashlib is None:
     hashlib = _Hash()
 
 
-class _Dummy:
+class _Dummy(object):
     pass
 
 
@@ -737,7 +739,7 @@ class Manifest(object):
     
     def parse(self, filename_or_file, initialize=True):
         """ Load manifest from file or file object """
-        if isinstance(filename_or_file, (str, unicode)):
+        if isinstance(filename_or_file, (str, str)):
             filename = filename_or_file
         else:
             filename = filename_or_file.name
@@ -745,7 +747,7 @@ class Manifest(object):
             domtree = minidom.parse(filename_or_file)
         except xml.parsers.expat.ExpatError as e:
             args = [e.args[0]]
-            if isinstance(filename, unicode):
+            if isinstance(filename, str):
                 filename = filename.encode(sys.getdefaultencoding(), "replace")
             args.insert(0, '\n  File "%s"\n   ' % filename)
             raise ManifestXMLParseError(" ".join([str(arg) for arg in args]))
@@ -927,7 +929,7 @@ class Manifest(object):
         """ Write the manifest as XML to a file or file object """
         if not filename_or_file:
             filename_or_file = self.filename
-        if isinstance(filename_or_file, (str, unicode)):
+        if isinstance(filename_or_file, (str, str)):
             filename_or_file = open(filename_or_file, "wb")
         xmlstr = self.toprettyxml(indent, newl, encoding)
         filename_or_file.write(xmlstr)
@@ -938,7 +940,7 @@ class Manifest(object):
         """ Write the manifest as XML to a file or file object """
         if not filename_or_file:
             filename_or_file = self.filename
-        if isinstance(filename_or_file, (str, unicode)):
+        if isinstance(filename_or_file, (str, str)):
             filename_or_file = open(filename_or_file, "wb")
         xmlstr = self.toxml(indent, newl, encoding)
         filename_or_file.write(xmlstr)
@@ -950,8 +952,8 @@ def ManifestFromResFile(filename, names=None, languages=None):
     res = GetManifestResources(filename, names, languages)
     pth = []
     if res and res[RT_MANIFEST]:
-        while isinstance(res, dict) and res.keys():
-            key = res.keys()[0]
+        while isinstance(res, dict) and list(res.keys()):
+            key = list(res.keys())[0]
             pth.append(str(key))
             res = res[key]
     if isinstance(res, dict):

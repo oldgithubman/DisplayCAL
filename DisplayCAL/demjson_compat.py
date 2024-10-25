@@ -6,7 +6,9 @@ demjson 1.3 compatibilty module
 """
 from __future__ import print_function
 
-from StringIO import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from io import StringIO
 import json
 import sys
 

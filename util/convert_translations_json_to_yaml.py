@@ -23,7 +23,7 @@ def convert(infilename):
 
 	outfilename = os.path.splitext(infilename)[0] + ".yaml"
 	with open(outfilename, "wb") as outfile:
-		for key in natsort(dictin.keys(), False):
+		for key in natsort(list(dictin.keys()), False):
 			outfile.write('"%s": |-\n' % key.encode("UTF-8"))
 			for line in dictin[key].split("\n"):
 				# Do not use splitlines, returns empty list for empty string

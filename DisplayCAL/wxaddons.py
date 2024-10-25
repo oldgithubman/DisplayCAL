@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from __future__ import division
+from builtins import chr
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from time import sleep
 import os
 import sys
@@ -93,7 +98,7 @@ def GetAllChildren(self, skip=None):
 	""" Get children of window and its subwindows """
 	if not isinstance(skip, (list, tuple)):
 		skip = [skip]
-	children = filter(lambda child: child not in skip, self.GetChildren())
+	children = [child for child in self.GetChildren() if child not in skip]
 	allchildren = []
 	for child in children:
 		allchildren.append(child)
@@ -133,9 +138,9 @@ def RealCenterOnScreen(self, dir=wx.BOTH):
 	x, y = self.Position
 	left, top, w, h = self.GetDisplay().ClientArea
 	if dir & wx.HORIZONTAL:
-		x = left + w / 2 - self.Size[0] / 2
+		x = left + old_div(w, 2) - old_div(self.Size[0], 2)
 	if dir & wx.VERTICAL:
-		y = top + h / 2 - self.Size[1] / 2
+		y = top + old_div(h, 2) - old_div(self.Size[1], 2)
 	self.Position = x, y
 
 
@@ -180,7 +185,7 @@ def SetSaneGeometry(self, x=None, y=None, w=None, h=None):
 			xy = [x, y]
 			for i, pos in enumerate([xy,
 									 (x + self.Size[0], y + self.Size[1])]):
-				for j in xrange(2):
+				for j in range(2):
 					if (pos[j] > display_client_rect[j] +
 								 display_client_rect[2 + j] or
 						pos[j] < display_client_rect[j]):
@@ -288,7 +293,7 @@ def draw_granger_rainbow(dc, x=0, y=0, width=1920, height=1080):
 	rainbow_width = width - column_width * 2
 	strip_width = int(rainbow_width / 7.0)
 	rainbow_width = strip_width * 7
-	column_width = (width - rainbow_width) / 2
+	column_width = old_div((width - rainbow_width), 2)
 
 	# Gray columns left/right
 	dc.GradientFillLinear(wx.Rect(x, y, width, height),
@@ -311,13 +316,13 @@ def draw_granger_rainbow(dc, x=0, y=0, width=1920, height=1080):
 	# White-to-black gradient with transparency for shading
 	# Top half - white to transparent
 	dc.GradientFillLinear(wx.Rect(x + column_width, y,
-								  rainbow_width, height / 2),
+								  rainbow_width, old_div(height, 2)),
 						  wx.Colour(0, 0, 0, 0),
 						  wx.Colour(255, 255, 255, 255),
 						  wx.UP)
 	# Bottom half - transparent to black
-	dc.GradientFillLinear(wx.Rect(x + column_width, y + height / 2,
-								  rainbow_width, height / 2),
+	dc.GradientFillLinear(wx.Rect(x + column_width, y + old_div(height, 2),
+								  rainbow_width, old_div(height, 2)),
 						  wx.Colour(0, 0, 0, 255),
 						  wx.Colour(255, 255, 255, 0),
 						  wx.UP)

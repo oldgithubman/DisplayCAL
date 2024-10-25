@@ -26,6 +26,8 @@
 # under the terms of the GNU GPL v3, as an alternative to the X11/MIT license.
 
 from __future__ import print_function  # Python 2.6/2.7 compatibility
+from builtins import range
+from builtins import object
 import ctypes, sys
 from ctypes import windll, wintypes
 from uuid import UUID
@@ -44,7 +46,7 @@ class GUID(ctypes.Structure):   # [1]
         for i in range(2, 8):
             self.Data4[i] = rest>>(8 - i - 1)*8 & 0xff
 
-class FOLDERID:     # [2]
+class FOLDERID(object):     # [2]
     AccountPictures         = UUID('{008ca0b1-55b4-4c56-b8a8-4de4b299d3be}')
     AdminTools              = UUID('{724EF170-A42D-4FEF-9F26-B60E846FBA4F}')
     ApplicationShortcuts    = UUID('{A3918781-E5F2-4890-B3D9-A7E54332328C}')
@@ -140,7 +142,7 @@ class FOLDERID:     # [2]
     VideosLibrary           = UUID('{491E922F-5643-4AF4-A7EB-4E7A138D8174}')
     Windows                 = UUID('{F38BF404-1D43-42F2-9305-67DE0B28FC23}')
 
-class UserHandle:   # [3]
+class UserHandle(object):   # [3]
     current = wintypes.HANDLE(0)
     common  = wintypes.HANDLE(-1)
 

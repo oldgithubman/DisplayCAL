@@ -18,6 +18,11 @@ This module also provides some data items to the user:
 """
 from __future__ import absolute_import
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import range
+from builtins import object
 __all__ = [
     "NamedTemporaryFile", "TemporaryFile", # high level safe interfaces
     "SpooledTemporaryFile",
@@ -35,9 +40,9 @@ import errno as _errno
 from random import Random as _Random
 
 try:
-    from cStringIO import StringIO as _StringIO
+    from io import StringIO as _StringIO
 except ImportError:
-    from StringIO import StringIO as _StringIO
+    from io import StringIO as _StringIO
 
 try:
     import fcntl as _fcntl
@@ -57,9 +62,9 @@ else:
 
 
 try:
-    import thread as _thread
+    import _thread as _thread
 except ImportError:
-    import dummy_thread as _thread
+    import _dummy_thread as _thread
 _allocate_lock = _thread.allocate_lock
 
 _text_openflags = _os.O_RDWR | _os.O_CREAT | _os.O_EXCL
@@ -105,7 +110,7 @@ def _exists(fn):
     else:
         return True
 
-class _RandomNameSequence:
+class _RandomNameSequence(object):
     """An instance of _RandomNameSequence generates an endless
     sequence of unpredictable strings which can safely be incorporated
     into file names.  Each string is six characters long.  Multiple
@@ -125,7 +130,7 @@ class _RandomNameSequence:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         m = self.mutex
         c = self.characters
         choose = self.rng.choice
@@ -187,7 +192,7 @@ def _get_default_tempdir():
         if dir != _os.curdir:
             dir = _os.path.normcase(_os.path.abspath(dir))
         # Try only a few names per directory.
-        for seq in xrange(100):
+        for seq in range(100):
             name = next(namer)
             filename = _os.path.join(dir, name)
             try:
@@ -226,7 +231,7 @@ def _mkstemp_inner(dir, pre, suf, flags):
 
     names = _get_candidate_names()
 
-    for seq in xrange(TMP_MAX):
+    for seq in range(TMP_MAX):
         name = next(names)
         file = _os.path.join(dir, pre + name + suf)
         try:
@@ -316,7 +321,7 @@ def mkdtemp(suffix="", prefix=template, dir=None):
 
     names = _get_candidate_names()
 
-    for seq in xrange(TMP_MAX):
+    for seq in range(TMP_MAX):
         name = next(names)
         file = _os.path.join(dir, prefix + name + suffix)
         try:
@@ -350,7 +355,7 @@ def mktemp(suffix="", prefix=template, dir=None):
         dir = gettempdir()
 
     names = _get_candidate_names()
-    for seq in xrange(TMP_MAX):
+    for seq in range(TMP_MAX):
         name = next(names)
         file = _os.path.join(dir, prefix + name + suffix)
         if not _exists(file):
@@ -359,7 +364,7 @@ def mktemp(suffix="", prefix=template, dir=None):
     raise IOError(_errno.EEXIST, "No usable temporary filename found")
 
 
-class _TemporaryFileWrapper:
+class _TemporaryFileWrapper(object):
     """Temporary file wrapper
 
     This class provides a wrapper around files opened for
@@ -485,7 +490,7 @@ else:
             _os.close(fd)
             raise
 
-class SpooledTemporaryFile:
+class SpooledTemporaryFile(object):
     """Temporary file wrapper, specialized to switch from
     StringIO to a real file when it exceeds a certain size or
     when a fileno is needed.
@@ -567,8 +572,8 @@ class SpooledTemporaryFile:
     def newlines(self):
         return self._file.newlines
 
-    def next(self):
-        return self._file.next
+    def __next__(self):
+        return self._file.__next__
 
     def read(self, *args):
         return self._file.read(*args)

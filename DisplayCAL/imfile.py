@@ -2,6 +2,13 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import division
+from builtins import chr
+from builtins import str
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
 import math
 import os
 import struct
@@ -95,10 +102,10 @@ def write(data, stream_or_filename, bitdepth=16, format=None, dimensions=None,
 
 def write_rgb_clut(stream_or_filename, clutres=33, bitdepth=16, format=None):
 	clut = []
-	for R in xrange(clutres):
-		for G in xrange(clutres):
+	for R in range(clutres):
+		for G in range(clutres):
 			clut.append([])
-			for B in xrange(clutres):
+			for B in range(clutres):
 					RGB = [v * (1.0 / (clutres - 1)) for v in (R, G, B)]
 					clut[-1].append([v * (2 ** bitdepth - 1) for v in RGB])
 	write(clut, stream_or_filename, bitdepth, format)
@@ -228,10 +235,10 @@ class Image(object):
 																   "height")]
 		# X offset
 		stream.write(struct.pack(">I", self.extrainfo.get("offset_x",
-														  (sw - w) / 2)))
+														  old_div((sw - w), 2))))
 		# Y offset
 		stream.write(struct.pack(">I", self.extrainfo.get("offset_y",
-														  (sh - h) / 2)))
+														  old_div((sh - h), 2))))
 		# X center
 		stream.write(struct.pack(">f", self.extrainfo.get("center_x", sw / 2.0)))
 		# Y center

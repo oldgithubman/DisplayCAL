@@ -63,7 +63,16 @@ http://pexpect.sourceforge.net/
 $Id: pexpect.py 507 2007-12-27 02:40:52Z noah $
 """
 from __future__ import absolute_import
+from __future__ import division
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import chr
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from future.utils import raise_
 import os, sys, time
 import select
@@ -83,7 +92,7 @@ if sys.platform != 'win32':
     import resource
     import fcntl
 else:
-    from StringIO import StringIO
+    from io import StringIO
     from ctypes import windll
     import pywintypes
     from win32com.shell.shellcon import CSIDL_APPDATA
@@ -234,8 +243,8 @@ def run (command, timeout=-1, withexitstatus=False, events=None, extra_args=None
     else:
         child = spawn(command, timeout=timeout, maxread=2000, logfile=logfile, cwd=cwd, env=env)
     if events is not None:
-        patterns = events.keys()
-        responses = events.values()
+        patterns = list(events.keys())
+        responses = list(events.values())
     else:
         patterns=None # We assume that EOF or TIMEOUT will save us.
         responses=None
@@ -444,7 +453,7 @@ class spawn_unix (object):
         self.name = '<' + repr(self) + '>' # File-like object.
         self.encoding = None # File-like object.
         self.closed = True # File-like object.
-        self.ocwd = os.getcwdu()
+        self.ocwd = os.getcwd()
         self.cwd = cwd
         self.env = env
         self.__irix_hack = (sys.platform.lower().find('irix')>=0) # This flags if we are running on irix
@@ -937,7 +946,7 @@ class spawn_unix (object):
 
         return self
 
-    def next (self):    # File-like object.
+    def __next__ (self):    # File-like object.
 
         """This is to support iterators over a file-like object.
         """
@@ -1658,7 +1667,7 @@ class spawn_windows (spawn_unix, object):
         self.name = '<' + repr(self) + '>' # File-like object.
         self.encoding = None # File-like object.
         self.closed = True # File-like object.
-        self.ocwd = os.getcwdu()
+        self.ocwd = os.getcwd()
         self.cwd = cwd
         self.env = env
         self.codepage = codepage
@@ -1928,7 +1937,7 @@ class spawn_windows (spawn_unix, object):
 # End of spawn_windows class
 ##############################################################################
 
-class Wtty:
+class Wtty(object):
 
     def __init__(self, timeout=30, codepage=None, columns=None, rows=None,
                  cwd=None):
@@ -2128,7 +2137,7 @@ class Wtty:
     
         if len(s) == 0:
             return 0
-        records = [self.createKeyEvent(c) for c in unicode(s)]
+        records = [self.createKeyEvent(c) for c in str(s)]
         self.switchTo()
         try:
             wrote = self.__consin.WriteConsoleInput(records)
@@ -2144,7 +2153,7 @@ class Wtty:
         
         consinfo = self.__consout.GetConsoleScreenBufferInfo()
         x = offset % consinfo['Size'].X
-        y = offset / consinfo['Size'].X
+        y = old_div(offset, consinfo['Size'].X)
         return (x, y)
    
     def getOffset(self, x, y):
@@ -2307,7 +2316,7 @@ class Wtty:
           
         consinfo = self.__consout.GetConsoleScreenBufferInfo()
         cursorPos = consinfo['CursorPosition']
-        maxconsoleY = consinfo['Size'].Y / 2
+        maxconsoleY = old_div(consinfo['Size'].Y, 2)
         reset = False
         eof = False
         try:  
@@ -2477,7 +2486,7 @@ class Wtty:
             raise
         self.switchBack()
     
-class ConsoleReader:
+class ConsoleReader(object):
    
     def __init__(self, path, pid, tid, env=None, cp=None, c=None, r=None, logdir=None):
         self.logdir = logdir
@@ -2529,7 +2538,7 @@ class ConsoleReader:
                     
                     consinfo = consout.GetConsoleScreenBufferInfo()
                     cursorPos = consinfo['CursorPosition']
-                    maxconsoleY = consinfo['Size'].Y / 2
+                    maxconsoleY = old_div(consinfo['Size'].Y, 2)
                     
                     if cursorPos.Y > maxconsoleY and not paused:
                         #log('ConsoleReader.__init__: cursorPos %s' 
@@ -2631,7 +2640,7 @@ class searcher_string (object):
         self.eof_index = -1
         self.timeout_index = -1
         self._strings = []
-        for n, s in zip(range(len(strings)), strings):
+        for n, s in zip(list(range(len(strings))), strings):
             if s is EOF:
                 self.eof_index = n
                 continue
@@ -2652,7 +2661,7 @@ class searcher_string (object):
         if self.timeout_index >= 0:
             ss.append ((self.timeout_index,'    %d: TIMEOUT' % self.timeout_index))
         ss.sort()
-        ss = zip(*ss)[1]
+        ss = list(zip(*ss))[1]
         return '\n'.join(ss)
 
     def search(self, buffer, freshlen, searchwindowsize=None):
@@ -2729,7 +2738,7 @@ class searcher_re (object):
         self.eof_index = -1
         self.timeout_index = -1
         self._searches = []
-        for n, s in zip(range(len(patterns)), patterns):
+        for n, s in zip(list(range(len(patterns))), patterns):
             if s is EOF:
                 self.eof_index = n
                 continue
@@ -2750,7 +2759,7 @@ class searcher_re (object):
         if self.timeout_index >= 0:
             ss.append ((self.timeout_index,'    %d: TIMEOUT' % self.timeout_index))
         ss.sort()
-        ss = zip(*ss)[1]
+        ss = list(zip(*ss))[1]
         return '\n'.join(ss)
 
     def search(self, buffer, freshlen, searchwindowsize=None):

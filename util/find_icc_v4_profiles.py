@@ -20,7 +20,7 @@ for p in set(iccprofiles_home + iccprofiles):
 			else:
 				if profile.version >= 4:
 					safe_print(os.path.join(p, f))
-					safe_print("Descriptions:", profile.tags.desc.keys(),
-												profile.tags.desc.values()[0].keys())
+					safe_print("Descriptions:", list(profile.tags.desc.keys()),
+												list(profile.tags.desc.values())[0].keys())
 					safe_print("")
 

@@ -77,7 +77,9 @@ Latest Revision: Andrea Gavana @ 27 Nov 2009, 17.00 GMT
 Version 0.3
 
 """
+from __future__ import division
 
+from past.utils import old_div
 import wx
 
 
@@ -198,9 +200,9 @@ class GradientButton(wx.PyControl):
 
         # We take the percent way of the colour from colour -. white
         i = percent
-        r = colour.Red() + ((i*rd*100)/high)/100
-        g = colour.Green() + ((i*gd*100)/high)/100
-        b = colour.Blue() + ((i*bd*100)/high)/100
+        r = colour.Red() + old_div((old_div((i*rd*100),high)),100)
+        g = colour.Green() + old_div((old_div((i*gd*100),high)),100)
+        b = colour.Blue() + old_div((old_div((i*bd*100),high)),100)
 
         return wx.Colour(r, g, b)
 
@@ -354,21 +356,21 @@ class GradientButton(wx.PyControl):
 
         x, y, width, height = clientRect        
         
-        gradientRect.SetHeight(gradientRect.GetHeight()/2 + ((capture==self and [1] or [0])[0]))
+        gradientRect.SetHeight(old_div(gradientRect.GetHeight(),2) + ((capture==self and [1] or [0])[0]))
         if capture != self:
             if self._mouseAction == HOVER:
                 topStart, topEnd = self.LightColour(self._topStartColour, 10), self.LightColour(self._topEndColour, 10)
             else:
                 topStart, topEnd = self._topStartColour, self._topEndColour
 
-            rc1 = wx.Rect(x, y, width, height/2)
+            rc1 = wx.Rect(x, y, width, old_div(height,2))
             path1 = self.GetPath(gc, rc1, 8)
-            br1 = gc.CreateLinearGradientBrush(x, y, x, y+height/2, topStart, topEnd)
+            br1 = gc.CreateLinearGradientBrush(x, y, x, y+old_div(height,2), topStart, topEnd)
             gc.SetBrush(br1)
             gc.FillPath(path1) #draw main
 
             path4 = gc.CreatePath()
-            path4.AddRectangle(x, y+height/2-8, width, 8)
+            path4.AddRectangle(x, y+old_div(height,2)-8, width, 8)
             path4.CloseSubpath()
             gc.SetBrush(br1)
             gc.FillPath(path4)            
@@ -390,14 +392,14 @@ class GradientButton(wx.PyControl):
             else:
                 bottomStart, bottomEnd = self._bottomStartColour, self._bottomEndColour
 
-            rc3 = wx.Rect(x, y+height/2, width, height/2)
+            rc3 = wx.Rect(x, y+old_div(height,2), width, old_div(height,2))
             path3 = self.GetPath(gc, rc3, 8)
-            br3 = gc.CreateLinearGradientBrush(x, y+height/2, x, y+height, bottomStart, bottomEnd)
+            br3 = gc.CreateLinearGradientBrush(x, y+old_div(height,2), x, y+height, bottomStart, bottomEnd)
             gc.SetBrush(br3)
             gc.FillPath(path3) #draw main
 
             path4 = gc.CreatePath()
-            path4.AddRectangle(x, y+height/2, width, 8)
+            path4.AddRectangle(x, y+old_div(height,2), width, 8)
             path4.CloseSubpath()
             gc.SetBrush(br3)
             gc.FillPath(path4)
@@ -405,7 +407,7 @@ class GradientButton(wx.PyControl):
             shadowOffset = 0
         else:
         
-            rc2 = wx.Rect(x+1, gradientRect.height/2, gradientRect.width, gradientRect.height)
+            rc2 = wx.Rect(x+1, old_div(gradientRect.height,2), gradientRect.width, gradientRect.height)
             path2 = self.GetPath(gc, rc2, 8)
             gc.SetPen(wx.Pen(self._pressedBottomColour))
             gc.SetBrush(wx.Brush(self._pressedBottomColour))
@@ -426,13 +428,13 @@ class GradientButton(wx.PyControl):
         else:
             bw = bh = 0
             
-        pos_x = (width-bw-tw)/2+shadowOffset      # adjust for bitmap and text to centre        
+        pos_x = old_div((width-bw-tw),2)+shadowOffset      # adjust for bitmap and text to centre        
         if self._bitmap:
-            pos_y =  (height-bh)/2+shadowOffset
+            pos_y =  old_div((height-bh),2)+shadowOffset
             gc.DrawBitmap(self._bitmap, pos_x, pos_y, bw, bh) # draw bitmap if available
             pos_x = pos_x + 2   # extra spacing from bitmap
 
-        gc.DrawText(label, pos_x + bw + shadowOffset, (height-th)/2+shadowOffset) 
+        gc.DrawText(label, pos_x + bw + shadowOffset, old_div((height-th),2)+shadowOffset) 
 
         
     def GetPath(self, gc, rc, r):

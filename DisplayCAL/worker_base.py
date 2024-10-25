@@ -2,6 +2,12 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
 from binascii import hexlify
 import atexit
 import math
@@ -61,7 +67,7 @@ def _mp_xicclu(chunk, thread_abort_event, progress_queue, profile_filename,
 	start = 0
 	num_subchunks = 50
 	subchunksize = float(len(chunk)) / num_subchunks
-	for i in xrange(num_subchunks):
+	for i in range(num_subchunks):
 		if (thread_abort_event is not None and getattr(sys, "_sigbreak", False) and
 			not thread_abort_event.is_set()):
 			thread_abort_event.set()
@@ -72,7 +78,7 @@ def _mp_xicclu(chunk, thread_abort_event, progress_queue, profile_filename,
 		end = int(math.ceil(subchunksize * (i + 1)))
 		xicclu(chunk[start:end])
 		start = end
-		perc = round((i + 1.0) / num_subchunks * 100)
+		perc = round(old_div((i + 1.0), num_subchunks) * 100)
 		if progress_queue and perc > prevperc:
 			progress_queue.put(perc - prevperc)
 			prevperc = perc
@@ -92,10 +98,10 @@ def _mp_generate_B2A_clut(chunk, thread_abort_event, progress_queue,
 	
 	"""
 	if debug:
-		safe_print("comtypes?", "comtypes" in str(sys.modules.keys()))
-		safe_print("numpy?", "numpy" in str(sys.modules.keys()))
-		safe_print("wx?", "wx" in str(sys.modules.keys()))
-		safe_print("x3dom?", "x3dom" in str(sys.modules.keys()))
+		safe_print("comtypes?", "comtypes" in str(list(sys.modules.keys())))
+		safe_print("numpy?", "numpy" in str(list(sys.modules.keys())))
+		safe_print("wx?", "wx" in str(list(sys.modules.keys())))
+		safe_print("x3dom?", "x3dom" in str(list(sys.modules.keys())))
 	if not config.cfg.items(config.ConfigParser.DEFAULTSECT):
 		config.initcfg()
 	idata = []
@@ -132,8 +138,8 @@ def _mp_generate_B2A_clut(chunk, thread_abort_event, progress_queue,
 				xicclu2.exit()
 			xicclu1.exit()
 			return Info(abortmessage)
-		for b in xrange(clutres):
-			for c in xrange(clutres):
+		for b in range(clutres):
+			for c in range(clutres):
 				d, e, f = [v * step for v in (a, b, c)]
 				if profile.connectionColorSpace == "XYZ":
 					# Apply TRC to XYZ values to distribute them optimally
@@ -149,7 +155,7 @@ def _mp_generate_B2A_clut(chunk, thread_abort_event, progress_queue,
 					##raw_input()
 					if intent == "a":
 						v = colormath.adapt(*v + [XYZwp,
-												  profile.tags.wtpt.ir.values()])
+												  list(profile.tags.wtpt.ir.values())])
 				else:
 					# Legacy CIELAB
 					L = Linterp(d * 100)
@@ -167,7 +173,7 @@ def _mp_generate_B2A_clut(chunk, thread_abort_event, progress_queue,
 										 c > threshold2):
 					xicclu2(v)
 				count += 1.0
-			perc = round(count / (chunksize * clutres ** 2) * 100)
+			perc = round(old_div(count, (chunksize * clutres ** 2)) * 100)
 			if progress_queue and perc > prevperc:
 				progress_queue.put(perc - prevperc)
 				prevperc = perc
@@ -324,7 +330,7 @@ def printcmdline(cmd, args=None, fn=safe_print, cwd=None):
 	if args is None:
 		args = []
 	if cwd is None:
-		cwd = os.getcwdu()
+		cwd = os.getcwd()
 	fn("  " + cmd)
 	i = 0
 	lines = []
@@ -353,7 +359,7 @@ class ThreadAbort(object):
 	def __init__(self):
 		self.event = mp.Event()
 
-	def __nonzero__(self):
+	def __bool__(self):
 		return self.event.is_set()
     
 	def __cmp__(self, other):
@@ -601,17 +607,17 @@ class Xicclu(WorkerBase):
 			scale = float(self.scale)
 			idata = list(idata)  # Make a copy
 			for i, v in enumerate(idata):
-				if isinstance(v, (float, int, long)):
+				if isinstance(v, (float, int, int)):
 					self([idata])
 					return
 				if not isinstance(v, basestring):
 					if verbose:
 						for n in v:
-							if not isinstance(n, (float, int, long)):
+							if not isinstance(n, (float, int, int)):
 								raise TypeError("xicclu: Expecting list of "
 												"strings or n-tuples with "
 												"floats")
-					idata[i] = " ".join(str(devi_devip(n / scale) * scale) for n in v)
+					idata[i] = " ".join(str(devi_devip(old_div(n, scale)) * scale) for n in v)
 		else:
 			idata = idata.splitlines()
 		numrows = len(idata)

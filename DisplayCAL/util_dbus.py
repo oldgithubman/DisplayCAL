@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+from past.builtins import basestring
+from builtins import object
 import sys
 
 USE_GI = True
@@ -52,7 +54,7 @@ class DBusObjectInterfaceMethod(object):
 			for arg in args:
 				if isinstance(arg, basestring):
 					format_string += "s"
-				elif isinstance(arg, (int, long)):
+				elif isinstance(arg, (int, int)):
 					if arg < 0:
 						format_string += "i"
 					else:

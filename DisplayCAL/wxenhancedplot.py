@@ -108,7 +108,13 @@ Zooming controls with mouse (when enabled):
     Right mouse click - zoom out centred on click location.
 """
 from __future__ import absolute_import
+from __future__ import division
 
+from builtins import str
+from builtins import map
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from future.utils import raise_
 import functools
 import  string as _string
@@ -242,8 +248,8 @@ class DisplaySide(object):
     def __iter__(self):
         return iter([self.bottom, self.left, self.top, self.right])
 
-    def __nonzero__(self):
-        return bool(filter(None, self))
+    def __bool__(self):
+        return bool([_f for _f in self if _f])
 
 
 # TODO: replace with wx.DCPenChanger/wx.DCBrushChanger, etc.
@@ -437,7 +443,7 @@ def set_displayside(value):
 #
 # Plotting classes...
 #
-class PolyPoints:
+class PolyPoints(object):
     """Base Class for lines and markers
         - All methods are private.
     """
@@ -451,9 +457,9 @@ class PolyPoints:
         self.scaled = self.points
         self.attributes = {}
         self.attributes.update(self._attributes)
-        for name, value in attr.items():   
-            if name not in self._attributes.keys():
-                raise_(KeyError, "Style attribute incorrect. Should be one of %s" % self._attributes.keys())
+        for name, value in list(attr.items()):   
+            if name not in list(self._attributes.keys()):
+                raise_(KeyError, "Style attribute incorrect. Should be one of %s" % list(self._attributes.keys()))
             self.attributes[name] = value
         
     def setLogScale(self, logscale):
@@ -521,7 +527,7 @@ class PolyPoints:
         d= _Numeric.sqrt(_Numeric.add.reduce((p-pxy)**2,1)) #sqrt(dx^2+dy^2)
         pntIndex = _Numeric.argmin(d)
         dist = d[pntIndex]
-        return [pntIndex, self.points[pntIndex], self.scaled[pntIndex] / self._pointSize, dist]
+        return [pntIndex, self.points[pntIndex], old_div(self.scaled[pntIndex], self._pointSize), dist]
         
         
 class PolyLine(PolyPoints):
@@ -730,7 +736,7 @@ class PolyMarker(PolyPoints):
             lines= _Numeric.concatenate((coords,coords),axis=1)+f
             dc.DrawLineList(lines.astype(_Numeric.Int32))
 
-class PlotGraphics:
+class PlotGraphics(object):
     """Container to hold PolyXXX objects and graph labels
         - All methods except __init__ are private.
     """
@@ -1396,7 +1402,7 @@ class PlotCanvas(wx.Panel):
     def PositionScreenToUser(self, pntXY):
         """Converts Screen position to User Coordinates"""
         screenPos= _Numeric.array(pntXY)
-        x,y= (screenPos-self._pointShift)/self._pointScale
+        x,y= old_div((screenPos-self._pointShift),self._pointScale)
         return x,y
         
     def SetXSpec(self, type= 'auto'):
@@ -1687,10 +1693,10 @@ class PlotCanvas(wx.Panel):
                              bottomH, topH, xLabelWH, yLabelWH)
 
         # allow for scaling and shifting plotted points
-        scale = (self.plotbox_size-textSize_scale) / (p2-p1)* _Numeric.array((1,-1))
+        scale = old_div((self.plotbox_size-textSize_scale), (p2-p1))* _Numeric.array((1,-1))
         shift = -p1*scale + self.plotbox_origin + textSize_shift * _Numeric.array((1,-1))
-        self._pointScale= scale / self._pointSize  # make available for mouse events
-        self._pointShift= shift / self._pointSize       
+        self._pointScale= old_div(scale, self._pointSize)  # make available for mouse events
+        self._pointShift= old_div(shift, self._pointSize)       
 
         # Draw ticks
         if self._ticksEnabled:
@@ -1768,8 +1774,8 @@ class PlotCanvas(wx.Panel):
             (graphics, xAxis, yAxis) = self.last_draw
             w = (xAxis[1] - xAxis[0]) * Ratio[0]
             h = (yAxis[1] - yAxis[0]) * Ratio[1]
-            xAxis = ( x - w/2, x + w/2 )
-            yAxis = ( y - h/2, y + h/2 )
+            xAxis = ( x - old_div(w,2), x + old_div(w,2) )
+            yAxis = ( y - old_div(h,2), y + old_div(h,2) )
             self._Draw(graphics, xAxis, yAxis)
         
     def GetClosestPoints(self, pntXY, pointScaled= True):
@@ -1854,7 +1860,7 @@ class PlotCanvas(wx.Panel):
             self._drawRubberBand(self._zoomCorner1, self._zoomCorner2) # add new
         elif self._dragEnabled and event.LeftIsDown():
             coordinates = event.GetPosition()
-            newpos, oldpos = map(_Numeric.array, map(self.PositionScreenToUser, [coordinates, self._screenCoordinates]))
+            newpos, oldpos = list(map(_Numeric.array, list(map(self.PositionScreenToUser, [coordinates, self._screenCoordinates]))))
             dist = newpos-oldpos
             self._screenCoordinates = coordinates
 
@@ -2046,7 +2052,7 @@ class PlotCanvas(wx.Panel):
             else:
                 raise TypeError("object is neither PolyMarker or PolyLine instance")
             # draw legend txt
-            pnt= (trhc[0]+legendLHS+legendSymExt[0]+5*self._pointSize[0], trhc[1]+s+lineHeight/2.-legendTextExt[1]/2)
+            pnt= (trhc[0]+legendLHS+legendSymExt[0]+5*self._pointSize[0], trhc[1]+s+lineHeight/2.-old_div(legendTextExt[1],2))
             dc.DrawText(legend,pnt[0],pnt[1])
         dc.SetFont(self._getFont(self._fontSizeAxis)) # reset
 
@@ -2305,7 +2311,7 @@ class PlotCanvas(wx.Panel):
         b1, b2 = self.last_draw[0].boundingBox()
 
         if self._centerLinesEnabled:
-            x, y = [b1[i] + (b2[i] - b1[i]) / 2.0 for i in xrange(2)]
+            x, y = [b1[i] + (b2[i] - b1[i]) / 2.0 for i in range(2)]
             x, y = self.PositionUserToScreen((x, y))
             x, y = x * self._pointSize[0], y * self._pointSize[1]
             if self._centerLinesEnabled in ('Horizontal', True):
@@ -2376,11 +2382,11 @@ class PlotCanvas(wx.Panel):
         mag = _Numeric.power(10,_Numeric.floor(lower))
         if upper-lower > 6:
             t = _Numeric.power(10,_Numeric.ceil(lower))
-            base = _Numeric.power(10,_Numeric.floor((upper-lower)/6))
+            base = _Numeric.power(10,_Numeric.floor(old_div((upper-lower),6)))
             def inc(t):
                 return t*base-t
         else:
-            t = _Numeric.ceil(_Numeric.power(10,lower)/mag)*mag
+            t = _Numeric.ceil(old_div(_Numeric.power(10,lower),mag))*mag
             def inc(t):
                 return 10**int(_Numeric.floor(_Numeric.log10(t)+1e-16))
         majortick = int(_Numeric.log10(mag))
@@ -2390,7 +2396,7 @@ class PlotCanvas(wx.Panel):
                 ticklabel = '1e%d'%majortick
             else:
                 if upper-lower < 2:
-                    minortick = int(t/pow(10,majortick)+.5)
+                    minortick = int(old_div(t,pow(10,majortick))+.5)
                     ticklabel = '%de%d'%(minortick,majortick)
                 else:
                     ticklabel = ''
@@ -2433,7 +2439,7 @@ class PlotCanvas(wx.Panel):
                 digits = -int(power)
                 format = '%'+repr(digits+2)+'.'+repr(fdigits)+'f'
         ticks = []
-        t = -grid*_Numeric.floor(-lower/grid)
+        t = -grid*_Numeric.floor(old_div(-lower,grid))
         while t <= upper:
             if t == -0:
                 t = 0
@@ -2466,10 +2472,10 @@ class PlotCanvas(wx.Panel):
         self._sb_xfullrange = r_max
 
         unit = (r_max[1]-r_max[0])/float(self.sb_hor.GetRange())
-        pos = int((r_current[0]-r_max[0])/unit)
+        pos = int(old_div((r_current[0]-r_max[0]),unit))
         
         if pos >= 0:
-            pagesize = int((r_current[1]-r_current[0])/unit)
+            pagesize = int(old_div((r_current[1]-r_current[0]),unit))
 
             self.sb_hor.SetScrollbar(pos, pagesize, sbfullrange, pagesize)
             self._sb_xunit = unit
@@ -2487,11 +2493,11 @@ class PlotCanvas(wx.Panel):
             
         self._sb_yfullrange = r_max
         
-        unit = (r_max[1]-r_max[0])/sbfullrange
-        pos = int((r_current[0]-r_max[0])/unit)
+        unit = old_div((r_max[1]-r_max[0]),sbfullrange)
+        pos = int(old_div((r_current[0]-r_max[0]),unit))
         
         if pos >= 0:
-            pagesize = int((r_current[1]-r_current[0])/unit)
+            pagesize = int(old_div((r_current[1]-r_current[0]),unit))
             pos = (sbfullrange-1-pos-pagesize)
             self.sb_vert.SetScrollbar(pos, pagesize, sbfullrange, pagesize)
             self._sb_yunit = unit
@@ -2576,10 +2582,10 @@ class PlotPrintout(wx.Printout):
         # Thicken up pens and increase marker size for printing
         ratioW= float(plotAreaW)/clientDcSize[0]
         ratioH= float(plotAreaH)/clientDcSize[1]
-        aveScale= (ratioW+ratioH)/2
+        aveScale= old_div((ratioW+ratioH),2)
         if self.graph._antiAliasingEnabled and not self.IsPreview():
             scale = dc.GetUserScale()
-            dc.SetUserScale(scale[0] / self.graph._pointSize[0], scale[1] / self.graph._pointSize[1])
+            dc.SetUserScale(old_div(scale[0], self.graph._pointSize[0]), old_div(scale[1], self.graph._pointSize[1]))
         self.graph._setPrinterScale(aveScale)  # tickens up pens for printing
 
         self.graph._printDraw(dc)
@@ -2644,7 +2650,7 @@ def _draw1Objects():
 
     # A few more points...
     pi = _Numeric.pi
-    markers2 = PolyMarker([(0., 0.), (pi/4., 1.), (pi/2, 0.),
+    markers2 = PolyMarker([(0., 0.), (pi/4., 1.), (old_div(pi,2), 0.),
                           (3.*pi/4., -1)], legend='Cross Legend', colour='blue',
                           marker='cross')
     
@@ -2665,7 +2671,7 @@ def _draw2Objects():
 
     # A few more points...
     pi = _Numeric.pi
-    markers1 = PolyMarker([(0., 0.), (pi/4., 1.), (pi/2, 0.),
+    markers1 = PolyMarker([(0., 0.), (pi/4., 1.), (old_div(pi,2), 0.),
                           (3.*pi/4., -1)], legend='Cross Hatch Square', colour='blue', width= 3, size= 6,
                           fillcolour= 'red', fillstyle= wx.CROSSDIAG_HATCH,
                           marker='square')

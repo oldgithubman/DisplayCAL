@@ -40,7 +40,12 @@ Create a new task to be run under the current user account at logon:
 from __future__ import with_statement
 from __future__ import print_function
 from __future__ import absolute_import
-from itertools import izip, imap
+from builtins import zip
+from builtins import map
+from builtins import str
+from builtins import range
+from builtins import object
+
 import codecs
 import os
 from . import subprocess as sp
@@ -79,18 +84,18 @@ class _Dict2XML(OrderedDict):
 
 	def __unicode__(self):
 		items = []
-		for name, value in self.iteritems():
+		for name, value in self.items():
 			if isinstance(value, bool):
 				value = str(value).lower()
 			elif name in ("cls_name", "cls_attr") or not value:
 				continue
 			if isinstance(value, _Dict2XML):
-				item = unicode(value)
+				item = str(value)
 			else:
 				cc = "".join(part[0].upper() + part[1:]
 							 for part in name.split("_"))
 				if isinstance(value, (list, tuple)):
-					item = "\n".join([unicode(item) for item in value])
+					item = "\n".join([str(item) for item in value])
 				else:
 					item = "<%(cc)s>%(value)s</%(cc)s>" % {"cc": cc, "value": value}
 			items.append(indent(item, "  "))
@@ -220,7 +225,7 @@ class Task(_Dict2XML):
 
 	def __str__(self):
 		return universal_newlines("""<?xml version="1.0" encoding="UTF-16"?>
-%s""" % unicode(self)).replace("\n", "\r\n").encode("UTF-16-LE")
+%s""" % str(self)).replace("\n", "\r\n").encode("UTF-16-LE")
 
 
 class TaskScheduler(object):
@@ -366,13 +371,13 @@ class TaskScheduler(object):
 		return task.GetExitCode()
 	
 	def items(self):
-		return zip(self, self.tasks())
+		return list(zip(self, self.tasks()))
 	
 	def iteritems(self):
-		return izip(self, self.itertasks())
+		return zip(self, self.itertasks())
 	
 	def itertasks(self):
-		return imap(self.get, self)
+		return map(self.get, self)
 
 	def run(self, name, elevated=False, echo=False):
 		""" Run existing task """
@@ -419,7 +424,7 @@ class TaskScheduler(object):
 		return self.lastreturncode == 0
 	
 	def tasks(self):
-		return map(self.get, self)
+		return list(map(self.get, self))
 
 
 if __name__ == "__main__":
@@ -438,7 +443,7 @@ if __name__ == "__main__":
 
 	ts = TaskScheduler()
 
-	for taskname, task in ts.iteritems():
+	for taskname, task in ts.items():
 		print("=" * 79)
 		print("%18s:" % "Task", taskname)
 		for name in dir(task):
@@ -447,7 +452,7 @@ if __name__ == "__main__":
 			attr = getattr(task, name)
 			if name.startswith("Get"):
 				if name in ("GetTrigger", "GetTriggerString"):
-					for i in xrange(task.GetTriggerCount()):
+					for i in range(task.GetTriggerCount()):
 						print_task_attr(name[3:] +"(%i)" % i, attr, i)
 				else:
 					print_task_attr(name[3:], attr)

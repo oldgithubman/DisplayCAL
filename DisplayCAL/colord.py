@@ -3,6 +3,9 @@
 from __future__ import with_statement
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from past.builtins import basestring
 from binascii import hexlify
 import os
 import re
@@ -130,7 +133,7 @@ def client_connect():
 
 def device_connect(client, device_id):
 	""" Connect to device """
-	if isinstance(device_id, unicode):
+	if isinstance(device_id, str):
 		device_id = device_id.encode('UTF-8')
 	try:
 		device = client.find_device_sync(device_id, cancellable)
@@ -236,7 +239,7 @@ def get_default_profile(device_id):
 def get_devices_by_kind(kind):
 	if not isinstance(Colord, DBusObject):
 		return []
-	return [Device(unicode(object_path, "UTF-8"))
+	return [Device(str(object_path, "UTF-8"))
 			for object_path in Colord.get_devices_by_kind(kind)]
 
 
@@ -245,8 +248,8 @@ def get_display_devices():
 
 
 def get_display_device_ids():
-	return filter(None, (display.properties.get("DeviceId")
-						 for display in get_display_devices()))
+	return [_f for _f in (display.properties.get("DeviceId")
+						 for display in get_display_devices()) if _f]
 
 
 def get_object_path(search, object_type):
@@ -332,7 +335,7 @@ def install_profile(device_id, profile,
 
 			maxtries = 3
 
-			for n in xrange(1, maxtries + 1):
+			for n in range(1, maxtries + 1):
 				if logfn:
 					logfn("Trying to import profile, attempt %i..." % n)
 				try:
@@ -355,7 +358,7 @@ def install_profile(device_id, profile,
 
 	if not cdprofile:
 		# Query colord for newly added profile
-		for i in xrange(int(timeout / 1.0)):
+		for i in range(int(timeout / 1.0)):
 			try:
 				if Colord and not isinstance(Colord, DBusObject):
 					cdprofile = client.find_profile_sync(profile_id,
@@ -445,7 +448,7 @@ def quirk_manufacturer(manufacturer):
 		return Colord.quirk_vendor_name(manufacturer)
 
 	# Correct some company names
-	for old, new in quirk_cache['vendor_names'].iteritems():
+	for old, new in quirk_cache['vendor_names'].items():
 		if manufacturer.startswith(old):
 			manufacturer = new
 			break
@@ -477,7 +480,7 @@ class Object(DBusObject):
 	def properties(self):
 		try:
 			properties = {}
-			for key, value in self._properties.iteritems():
+			for key, value in self._properties.items():
 				if key == "Profiles":
 					value = [Profile(object_path) for object_path in value]
 				properties[key] = value

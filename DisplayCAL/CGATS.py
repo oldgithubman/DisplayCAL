@@ -8,6 +8,12 @@ Copyright (C) 2008 Florian Hoech
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import division
+from builtins import filter
+from builtins import str
+from builtins import range
+from past.builtins import basestring
+from past.utils import old_div
 import math, os, re, sys
 
 from . import colormath
@@ -18,10 +24,9 @@ from .util_str import safe_unicode
 
 
 def get_device_value_labels(color_rep=None):
-	return filter(bool, map(lambda v: v[1] if not color_rep or v[0] == color_rep
-									  else False,
-							{"CMYK": ("CMYK_C", "CMYK_M", "CMYK_Y", "CMYK_K"),
-							 "RGB": ("RGB_R", "RGB_G", "RGB_B")}.iteritems()))
+	return list(filter(bool, [v[1] if not color_rep or v[0] == color_rep
+									  else False for v in iter({"CMYK": ("CMYK_C", "CMYK_M", "CMYK_Y", "CMYK_K"),
+							 "RGB": ("RGB_R", "RGB_G", "RGB_B")}.items())]))
 
 
 def rpad(value, width):
@@ -34,7 +39,7 @@ def rpad(value, width):
 	
 	"""
 	strval = str(value)
-	if not isinstance(value, (int, float, long, complex)):
+	if not isinstance(value, (int, float, int, complex)):
 		# Return quoted string representation
 		# Also need to escape single quote -> double quote
 		return '"%s"' % strval.replace('"', '""')
@@ -434,7 +439,7 @@ class CGATS(dict):
 		if len(color_rep) == 2:
 			query = {}
 			colorants = []
-			for i in xrange(len(color_rep[0])):
+			for i in range(len(color_rep[0])):
 				for j, channelname in enumerate(color_rep[0]):
 					query["_".join([color_rep[0], channelname])] = {i: 100}.get(j, 0)
 				colorants.append(self.queryi1(query))
@@ -519,11 +524,11 @@ class CGATS(dict):
 										self.parent.vmaxlen + 
 										(1 if self[item] < 0 else 0))
 								   for item in 
-								   self.parent.parent['DATA_FORMAT'].values()))
+								   list(self.parent.parent['DATA_FORMAT'].values())))
 		elif self.type == 'DATA':
 			data = self
 		elif self.type == 'DATA_FORMAT':
-			result.append(' '.join(self.values()))
+			result.append(' '.join(list(self.values())))
 		else:
 			if self.datetime:
 				result.append(self.datetime)
@@ -542,13 +547,13 @@ class CGATS(dict):
 				value = self[key]
 				if key == 'DATA':
 					data = value
-				elif type(value) in (float, int, str, unicode):
+				elif type(value) in (float, int, str, str):
 					if key not in ('NUMBER_OF_FIELDS', 'NUMBER_OF_SETS'):
 						if type(key) == int:
 							result.append(str(value))
 						else:
 							if 'KEYWORDS' in self and \
-								key in self['KEYWORDS'].values():
+								key in list(self['KEYWORDS'].values()):
 								if self.emit_keywords:
 									result.append('KEYWORD "%s"' % key)
 							if isinstance(value, basestring):
@@ -566,12 +571,12 @@ class CGATS(dict):
 				result.append('')
 		if data and data.parent['DATA_FORMAT']:
 			if 'KEYWORDS' in data.parent and self.emit_keywords:
-				for item in data.parent['DATA_FORMAT'].values():
-					if item in data.parent['KEYWORDS'].values():
+				for item in list(data.parent['DATA_FORMAT'].values()):
+					if item in list(data.parent['KEYWORDS'].values()):
 						result.append('KEYWORD "%s"' % item)
 			result.append('NUMBER_OF_FIELDS %s' % len(data.parent['DATA_FORMAT']))
 			result.append('BEGIN_DATA_FORMAT')
-			result.append(' '.join(data.parent['DATA_FORMAT'].values()))
+			result.append(' '.join(list(data.parent['DATA_FORMAT'].values())))
 			result.append('END_DATA_FORMAT')
 			result.append('')
 			result.append('NUMBER_OF_SETS %s' % (len(data)))
@@ -581,7 +586,7 @@ class CGATS(dict):
 											 data.vmaxlen + 
 											 (1 if data[key][item] < 0 else 0)) 
 										for item in 
-										data.parent['DATA_FORMAT'].values()]))
+										list(data.parent['DATA_FORMAT'].values())]))
 			result.append('END_DATA')
 		if (self.parent and self.parent.type or
 			self.type) == 'ROOT' and result and result[-1] != '' and lvl == 0:
@@ -604,7 +609,7 @@ class CGATS(dict):
 			context['KEYWORDS'].parent = context
 			context['KEYWORDS'].root = self.root
 			context['KEYWORDS'].type = 'KEYWORDS'
-		if not keyword in context['KEYWORDS'].values():
+		if not keyword in list(context['KEYWORDS'].values()):
 			newkey = len(context['KEYWORDS'])
 			while newkey in context['KEYWORDS']:
 				newkey += 1
@@ -628,7 +633,7 @@ class CGATS(dict):
 			context = self.parent.parent
 		else:
 			context = self
-		for key in context['KEYWORDS'].keys():
+		for key in list(context['KEYWORDS'].keys()):
 			if context['KEYWORDS'][key] == keyword:
 				del context['KEYWORDS'][key]
 		if remove_value:
@@ -656,7 +661,7 @@ class CGATS(dict):
 		if not data:
 			return False, False
 		valueslist = []
-		for key, item in data.iteritems():
+		for key, item in data.items():
 			values = []
 			for field_name in field_names:
 				values.append(item[field_name])
@@ -893,7 +898,7 @@ class CGATS(dict):
 		"""
 		Move items from start by icrementing or decrementing their key by inc.
 		"""
-		r = xrange(start, len(self) + 1)
+		r = range(start, len(self) + 1)
 		if inc > 0:
 			r = reversed(r)
 		for key in r:
@@ -924,7 +929,7 @@ class CGATS(dict):
 											 'values (%s given)' % (fl, il))
 					dataset = CGATS()
 					i = -1
-					for item in self.parent['DATA_FORMAT'].values():
+					for item in list(self.parent['DATA_FORMAT'].values()):
 						i += 1
 						if isinstance(data, dict):
 							try:
@@ -1208,15 +1213,15 @@ Transform {
 				}
 			]
 		}
-""" % (100 / scale, 100 / scale, colorspace, 10.0 / scale)
+""" % (old_div(100, scale), old_div(100, scale), colorspace, 10.0 / scale)
 				(pxlabel,
 				 nxlabel,
 				 pylabel,
 				 nylabel,
-				 pllabel) = ('"a", "+%i"' % (100 / scale),
-							 '"a", "-%i"' % (100 / scale),
-							 '"b +%i"' % (100 / scale),
-							 '"b -%i"' % (100 / scale),
+				 pllabel) = ('"a", "+%i"' % (old_div(100, scale)),
+							 '"a", "-%i"' % (old_div(100, scale)),
+							 '"b +%i"' % (old_div(100, scale)),
+							 '"b -%i"' % (old_div(100, scale)),
 							 '"L", "+100"')
 			elif colorspace == "ICtCp":
 				scale = 2.0
@@ -1437,7 +1442,7 @@ Transform {
 		children = []
 		sqrt3_100 = math.sqrt(3) * 100
 		sqrt3_50 = math.sqrt(3) * 50
-		for entry in data.itervalues():
+		for entry in data.values():
 			X, Y, Z = colormath.adapt(entry["XYZ_X"],
 									  entry["XYZ_Y"],
 									  entry["XYZ_Z"],
@@ -1455,7 +1460,7 @@ Transform {
 				H, S, z = colormath.RGB2HSI(entry["RGB_R"] / 100.0,
 											entry["RGB_G"] / 100.0,
 											entry["RGB_B"] / 100.0)
-				rad = H * 360 * math.pi / 180
+				rad = old_div(H * 360 * math.pi, 180)
 				x, y = S * z * math.cos(rad), S * z * math.sin(rad)
 				# Fudge device locations into Lab space
 				x, y, z = x * sqrt3_100, y * sqrt3_100, z * sqrt3_100 - sqrt3_50
@@ -1463,7 +1468,7 @@ Transform {
 				H, S, z = colormath.RGB2HSL(entry["RGB_R"] / 100.0,
 											entry["RGB_G"] / 100.0,
 											entry["RGB_B"] / 100.0)
-				rad = H * 360 * math.pi / 180
+				rad = old_div(H * 360 * math.pi, 180)
 				if z > .5:
 					S *= 1 - z
 				else:
@@ -1475,7 +1480,7 @@ Transform {
 				H, S, z = colormath.RGB2HSV(entry["RGB_R"] / 100.0,
 											entry["RGB_G"] / 100.0,
 											entry["RGB_B"] / 100.0)
-				rad = H * 360 * math.pi / 180
+				rad = old_div(H * 360 * math.pi, 180)
 				x, y = S * z * math.cos(rad), S * z * math.sin(rad)
 				# Fudge device locations into Lab space
 				x, y, z = x * sqrt3_50, y * sqrt3_50, z * sqrt3_100 - sqrt3_50
@@ -1666,7 +1671,7 @@ Transform {
 						elif len(result_n):
 							for i in result_n:
 								n = len(result)
-								if result_n[i] not in result.values():
+								if result_n[i] not in list(result.values()):
 									result[n] = result_n[i]
 		
 		if isinstance(result, CGATS):
@@ -1747,11 +1752,11 @@ Transform {
 		# Add entries to DATA_FORMAT
 		Lab_data_format = ("LAB_L", "LAB_A", "LAB_B")
 		for label in Lab_data_format:
-			if not label in data.parent.DATA_FORMAT.values():
+			if not label in list(data.parent.DATA_FORMAT.values()):
 				data.parent.DATA_FORMAT.add_data((label, ))
 
 		# Add L*a*b* to each sample
-		for key, sample in data.iteritems():
+		for key, sample in data.items():
 			cie_values = [sample[label] for label in cie_labels]
 			Lab = colormath.XYZ2Lab(*cie_values)
 			for i, label in enumerate(Lab_data_format):
@@ -1781,10 +1786,10 @@ Transform {
 			for channel in color_rep[0]:
 				device_labels.append(color_rep[0] + "_" + channel)
 			remove = []
-			for key, sample in data.iteritems():
+			for key, sample in data.items():
 				cie_values = [sample[label] for label in cie_labels]
 				# Check if zero
-				if filter(lambda v: v, cie_values):
+				if [v for v in cie_values if v]:
 					# Not all zero. Check if some component(s) equal or below zero
 					if min(cie_values) <= 0:
 						for label in cie_labels:
@@ -1840,8 +1845,8 @@ Transform {
 		"""
 		fixed = 0
 		for labels in get_device_value_labels(color_rep):
-			for dataset in self.query("DATA").itervalues():
-				for item in dataset.queryi(labels).itervalues():
+			for dataset in self.query("DATA").values():
+				for item in dataset.queryi(labels).values():
 					for label in labels:
 						if item[label] > 100:
 							dataset.scale_device_values(color_rep=color_rep)
@@ -1860,10 +1865,10 @@ Transform {
 									 "%.4f %.4f %.4f" % (white_cie["XYZ_X"],
 														 white_cie["XYZ_Y"],
 														 white_cie["XYZ_Z"]))
-					for sample in self.DATA.itervalues():
+					for sample in self.DATA.values():
 						for label in "XYZ":
 							v = sample["XYZ_" + label]
-							sample["XYZ_" + label] = v / white_Y * 100
+							sample["XYZ_" + label] = old_div(v, white_Y) * 100
 				self.add_keyword("NORMALIZED_TO_Y_100", "YES")
 				return True
 		return False
@@ -1871,7 +1876,7 @@ Transform {
 	def quantize_device_values(self, bits=8, quantizer=round):
 		""" Quantize device values to n bits """
 		q = 2 ** bits - 1.0
-		for data in self.queryv("DATA").itervalues():
+		for data in self.queryv("DATA").values():
 			if data.parent.type == "CAL":
 				maxv = 1.0
 				digits = 8
@@ -1883,16 +1888,16 @@ Transform {
 				digits = 4
 			color_rep = (data.parent.queryv1("COLOR_REP") or "").split("_")[0]
 			for labels in get_device_value_labels(color_rep):
-				for item in data.queryi(labels).itervalues():
+				for item in data.queryi(labels).values():
 					for label in labels:
-						item[label] = round(quantizer(item[label] / maxv * q) /
-											q * maxv, digits)
+						item[label] = round(old_div(quantizer(old_div(item[label], maxv) * q),
+											q) * maxv, digits)
 	
 	def scale_device_values(self, factor=100.0 / 255, color_rep=None):
 		""" Scales device values by multiplying with factor. """
 		for labels in get_device_value_labels(color_rep):
-			for data in self.queryv("DATA").itervalues():
-				for item in data.queryi(labels).itervalues():
+			for data in self.queryv("DATA").values():
+				for item in data.queryi(labels).values():
 					for label in labels:
 						item[label] *= factor
 	
@@ -1905,14 +1910,14 @@ Transform {
 		
 		"""
 		n = 0
-		for dataset in self.query("DATA").itervalues():
+		for dataset in self.query("DATA").values():
 			if not dataset.get_cie_data_format():
 				continue
 			if not whitepoint_source:
 				whitepoint_source = dataset.get_white_cie("XYZ")
 			if whitepoint_source:
 				n += 1
-				for item in dataset.queryv1("DATA").itervalues():
+				for item in dataset.queryv1("DATA").values():
 					if "XYZ_X" in item:
 						X, Y, Z = item["XYZ_X"], item["XYZ_Y"], item["XYZ_Z"]
 					else:
@@ -1944,7 +1949,7 @@ Transform {
 		
 		"""
 		n = 0
-		for dataset in self.query("DATA").itervalues():
+		for dataset in self.query("DATA").values():
 			if dataset.type.strip() == "CAL":
 				is_Lab = False
 				labels = ("RGB_R", "RGB_G", "RGB_B")
@@ -2000,17 +2005,17 @@ Transform {
 					white = colormath.Lab2XYZ(*white)
 				else:
 					max_v = white[1]
-					black = [v / max_v for v in black]
-					white = [v / max_v for v in white]
+					black = [old_div(v, max_v) for v in black]
+					white = [old_div(v, max_v) for v in white]
 
 			# Apply black point compensation
 			n += 1
 			for i in data:
-				values = data[i].queryv1(labels).values()
+				values = list(data[i].queryv1(labels).values())
 				if is_Lab:
 					values = colormath.Lab2XYZ(*values)
 				else:
-					values = [v / max_v for v in values]
+					values = [old_div(v, max_v) for v in values]
 				if weight:
 					values = colormath.apply_bpc(values[0], values[1],
 												 values[2], black, bp_out,
@@ -2037,9 +2042,9 @@ Transform {
 		"""
 		data_format = self.get_cie_data_format()
 		if data_format:
-			if "RGB_R" in data_format.values():
+			if "RGB_R" in list(data_format.values()):
 				white = {"RGB_R": 100, "RGB_G": 100, "RGB_B": 100}
-			elif "CMYK_C" in data_format.values():
+			elif "CMYK_C" in list(data_format.values()):
 				white = {"CMYK_C": 0, "CMYK_M": 0, "CMYK_Y": 0, "CMYK_K": 0}
 			else:
 				white = None
@@ -2055,7 +2060,7 @@ Transform {
 							white = None
 						else:
 							if len(white) == 3:
-								white = [v / white[1] * 100 for v in white]
+								white = [old_div(v, white[1]) * 100 for v in white]
 								white = {"XYZ_X": white[0],
 										 "XYZ_Y": white[1],
 										 "XYZ_Z": white[2]}
@@ -2097,12 +2102,11 @@ Transform {
 		if data_format:
 			cie = {}
 			for ch in ("L", "A", "B"):
-				cie[ch] = "LAB_%s" % ch in data_format.values()
-			if len(cie.values()) in (0, 3):
+				cie[ch] = "LAB_%s" % ch in list(data_format.values())
+			if len(list(cie.values())) in (0, 3):
 				for ch in ("X", "Y", "Z"):
-					cie[ch] = "XYZ_%s" % ch in data_format.values()
-				if len(filter(lambda v: v is not False,
-							  cie.itervalues())) in (3, 6):
+					cie[ch] = "XYZ_%s" % ch in list(data_format.values())
+				if len([v for v in iter(cie.values()) if v is not False]) in (3, 6):
 					return data_format
 	
 	pop = remove

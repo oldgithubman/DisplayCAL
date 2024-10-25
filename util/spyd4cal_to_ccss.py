@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from glob import glob
 from time import strftime
 import math
@@ -42,7 +46,7 @@ def readcals(filename):
 	with open(filename, 'rb') as f:
 		buf = f.read()
 		size = f.tell()
-	for i in xrange(size / (41 * 8)):
+	for i in range(old_div(size, (41 * 8))):
 		display = {0: 'Identity',
 				   1: 'LCD (CCFL)',
 				   2: 'Wide Gamut LCD (CCFL)',
@@ -71,7 +75,7 @@ class Spyd4Cal(object):
 		self.end_nm = 780
 		self.norm = 1.0
 		self.spec = []
-		for i in xrange(len(buf) / 8):
+		for i in range(old_div(len(buf), 8)):
 			val = buf2ord64(buf[8 * i:8 * (i + 1)])
 			self.spec.append(IEEE754_64todouble(val))
 	def write_ccss(self, filename):
@@ -107,22 +111,22 @@ DESCRIPTOR "Not specified"
 	   'norm': self.norm})
 			for i, spec in enumerate(self.spec):
 				f.write('KEYWORD "SPEC_%i"\n' % (self.start_nm +
-												 (self.end_nm - self.start_nm) /
-												 (len(self.spec) -1) * i))
+												 old_div((self.end_nm - self.start_nm),
+												 (len(self.spec) -1)) * i))
 			f.write('NUMBER_OF_FIELDS %i\n' % (1 + len(self.spec)))
 			f.write('BEGIN_DATA_FORMAT\n')
 			f.write('SAMPLE_ID ')
 			for i, spec in enumerate(self.spec):
 				f.write('SPEC_%i ' % (self.start_nm +
-									  (self.end_nm - self.start_nm) /
-									  (len(self.spec) -1) * i))
+									  old_div((self.end_nm - self.start_nm),
+									  (len(self.spec) -1)) * i))
 			f.write('''
 END_DATA_FORMAT
 
 NUMBER_OF_SETS 3
 BEGIN_DATA
 ''')
-			for n in xrange(3):
+			for n in range(3):
 				f.write('%i ' % (n + 1))
 				for spec in self.spec:
 					f.write('%.6f ' % spec)
