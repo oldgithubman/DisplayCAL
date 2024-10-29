@@ -1,18 +1,12 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from __future__ import with_statement
 from __future__ import print_function
-from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
 from builtins import str
 from builtins import map
 from builtins import range
-from past.utils import old_div
 from configparser import RawConfigParser
-from distutils.sysconfig import get_python_lib
-from distutils.util import change_root, get_platform
+from distutils.util import get_platform
 from hashlib import md5, sha1
 from subprocess import call, Popen
 from time import gmtime, strftime
@@ -20,7 +14,6 @@ from textwrap import fill
 import calendar
 import codecs
 import glob
-import math
 import os
 import re
 import shutil
@@ -30,10 +23,11 @@ import time
 if sys.platform == "win32":
 	import msilib
 
-sys.path.insert(0, "DisplayCAL")
+# Add the DisplayCAL directory to the system path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "DisplayCAL")))
 
-from util_os import fs_enc, which
-from util_str import strtr
+from DisplayCAL.util_os import fs_enc, which
+from DisplayCAL.util_str import strtr
 
 pypath = os.path.abspath(__file__)
 pydir = os.path.dirname(pypath)
@@ -597,7 +591,7 @@ def setup():
 				if key.startswith("*") and key != "*":
 					untranslated += 1
 			languages.append('<lang percentage="%i">%s</lang>' %
-							 (round((1 - old_div(untranslated, (len(tdict) - 1.0))) * 100),
+							 (round((1 - (untranslated / (len(tdict) - 1.0))) * 100),
 							 code))
 		languages = "\n\t\t".join(languages)
 		tmpl_name = appstream_id + ".appdata.xml"
