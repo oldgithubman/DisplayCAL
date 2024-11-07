@@ -6,7 +6,7 @@ import sys
 if sys.platform == "win32":
 	from ctypes import windll
 
-def get_encoding(stream):
+def get_encoding(stream: object) -> str | None:
 	""" Return stream encoding. """
 	enc = None
 	if stream in (sys.stdin, sys.stdout, sys.stderr):
@@ -17,7 +17,7 @@ def get_encoding(stream):
 			if sys.version_info >= (2, 6):
 				# Windows/Python 2.6+: If a locale is set, the actual encoding 
 				# of stdio changes, but the encoding attribute isn't updated
-				enc = locale.getlocale()[1]
+				enc: str | None = locale.getlocale()[1]
 			if not enc:
 				try:
 					# GetConsoleCP and GetConsoleOutputCP return zero if
@@ -36,8 +36,8 @@ def get_encoding(stream):
 	return enc
 
 
-def get_encodings():
+def get_encodings() -> tuple[str | None, str | None]:
 	""" Return console encoding, filesystem encoding. """
-	enc = get_encoding(sys.stdout)
-	fs_enc = sys.getfilesystemencoding() or enc
+	enc: str | None = get_encoding(sys.stdout)
+	fs_enc: str | None = sys.getfilesystemencoding() or enc
 	return enc, fs_enc

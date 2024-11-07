@@ -1,18 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import filter
-from builtins import range
-from past.builtins import basestring
-from builtins import object
+from builtins import str, filter, range, object
 import fnmatch
 import ctypes
 import errno
 import glob
-import locale
 import os
 import re
 import shutil
@@ -22,6 +15,8 @@ import sys
 from . import tempfile
 import time
 
+import builtins
+
 if sys.platform not in ("darwin", "win32"):
 	# Linux
 	import grp
@@ -30,30 +25,32 @@ if sys.platform not in ("darwin", "win32"):
 if sys.platform != "win32":
 	import fcntl
 
-try:
-	reloaded
-except NameError:
-	# First import. All fine
-	reloaded = 0
-else:
-	# Module is being reloaded. NOT recommended.
-	reloaded += 1
-	import warnings
-	warnings.warn("Module %s is being reloaded. This is NOT recommended." %
-				  __name__, RuntimeWarning)
-	warnings.warn("Implicitly reloading builtins", RuntimeWarning)
-	if sys.platform == "win32":
-		reload(__builtin__)
-	warnings.warn("Implicitly reloading os", RuntimeWarning)
-	reload(os)
-	warnings.warn("Implicitly reloading os.path", RuntimeWarning)
-	reload(os.path)
-	if sys.platform == "win32":
-		warnings.warn("Implicitly reloading win32api", RuntimeWarning)
-		reload(win32api)
+# Remove the reloaded variable and its checks
+# reloaded = 0
+# try:
+#     reloaded  # Check if reloaded is defined
+# except NameError:
+#     # First import. All fine
+#     reloaded = 0
+# else:
+#     # Module is being reloaded. NOT recommended.
+#     reloaded += 1
+#     import warnings
+#     warnings.warn("Module %s is being reloaded. This is NOT recommended." % __name__, RuntimeWarning)
+#     warnings.warn("Implicitly reloading builtins", RuntimeWarning)
+#     if sys.platform == "win32":
+#         from importlib import reload
+#         reload(builtins)
+#     warnings.warn("Implicitly reloading os", RuntimeWarning)
+#     reload(os)
+#     warnings.warn("Implicitly reloading os.path", RuntimeWarning)
+#     reload(os.path)
+#     if sys.platform == "win32":
+#         warnings.warn("Implicitly reloading win32api", RuntimeWarning)
+#         reload(win32api)
 
 if sys.platform == "win32":
-	from win32file import *
+	from win32file import CreateFileW, GENERIC_READ, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT, CloseHandle, GetFileAttributes
 	from winioctlcon import FSCTL_GET_REPARSE_POINT
 	import win32file
 	import win32con
@@ -61,7 +58,7 @@ if sys.platform == "win32":
 	import winerror
 
 # Cache used for safe_shell_filter() function
-_cache = {}
+_cache: dict[str, re.Pattern[str]] = {}
 _MAXCACHE = 100
 
 FILE_ATTRIBUTE_REPARSE_POINT = 1024
@@ -70,7 +67,7 @@ IO_REPARSE_TAG_SYMLINK = 0xA000000C
 
 from .encoding import get_encodings
 
-fs_enc = get_encodings()[1]
+fs_enc: str | None = get_encodings()[1]
 
 _listdir = os.listdir
 
@@ -420,7 +417,7 @@ def getenvu(name, default = None):
 		ctypes.windll.kernel32.GetEnvironmentVariableW(name, buffer, length)
 		return buffer.value
 	var = os.getenv(name, default)
-	if isinstance(var, basestring):
+	if isinstance(var, str):
 		return var if isinstance(var, str) else str(var, fs_enc)
 
 
@@ -796,10 +793,10 @@ def safe_shell_filter(names, pat):
 	try:
 		re_pat = _cache[pat]
 	except KeyError:
-		res = safe_translate(pat)
+		res: str = safe_translate(pat)
 		if len(_cache) >= _MAXCACHE:
 			_cache.clear()
-		_cache[pat] = re_pat = re.compile(res)
+		_cache[pat] = re_pat: Pattern[str] = re.compile(res)
 	match = re_pat.match
 	if os.path is posixpath:
 		# normcase on posix is NOP. Optimize it away from the loop.
@@ -823,7 +820,7 @@ def safe_translate(pat):
 	See https://bugs.python.org/issue738361
 	
 	"""
-	if isinstance(getattr(os.path, "altsep", None), basestring):
+	if isinstance(getattr(os.path, "altsep", None), str):
 		# Normalize path separators
 		pat = pat.replace(os.path.altsep, os.path.sep)
 	components = pat.split(os.path.sep)
@@ -907,7 +904,7 @@ def whereis(names, bin=True, bin_paths=None, man=True, man_paths=None, src=True,
 		args.append("-u")
 	if list_paths:
 		args.append("-l")
-	if isinstance(names, basestring):
+	if isinstance(names, str):
 		names = [names]
 	p = sp.Popen(["whereis"] + args + names, stdout=sp.PIPE)
 	stdout, stderr = p.communicate()
