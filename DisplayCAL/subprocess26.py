@@ -36,6 +36,7 @@ from __future__ import print_function
 
 from builtins import range
 from builtins import object
+from typing import IO, Any, LiteralString
 from future.utils import raise_
 import sys
 mswindows = (sys.platform == "win32")
@@ -443,7 +444,7 @@ class Popen(object):
                 self.stderr = os.fdopen(errread, 'rb', bufsize)
 
 
-    def _translate_newlines(self, data):
+    def _translate_newlines(self, data: str) -> str:
         data = data.replace("\r\n", "\n")
         data = data.replace("\r", "\n")
         return data
@@ -463,7 +464,7 @@ class Popen(object):
             _active.append(self)
 
 
-    def communicate(self, input=None):
+    def communicate(self, input: str | bytes | None = None) -> tuple[str | bytes | None, str | bytes | None]:
         """Interact with process: Send data to stdin.  Read data from
         stdout and stderr, until end-of-file is reached.  Wait for
         process to terminate.  The optional input argument should be a
@@ -480,16 +481,18 @@ class Popen(object):
             if self.stdin:
                 if input:
                     try:
+                        if isinstance(input, str):
+                            input = input.encode('utf-8')  # Encode string to bytes
                         self.stdin.write(input)
                     except IOError as e:
                         if e.errno != errno.EPIPE and e.errno != errno.EINVAL:
                             raise
                 self.stdin.close()
             elif self.stdout:
-                stdout = _eintr_retry_call(self.stdout.read)
+                stdout: str | bytes | None = _eintr_retry_call(self.stdout.read)
                 self.stdout.close()
             elif self.stderr:
-                stderr = _eintr_retry_call(self.stderr.read)
+                stderr: str | bytes | None = _eintr_retry_call(self.stderr.read)
                 self.stderr.close()
             self.wait()
             return (stdout, stderr)
@@ -709,24 +712,22 @@ class Popen(object):
             return self.returncode
 
 
-        def _readerthread(self, fh, buffer):
+        def _readerthread(self, fh: IO[bytes], buffer: list[bytes]) -> None:
             buffer.append(fh.read())
 
 
-        def _communicate(self, input):
-            stdout = None # Return
-            stderr = None # Return
+        def _communicate(self, input: bytes | None) -> tuple[str | None, str | None]:
+            stdout = None  # Return
+            stderr = None  # Return
 
-            if self.stdout:
-                stdout = []
-                stdout_thread = threading.Thread(target=self._readerthread,
-                                                 args=(self.stdout, stdout))
+            if self.stdout and threading:
+                stdout: list[str] | None= []
+                stdout_thread = threading.Thread(target=self._readerthread, args=(self.stdout, stdout))
                 stdout_thread.setDaemon(True)
                 stdout_thread.start()
-            if self.stderr:
-                stderr = []
-                stderr_thread = threading.Thread(target=self._readerthread,
-                                                 args=(self.stderr, stderr))
+            if self.stderr and threading:
+                stderr: list[str] | None = []
+                stderr_thread = threading.Thread(target=self._readerthread, args=(self.stderr, stderr))
                 stderr_thread.setDaemon(True)
                 stderr_thread.start()
 
@@ -763,10 +764,10 @@ class Popen(object):
             # object do the translation: It is based on stdio, which is
             # impossible to combine with select (unless forcing no
             # buffering).
-            if self.universal_newlines and hasattr(file, 'newlines'):
-                if stdout:
+            if self.universal_newlines:
+                if stdout and hasattr(self.stdout, 'newlines'):
                     stdout = self._translate_newlines(stdout)
-                if stderr:
+                if stderr and hasattr(self.stderr, 'newlines'):
                     stderr = self._translate_newlines(stderr)
 
             self.wait()
