@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-from builtins import str, filter, range, object
-from collections.abc import Callable
-import fnmatch
+from .encoding import get_encodings
+from builtins import filter, object, range, str
+from collections.abc import Callable, Sequence
 import ctypes
 import errno
+import fnmatch
 import glob
 from io import BufferedRandom, BufferedReader, BufferedWriter, FileIO, TextIOWrapper
 import os
 import re
 import shutil
+import string
 import struct
-from typing import IO, Any, BinaryIO, LiteralString
-from . import subprocess as sp
+import subprocess as sp
 import sys
-from . import tempfile
+import tempfile
 import time
+from typing import Any, BinaryIO, IO, Dict, List, LiteralString, Union
 
 if sys.platform not in ("darwin", "win32"):
     # Linux
@@ -25,6 +27,25 @@ if sys.platform not in ("darwin", "win32"):
 
 if sys.platform != "win32":
     import fcntl
+
+if sys.platform == "win32":
+    import builtins
+    import pywintypes
+    import win32api
+    import win32con
+    from win32file import (
+        FILE_FLAG_BACKUP_SEMANTICS,
+        FILE_FLAG_OPEN_REPARSE_POINT,
+        GENERIC_READ,
+        OPEN_EXISTING,
+        CloseHandle,
+        CreateFileW,
+        GetFileAttributes,
+    )
+    import win32file
+    import win32net
+    import winerror
+    from winioctlcon import FSCTL_GET_REPARSE_POINT
 
 # Remove the reloaded variable and its checks
 # reloaded = 0
@@ -50,22 +71,6 @@ if sys.platform != "win32":
 #         warnings.warn("Implicitly reloading win32api", RuntimeWarning)
 #         reload(win32api)
 
-if sys.platform == "win32":
-    from win32file import (
-        CreateFileW,
-        GENERIC_READ,
-        OPEN_EXISTING,
-        FILE_FLAG_BACKUP_SEMANTICS,
-        FILE_FLAG_OPEN_REPARSE_POINT,
-        CloseHandle,
-        GetFileAttributes,
-    )
-    from winioctlcon import FSCTL_GET_REPARSE_POINT
-    import win32file
-    import win32con
-    import pywintypes
-    import winerror
-
 # Cache used for safe_shell_filter() function
 _cache: dict[str, re.Pattern[str]] = {}
 _MAXCACHE = 100
@@ -74,8 +79,6 @@ FILE_ATTRIBUTE_REPARSE_POINT = 1024
 IO_REPARSE_TAG_MOUNT_POINT = 0xA0000003  # Junction
 IO_REPARSE_TAG_SYMLINK = 0xA000000C
 
-from .encoding import get_encodings
-
 fs_enc: str = get_encodings()[1] or sys.getfilesystemencoding() or 'utf-8'
 
 _listdir: Callable[..., list[str] | list[bytes]] = os.listdir
@@ -83,9 +86,6 @@ _listdir: Callable[..., list[str] | list[bytes]] = os.listdir
 if sys.platform == "win32":
     # Add support for long paths (> 260 chars)
     # and retry ERROR_SHARING_VIOLATION
-    import builtins
-    import winerror
-    import win32api
 
     _open: Callable[
         ...,
@@ -258,7 +258,7 @@ def dlopen(name: str | None, handle: int | None = None) -> ctypes.CDLL | None:
         pass
 
 
-def find_library(pattern: str, arch: LiteralString | bytes | str | None = None) -> None | LiteralString | bytes | str:
+def find_library(pattern: bytes, arch: Union[LiteralString, bytes, str, None] = None) -> Union[LiteralString, bytes, str, None]:
     """
     Use ldconfig cache to find installed library.
     
@@ -267,13 +267,13 @@ def find_library(pattern: str, arch: LiteralString | bytes | str | None = None) 
     """
     try:
         p = sp.Popen(["/sbin/ldconfig", "-p"], stdout=sp.PIPE)
-        stdout: None | str | bytes | LiteralString = p.communicate()[0]
+        stdout: Union[None, str, bytes, LiteralString] = p.communicate()[0]
     except:
-        return
+        return None
     if not arch:
         try:
             p = sp.Popen(["file", "-L", sys.executable], stdout=sp.PIPE)
-            file_stdout, file_stderr = p.communicate()
+            file_stdout: bytes = p.communicate()[0]
         except:
             pass
         else:
@@ -281,72 +281,79 @@ def find_library(pattern: str, arch: LiteralString | bytes | str | None = None) 
             # version 1 (SYSV), dynamically linked, interpreter
             # /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0,
             # BuildID[sha1]=41a1f0d4da3afee8f22d1947cc13a9f33f59f2b8, stripped
-            parts: list[LiteralString] | list[bytes] | list[str] = file_stdout.split(",")
+            parts: List[bytes] = file_stdout.split(b",")
             if len(parts) > 1:
                 arch = parts[1].strip()
     for line in stdout.splitlines():
         # libxyz.so (libc6,x86_64) => /lib64/libxyz.so.1
-        parts = line.split("=>", 1)
-        candidate: list[LiteralString] | list[bytes] | list[str] = parts[0].split(None, 1)
-        if len(parts) < 2 or len(candidate) < 2:
+        parts = line.split(b" => ", 1)
+        if len(parts) < 2:
             continue
-        info: list[LiteralString] | list[bytes] | list[str] = candidate[1].strip("( )").split(",")
+        candidate: List[bytes] = parts[0].split(None, 1)
+        if len(candidate) < 2:
+            continue
+        info: Sequence[Union[LiteralString, bytes, str]] = candidate[1].strip(b"( )").split(b",")
         if arch and len(info) > 1 and info[1].strip() != arch:
             # Skip libs for wrong arch
             continue
-        filename: LiteralString | bytes | str = candidate[0]
+        filename: Union[LiteralString, bytes, str] = candidate[0]
         if fnmatch.fnmatch(filename, pattern):
-            path: LiteralString | bytes | str = parts[1].strip()
+            path: Union[LiteralString, bytes, str] = parts[1].strip()
             return path
 
 
-def expanduseru(path):
+def expanduseru(path: str) -> str:
     """ Unicode version of os.path.expanduser """
     if sys.platform == "win32":
         # The code in this if-statement is copied from Python 2.7's expanduser
         # in ntpath.py, but uses getenvu() instead of os.environ[]
         if path[:1] != '~':
             return path
-        i, n = 1, len(path)
+        i = 1
+        n: int = len(path)
         while i < n and path[i] not in '/\\':
-            i = i + 1
+            i: int = i + 1
+
+        userhome: str | None = None
 
         if 'HOME' in os.environ:
             userhome = getenvu('HOME')
         elif 'USERPROFILE' in os.environ:
             userhome = getenvu('USERPROFILE')
-        elif not 'HOMEPATH' in os.environ:
-            return path
+        elif 'HOMEPATH' in os.environ:
+            drive: str | None = getenvu('HOMEDRIVE', '')
+            userhome = os.path.join(drive or '', getenvu('HOMEPATH') or '')
         else:
-            drive = getenvu('HOMEDRIVE', '')
-            userhome = os.path.join(drive, getenvu('HOMEPATH'))
+            return path
 
-        if i != 1: #~user
-            userhome = os.path.join(dirname(userhome), path[1:i])
+        if userhome is None:
+            return path
+
+        if i != 1:  # ~user
+            userhome = os.path.join(os.path.dirname(userhome), path[1:i])
 
         return userhome + path[i:]
-    return str(os.path.expanduser(path), fs_enc)
+    return os.path.expanduser(path).encode(fs_enc).decode(fs_enc)
 
 
-def expandvarsu(path):
+def expandvarsu(path: str) -> str:
     """ Unicode version of os.path.expandvars """
     if sys.platform == "win32":
         # The code in this if-statement is copied from Python 2.7's expandvars
         # in ntpath.py, but uses getenvu() instead of os.environ[]
         if '$' not in path and '%' not in path:
             return path
-        import string
-        varchars = string.ascii_letters + string.digits + '_-'
-        res = ''
+        varchars: LiteralString = string.ascii_letters + string.digits + '_-'
+        res: str = ''
         index = 0
-        pathlen = len(path)
+        pathlen: int = len(path)
         while index < pathlen:
-            c = path[index]
+            c: str = path[index]
             if c == '\'':   # no expansion within single quotes
                 path = path[index + 1:]
                 pathlen = len(path)
                 try:
-                    index = path.index('\'')
+                    index: int = path.index('\'')
                     res = res + '\'' + path[:index + 1]
                 except ValueError:
                     res = res + path
@@ -360,15 +367,12 @@ def expandvarsu(path):
                     pathlen = len(path)
                     try:
                         index = path.index('%')
+                        var: str = path[:index]
+                        env_value: Union[str, None] = getenvu(var)
+                        res = res + (env_value if env_value is not None else '%' + var + '%')
                     except ValueError:
                         res = res + '%' + path
                         index = pathlen - 1
-                    else:
-                        var = path[:index]
-                        if var in os.environ:
-                            res = res + getenvu(var)
-                        else:
-                            res = res + '%' + var + '%'
             elif c == '$':  # variable or '$$'
                 if path[index + 1:index + 2] == '$':
                     res = res + c
@@ -378,11 +382,9 @@ def expandvarsu(path):
                     pathlen = len(path)
                     try:
                         index = path.index('}')
-                        var = path[:index]
-                        if var in os.environ:
-                            res = res + getenvu(var)
-                        else:
-                            res = res + '${' + var + '}'
+                        var: str = path[:index]
+                        env_value: Union[str, None] = getenvu(var)
+                        res = res + (env_value if env_value is not None else '${' + var + '}')
                     except ValueError:
                         res = res + '${' + path
                         index = pathlen - 1
@@ -394,69 +396,84 @@ def expandvarsu(path):
                         var = var + c
                         index = index + 1
                         c = path[index:index + 1]
-                    if var in os.environ:
-                        res = res + getenvu(var)
-                    else:
-                        res = res + '$' + var
+                    env_value: Union[str, None] = getenvu(var)
+                    res = res + (env_value if env_value is not None else '$' + var)
                     if c != '':
                         index = index - 1
             else:
                 res = res + c
-            index = index + 1
+            index: int = index + 1
         return res
-    return str(os.path.expandvars(path), fs_enc)
+    return os.path.expandvars(path)
 
 
-def fname_ext(path):
+def fname_ext(path: str) -> tuple[str, str]:
     """ Get filename and extension """
     return os.path.splitext(os.path.basename(path))
 
 
-def get_program_file(name, foldername):
+def get_program_file(name: str, foldername: str) -> str | None:
     """ Get path to program file """
     if sys.platform == "win32":
-        paths = getenvu("PATH", os.defpath).split(os.pathsep)
-        paths += safe_glob(os.path.join(getenvu("PROGRAMFILES", ""),
-                                        foldername))
-        paths += safe_glob(os.path.join(getenvu("PROGRAMW6432", ""),
-                                        foldername))
+        path_env: str | None = getenvu("PATH", os.defpath)
+        if path_env is None:
+            path_env = os.defpath  # Fallback to os.defpath if getenvu returns None
+        paths: List[str] = path_env.split(os.pathsep)
+        program_files: str | None = getenvu("PROGRAMFILES", "")
+        program_w6432: str | None = getenvu("PROGRAMW6432", "")
+        if program_files:
+            paths += safe_glob(os.path.join(program_files, foldername))
+        if program_w6432:
+            paths += safe_glob(os.path.join(program_w6432, foldername))
         exe_ext = ".exe"
     else:
-        paths = None
+        paths = os.defpath.split(os.pathsep)  # Initialize paths with os.defpath for non-Windows platforms
         exe_ext = ""
     return which(name + exe_ext, paths=paths)
 
 
-def getenvu(name, default = None):
+def getenvu(name: str, default: Union[str, None] = None) -> Union[str, None]:
     """ Unicode version of os.getenv """
     if sys.platform == "win32":
         name = str(name)
         # http://stackoverflow.com/questions/2608200/problems-with-umlauts-in-python-appdata-environvent-variable
-        length = ctypes.windll.kernel32.GetEnvironmentVariableW(name, None, 0)
+        length: int = ctypes.windll.kernel32.GetEnvironmentVariableW(name, None, 0)
         if length == 0:
             return default
-        buffer = ctypes.create_unicode_buffer(u'\0' * length)
+        buffer: ctypes.Array[ctypes.c_wchar] = ctypes.create_unicode_buffer(u'\0' * length)
         ctypes.windll.kernel32.GetEnvironmentVariableW(name, buffer, length)
         return buffer.value
     var = os.getenv(name, default)
     if isinstance(var, str):
-        return var if isinstance(var, str) else str(var, fs_enc)
+        return var
+    return None
 
 
-def getgroups(username=None, names_only=False):
+def getgroups(username: Union[str, None] = None, names_only: bool = False) -> List[str]:
     """
     Return a list of groups that user is member of, or groups of current
     process if username not given
-    
     """
-    if username is None:
-        groups = [grp.getgrgid(g) for g in os.getgroups()]
-    else:
-        groups = [g for g in grp.getgrall() if username in g.gr_mem]
-        gid = pwd.getpwnam(username).pw_gid
-        groups.append(grp.getgrgid(gid))
+    if os.name == 'posix':  # Check if the OS is Unix-like
+        if username is None:
+            groups: List[str] = [grp.getgrgid(g).gr_name for g in os.getgroups()]
+        else:
+            groups = [g for g in grp.getgrall() if username in g.gr_mem]
+            gid = pwd.getpwnam(username).pw_gid
+            groups.append(grp.getgrgid(gid))
+    else:  # Handle Windows
+        if username is None:
+            groups: List[str] = []
+        else:
+            groups = []
+            try:
+                user_info: Dict[str, Any] = win32net.NetUserGetInfo(None, username, 1)  # Explicit type hint
+                groups = user_info['groups']
+            except Exception as e:
+                print(f"Error getting groups for user {username}: {e}")
+    
     if names_only:
-        groups = [g.gr_name for g in groups]
+        groups = [g.gr_name if isinstance(g, grp.struct_group) else g for g in groups]
     return groups
 
 
@@ -892,18 +909,21 @@ def waccess(path, mode):
     return True
 
 
-def which(executable, paths = None):
+def which(executable: str, paths: Union[list[str], None] = None) -> str | None:
     """ Return the full path of executable """
     if not paths:
-        paths = getenvu("PATH", os.defpath).split(os.pathsep)
+        path_env: str | None = getenvu("PATH", os.defpath)
+        if path_env is None:
+            path_env = os.defpath  # Fallback to os.defpath if getenvu returns None
+        paths = path_env.split(os.pathsep)
     for cur_dir in paths:
-        filename = os.path.join(cur_dir, executable)
+        filename: str = os.path.join(cur_dir, executable)
         if os.path.isfile(filename):
             try:
                 # make sure file is actually executable
                 if os.access(filename, os.X_OK):
                     return filename
-            except Exception as exception:
+            except Exception:
                 pass
     return None
 
