@@ -18,7 +18,7 @@ import subprocess as sp
 import sys
 import tempfile
 import time
-from typing import Any, BinaryIO, IO, Dict, List, LiteralString, Union
+from typing import Any, BinaryIO, IO, Dict, List, LiteralString, Optional, Tuple, Union
 
 if sys.platform not in ("darwin", "win32"):
     # Linux
@@ -460,7 +460,7 @@ def getgroups(username: Union[str, None] = None, names_only: bool = False) -> Li
         else:
             groups = [g for g in grp.getgrall() if username in g.gr_mem]
             gid = pwd.getpwnam(username).pw_gid
-            groups.append(grp.getgrgid(gid))
+            groups.append(grp.getgrgid(gid).gr_name)
     else:  # Handle Windows
         if username is None:
             groups: List[str] = []
@@ -473,11 +473,14 @@ def getgroups(username: Union[str, None] = None, names_only: bool = False) -> Li
                 print(f"Error getting groups for user {username}: {e}")
     
     if names_only:
-        groups = [g.gr_name if isinstance(g, grp.struct_group) else g for g in groups]
+        if os.name == 'posix':
+            groups = [g.gr_name if isinstance(g, grp.struct_group) else g for g in groups]
+        else:
+            groups = [g for g in groups]  # Already strings, no need to convert
     return groups
 
 
-def islink(path):
+def islink(path: str) -> bool:
     """
     Cross-platform islink implementation.
     
@@ -490,7 +493,7 @@ def islink(path):
                 FILE_ATTRIBUTE_REPARSE_POINT == FILE_ATTRIBUTE_REPARSE_POINT)
 
 
-def is_superuser():
+def is_superuser() -> bool:
     if sys.platform == "win32":
         if sys.getwindowsversion() >= (5, 1):
             return bool(ctypes.windll.shell32.IsUserAnAdmin())
@@ -503,31 +506,33 @@ def is_superuser():
         return os.geteuid() == 0
 
 
-def launch_file(filepath):
+def launch_file(filepath: str) -> Optional[Tuple[int, bytes, bytes]]:
     """
     Open a file with its assigned default app.
     
     Return tuple(returncode, stdout, stderr) or None if functionality not available
     
     """
-    filepath = filepath.encode(fs_enc)
     retcode = None
     kwargs = dict(stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
     if sys.platform == "darwin":
-        retcode = sp.call(['open', filepath], **kwargs)
+        result = sp.run(['open', filepath], **kwargs)
+        retcode = result.returncode
     elif sys.platform == "win32":
         # for win32, we could use os.startfile, but then we'd not be able
         # to return exitcode (does it matter?)
-        kwargs = {}
+        kwargs: dict[str, Union[sp.STARTUPINFO, bool]] = {}
         kwargs["startupinfo"] = sp.STARTUPINFO()
         kwargs["startupinfo"].dwFlags |= sp.STARTF_USESHOWWINDOW
         kwargs["startupinfo"].wShowWindow = sp.SW_HIDE
         kwargs["shell"] = True
         kwargs["close_fds"] = True
-        retcode = sp.call('start "" "%s"' % filepath, **kwargs)
+        result: Union[sp.CompletedProcess[str], sp.CompletedProcess[bytes], sp.CompletedProcess[Any]] = sp.run('start "" "%s"' % filepath, **kwargs)
+        retcode = result.returncode
     elif which('xdg-open'):
-        retcode = sp.call(['xdg-open', filepath], **kwargs)
-    return retcode
+        result = sp.run(['xdg-open', filepath], **kwargs)
+        retcode = result.returncode
+    return (retcode, result.stdout, result.stderr) if retcode is not None else None
 
 
 def listdir_re(path, rex = None):
