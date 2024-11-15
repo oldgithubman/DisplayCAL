@@ -3,13 +3,15 @@
 from __future__ import absolute_import
 from .encoding import get_encodings
 from builtins import filter, object, range, str
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
 import ctypes
 import errno
 import fnmatch
 import glob
 from io import BufferedRandom, BufferedReader, BufferedWriter, FileIO, TextIOWrapper
+import io
 import os
+import portalocker
 import re
 import shutil
 import string
@@ -18,7 +20,8 @@ import subprocess as sp
 import sys
 import tempfile
 import time
-from typing import Any, BinaryIO, IO, Dict, List, LiteralString, Optional, Tuple, Union
+from types import TracebackType
+from typing import Any, BinaryIO, Dict, IO, List, LiteralString, Optional, Tuple, Type, TypedDict, Union
 
 if sys.platform not in ("darwin", "win32"):
     # Linux
@@ -30,9 +33,7 @@ if sys.platform != "win32":
 
 if sys.platform == "win32":
     import builtins
-    import pywintypes
     import win32api
-    import win32con
     from win32file import (
         FILE_FLAG_BACKUP_SEMANTICS,
         FILE_FLAG_OPEN_REPARSE_POINT,
@@ -40,12 +41,14 @@ if sys.platform == "win32":
         OPEN_EXISTING,
         CloseHandle,
         CreateFileW,
+        DeviceIoControl,
         GetFileAttributes,
     )
-    import win32file
+    from win32helper.win32typing import PyHANDLE, PySECURITY_ATTRIBUTES
     import win32net
     import winerror
-    from winioctlcon import FSCTL_GET_REPARSE_POINT
+
+    FSCTL_GET_REPARSE_POINT = 0x900A8
 
 # Remove the reloaded variable and its checks
 # reloaded = 0
@@ -238,6 +241,18 @@ else:
         return paths
 
 os.listdir = listdir
+
+
+class ReparseDataBuffer(TypedDict):
+    tag: int
+    data_length: int
+    reserved: int
+    substitute_name_offset: int
+    substitute_name_length: int
+    print_name_offset: int
+    print_name_length: int
+    flags: int
+    buffer: bytes
 
 
 def quote_args(args: list[str]) -> list[str]:
@@ -513,34 +528,27 @@ def launch_file(filepath: str) -> Optional[Tuple[int, bytes, bytes]]:
     Return tuple(returncode, stdout, stderr) or None if functionality not available
     
     """
-    retcode = None
-    kwargs = dict(stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
     if sys.platform == "darwin":
-        result = sp.run(['open', filepath], **kwargs)
-        retcode = result.returncode
+        result = sp.run(['open', filepath], stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+        return (result.returncode, result.stdout, result.stderr)
     elif sys.platform == "win32":
-        # for win32, we could use os.startfile, but then we'd not be able
-        # to return exitcode (does it matter?)
-        kwargs: dict[str, Union[sp.STARTUPINFO, bool]] = {}
-        kwargs["startupinfo"] = sp.STARTUPINFO()
-        kwargs["startupinfo"].dwFlags |= sp.STARTF_USESHOWWINDOW
-        kwargs["startupinfo"].wShowWindow = sp.SW_HIDE
-        kwargs["shell"] = True
-        kwargs["close_fds"] = True
-        result: Union[sp.CompletedProcess[str], sp.CompletedProcess[bytes], sp.CompletedProcess[Any]] = sp.run('start "" "%s"' % filepath, **kwargs)
-        retcode = result.returncode
+        try:
+            os.startfile(filepath)
+            return (0, b'', b'')  # Assuming success
+        except Exception as e:
+            return (1, b'', str(e).encode('utf-8'))
     elif which('xdg-open'):
-        result = sp.run(['xdg-open', filepath], **kwargs)
-        retcode = result.returncode
-    return (retcode, result.stdout, result.stderr) if retcode is not None else None
+        result = sp.run(['xdg-open', filepath], stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
+        return (result.returncode, result.stdout, result.stderr)
+    return None
 
 
-def listdir_re(path, rex = None):
+def listdir_re(path: str, rex: Optional[str] = None) -> List[str]:
     """ Filter directory contents through a regular expression """
-    files = os.listdir(path)
+    files: List[str] = os.listdir(path)
     if rex:
-        rex = re.compile(rex, re.IGNORECASE)
-        files = list(filter(rex.search, files))
+        pattern: re.Pattern[str] = re.compile(rex, re.IGNORECASE)
+        files = list(filter(pattern.search, files))
     return files
 
 
@@ -561,20 +569,22 @@ def make_win32_compatible_long_path(path: str | bytes, maxpath: int = 259) -> st
     return str(path)
 
 
-def mkstemp_bypath(path, dir=None, text=False):
+def mkstemp_bypath(path: str, dir: Union[str, None] = None, text: bool = False) -> Tuple[int, str]:
     """
     Wrapper around mkstemp that uses filename and extension from path as prefix 
     and suffix for the temporary file, and the directory component as temporary
     file directory if 'dir' is not given.
     
     """
+    fname: str
+    ext: str
     fname, ext = fname_ext(path)
     if not dir:
         dir = os.path.dirname(path)
     return tempfile.mkstemp(ext, fname + "-", dir, text)
 
 
-def mksfile(filename):
+def mksfile(filename: str) -> Tuple[int, str]:
     """
     Create a file safely and return (fd, abspath)
     
@@ -586,18 +596,24 @@ def mksfile(filename):
     
     """
 
-    flags = tempfile._bin_openflags
+    # Define the flags for opening the file
+    flags: int = os.O_CREAT | os.O_EXCL | os.O_RDWR
+    if os.name == 'nt':  # Windows-specific flag
+        flags |= os.O_BINARY
 
+    fname: str
+    ext: str
     fname, ext = os.path.splitext(filename)
 
     for seq in range(tempfile.TMP_MAX):
         if not seq:
-            pth = filename
+            pth: str = filename
         else:
             pth = "%s(%i)%s" % (fname, seq, ext)
         try:
-            fd = os.open(pth, flags, 0o600)
-            tempfile._set_cloexec(fd)
+            fd: int = os.open(pth, flags, 0o600)
+            if os.name != 'nt':  # Set close-on-exec flag only on Unix-like systems
+                fcntl.fcntl(fd, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
             return (fd, os.path.abspath(pth))
         except OSError as e:
             if e.errno == errno.EEXIST:
@@ -607,7 +623,7 @@ def mksfile(filename):
     raise IOError(errno.EEXIST, "No usable temporary file name found")
 
 
-def movefile(src, dst, overwrite=True):
+def movefile(src: str, dst: str, overwrite: bool = True) -> None:
     """ Move a file to another location.
     
     dst can be a directory in which case a file with the same basename as src
@@ -623,60 +639,43 @@ def movefile(src, dst, overwrite=True):
     shutil.move(src, dst)
 
 
-def putenvu(name, value):
-    """ Unicode version of os.putenv (also correctly updates os.environ) """
-    if sys.platform == "win32" and isinstance(value, str):
-        ctypes.windll.kernel32.SetEnvironmentVariableW(str(name), value)
-    else:
-        os.environ[name] = value.encode(fs_enc)
-
-
-def parse_reparse_buffer(buf):
-    """ Implementing the below in Python:
-
-    typedef struct _REPARSE_DATA_BUFFER {
-        ULONG  ReparseTag;
-        USHORT ReparseDataLength;
-        USHORT Reserved;
-        union {
-            struct {
-                USHORT SubstituteNameOffset;
-                USHORT SubstituteNameLength;
-                USHORT PrintNameOffset;
-                USHORT PrintNameLength;
-                ULONG Flags;
-                WCHAR PathBuffer[1];
-            } SymbolicLinkReparseBuffer;
-            struct {
-                USHORT SubstituteNameOffset;
-                USHORT SubstituteNameLength;
-                USHORT PrintNameOffset;
-                USHORT PrintNameLength;
-                WCHAR PathBuffer[1];
-            } MountPointReparseBuffer;
-            struct {
-                UCHAR  DataBuffer[1];
-            } GenericReparseBuffer;
-        } DUMMYUNIONNAME;
-    } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
-
+def putenvu(name: str, value: str) -> None:
     """
-    # See https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/ntifs/ns-ntifs-_reparse_data_buffer
+    Unicode version of os.putenv (also correctly updates os.environ).
 
-    data = {'tag': struct.unpack('<I', buf[:4])[0],
-            'data_length': struct.unpack('<H', buf[4:6])[0],
-            'reserved': struct.unpack('<H', buf[6:8])[0]}
+    Parameters:
+    name (str): The name of the environment variable.
+    value (str): The value to set for the environment variable.
+    """
+    if sys.platform == "win32":
+        if not ctypes.windll.kernel32.SetEnvironmentVariableW(str(name), value):
+            raise OSError(f"Failed to set environment variable {name}")
+    else:
+        try:
+            os.environ[name] = value.encode(os.environ.get('PYTHONIOENCODING', 'utf-8'))
+        except UnicodeEncodeError as e:
+            raise ValueError(f"Failed to encode value for environment variable {name}: {e}")
+
+
+def parse_reparse_buffer(buf: bytes) -> ReparseDataBuffer:
+    data: ReparseDataBuffer = {
+        'tag': struct.unpack('<I', buf[:4])[0],
+        'data_length': struct.unpack('<H', buf[4:6])[0],
+        'reserved': struct.unpack('<H', buf[6:8])[0],
+        'substitute_name_offset': 0,  # Default value
+        'substitute_name_length': 0,  # Default value
+        'print_name_offset': 0,  # Default value
+        'print_name_length': 0,  # Default value
+        'flags': 0,  # Default value
+        'buffer': b''  # Default value
+    }
     buf = buf[8:]
 
     if data['tag'] in (IO_REPARSE_TAG_MOUNT_POINT, IO_REPARSE_TAG_SYMLINK):
-        keys = ['substitute_name_offset',
-                'substitute_name_length',
-                'print_name_offset',
-                'print_name_length']
+        keys: List[str] = ['substitute_name_offset', 'substitute_name_length', 'print_name_offset', 'print_name_length']
         if data['tag'] == IO_REPARSE_TAG_SYMLINK:
             keys.append('flags')
 
-        # Parsing
         for k in keys:
             if k == 'flags':
                 fmt, sz = '<I', 4
@@ -685,75 +684,87 @@ def parse_reparse_buffer(buf):
             data[k] = struct.unpack(fmt, buf[:sz])[0]
             buf = buf[sz:]
 
-    # Using the offset and lengths grabbed, we'll set the buffer.
     data['buffer'] = buf
 
     return data
 
 
-def readlink(path):
+def readlink(path: Union[str, bytes, bytearray, memoryview]) -> str:
     """
-    Cross-platform implenentation of readlink.
+    Cross-platform implementation of readlink.
     
     Supports Windows NT symbolic links and reparse points.
     
     """
-    if sys.platform != "win32":
-        return os.readlink(path)
+    if isinstance(path, (bytes, bytearray)):
+        path_str: str = path.decode('utf-8')
+    elif isinstance(path, memoryview):
+        path_str = path.tobytes().decode('utf-8')
+    else:
+        path_str = str(path)  # Explicitly convert to str if it's not already
 
-    # This wouldn't return true if the file didn't exist
-    if not islink(path):
+    if sys.platform != "win32":
+        return os.readlink(path_str)
+
+    if not islink(path_str):
         # Mimic POSIX error
-        raise OSError(22, 'Invalid argument', path)
+        raise OSError(22, 'Invalid argument', path_str)
 
     # Open the file correctly depending on the string type.
-    if type(path) is str:
-        createfilefn = CreateFileW
-    else:
-        createfilefn = CreateFile
+    createfilefn: Callable[[
+        str,
+        int,
+        int,
+        Union[PySECURITY_ATTRIBUTES, None],
+        int,
+        int,
+        Union[PyHANDLE, None],
+        Union[PyHANDLE, None],
+        Union[int, None],
+        None,
+        ], PyHANDLE] = CreateFileW  # path_str is always a str after the conversion
+
     # FILE_FLAG_OPEN_REPARSE_POINT alone is not enough if 'path'
     # is a symbolic link to a directory or a NTFS junction.
     # We need to set FILE_FLAG_BACKUP_SEMANTICS as well.
     # See https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-createfilea
-    handle = createfilefn(path, GENERIC_READ, 0, None, OPEN_EXISTING,
-                          FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, 0)
+    handle: PyHANDLE = createfilefn(path_str, GENERIC_READ, 0, None, OPEN_EXISTING,
+                        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, None)
 
     # MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16384 = (16 * 1024)
-    buf = DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, None, 16 * 1024)
-    # Above will return an ugly string (byte array), so we'll need to parse it.
+    buf: Union[str, memoryview, bytes] = DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, None, 16 * 1024)
+    
+    # Ensure buf is bytes
+    if isinstance(buf, str):
+        buf = buf.encode('utf-8')
+    else:
+        buf = bytes(buf)  # This will handle both memoryview and other cases
 
     # But first, we'll close the handle to our file so we're not locking it anymore.
     CloseHandle(handle)
 
     # Minimum possible length (assuming that the length is bigger than 0)
     if len(buf) < 9:
-        return type(path)()
+        return type(path_str)()  # This will return an empty str, but we need to ensure buf is bytes
     # Parse and return our result.
-    result = parse_reparse_buffer(buf)
+    result: ReparseDataBuffer = parse_reparse_buffer(buf)
     if result['tag'] in (IO_REPARSE_TAG_MOUNT_POINT, IO_REPARSE_TAG_SYMLINK):
-        offset = result['substitute_name_offset']
-        ending = offset + result['substitute_name_length']
-        rpath = result['buffer'][offset:ending].decode('UTF-16-LE')
+        offset: int = result['substitute_name_offset']
+        ending: int = offset + result['substitute_name_length']
+        rpath: str = result['buffer'][offset:ending].decode('UTF-16-LE')
     else:
-        rpath = result['buffer']
+        rpath = result['buffer'].decode('utf-8')  # Decode bytes to string
     if len(rpath) > 4 and rpath[0:4] == '\\??\\':
         rpath = rpath[4:]
     return rpath
+    
 
-
-def relpath(path, start):
+def relpath(path: str, start: str) -> str:
     """ Return a relative version of a path """
-    path = os.path.abspath(path).split(os.path.sep)
-    start = os.path.abspath(start).split(os.path.sep)
-    if path == start:
-        return "."
-    elif path[:len(start)] == start:
-        return os.path.sep.join(path[len(start):])
-    elif start[:len(path)] == path:
-        return os.path.sep.join([".."] * (len(start) - len(path)))
+    return os.path.relpath(path, start)
 
 
-def safe_glob(pathname):
+def safe_glob(pathname: str) -> List[str]:
     """
     Return a list of paths matching a pathname pattern.
 
@@ -764,14 +775,14 @@ def safe_glob(pathname):
 
     Like fnmatch.glob, but suppresses re.compile errors by escaping
     uncompilable path components.
-
+    
     See https://bugs.python.org/issue738361
 
     """
     return list(safe_iglob(pathname))
 
 
-def safe_iglob(pathname):
+def safe_iglob(pathname: str) -> Iterator[str]:
     """
     Return an iterator which yields the paths matching a pathname pattern.
 
@@ -786,29 +797,19 @@ def safe_iglob(pathname):
     See https://bugs.python.org/issue738361
 
     """
+    dirname: str
+    basename: str
     dirname, basename = os.path.split(pathname)
-    if not glob.has_magic(pathname):
-        if basename:
-            if os.path.lexists(pathname):
-                yield pathname
-        else:
-            # Patterns ending with a slash should match only directories
-            if os.path.isdir(dirname):
-                yield pathname
-        return
     if not dirname:
         for name in safe_glob1(os.curdir, basename):
             yield name
         return
-    # `os.path.split()` returns the argument itself as a dirname if it is a
-    # drive or UNC path.  Prevent an infinite recursion if a drive or UNC path
-    # contains magic characters (i.e. r'\\?\C:').
     if dirname != pathname and glob.has_magic(dirname):
-        dirs = safe_iglob(dirname)
+        dirs: Iterator[str] = safe_iglob(dirname)
     else:
-        dirs = [dirname]
+        dirs = iter([dirname])  # Convert list to iterator
     if glob.has_magic(basename):
-        glob_in_dir = safe_glob1
+        glob_in_dir: Callable[[str, str], List[str]] = safe_glob1
     else:
         glob_in_dir = glob.glob0
     for dirname in dirs:
@@ -816,14 +817,11 @@ def safe_iglob(pathname):
             yield os.path.join(dirname, name)
 
 
-def safe_glob1(dirname, pattern):
+def safe_glob1(dirname: str, pattern: str) -> List[str]:
     if not dirname:
         dirname = os.curdir
-    if isinstance(pattern, str) and not isinstance(dirname, str):
-        dirname = str(dirname, sys.getfilesystemencoding() or
-                                   sys.getdefaultencoding())
     try:
-        names = os.listdir(dirname)
+        names: List[str] = os.listdir(dirname)
     except os.error:
         return []
     if pattern[0] != '.':
@@ -831,7 +829,7 @@ def safe_glob1(dirname, pattern):
     return safe_shell_filter(names, pattern)
 
 
-def safe_shell_filter(names, pat):
+def safe_shell_filter(names: List[str], pat: str) -> List[str]:
     """
     Return the subset of the list NAMES that match PAT
 
@@ -841,8 +839,7 @@ def safe_shell_filter(names, pat):
     See https://bugs.python.org/issue738361
     
     """
-    import posixpath
-    result = []
+    result: list[str] = []
     pat = os.path.normcase(pat)
     try:
         re_pat = _cache[pat]
@@ -850,9 +847,10 @@ def safe_shell_filter(names, pat):
         res: str = safe_translate(pat)
         if len(_cache) >= _MAXCACHE:
             _cache.clear()
-        _cache[pat] = re_pat: Pattern[str] = re.compile(res)
-    match = re_pat.match
-    if os.path is posixpath:
+        re_pat: re.Pattern[str] = re.compile(res)  # Assign re.compile(res) to re_pat first
+        _cache[pat] = re_pat  # Then assign re_pat to _cache[pat]
+    match: Callable[[str, int, int], Union[re.Match[str], None]] = re_pat.match
+    if os.name == 'posix':
         # normcase on posix is NOP. Optimize it away from the loop.
         for name in names:
             if match(name):
@@ -864,7 +862,7 @@ def safe_shell_filter(names, pat):
     return result
 
 
-def safe_translate(pat):
+def safe_translate(pat: str) -> str:
     """
     Translate a shell PATTERN to a regular expression.
 
@@ -877,42 +875,35 @@ def safe_translate(pat):
     if isinstance(getattr(os.path, "altsep", None), str):
         # Normalize path separators
         pat = pat.replace(os.path.altsep, os.path.sep)
-    components = pat.split(os.path.sep)
+    components: List[str] = pat.split(os.path.sep)
     for i, component in enumerate(components):
         translated = fnmatch.translate(component)
         try:
             re.compile(translated)
         except re.error:
-            translated = re.escape(component)
+            translated: str = re.escape(component)
         components[i] = translated
     return re.escape(os.path.sep).join(components)
 
 
-def waccess(path, mode):
+def waccess(path: Union[str, bytes], mode: int) -> bool:
     """ Test access to path """
+    if isinstance(path, bytes):
+        path = path.decode('utf-8')  # Decode bytes to string if necessary
+
     if mode & os.R_OK:
-        try:
-            test = open(path, "rb")
-        except EnvironmentError:
+        if not os.access(path, os.R_OK):
             return False
-        test.close()
     if mode & os.W_OK:
-        if os.path.isdir(path):
-            dir = path
-        else:
-            dir = os.path.dirname(path)
-        try:
-            if os.path.isfile(path):
-                test = open(path, "ab")
-            else:
-                test = tempfile.TemporaryFile(prefix=".", dir=dir)
-        except EnvironmentError:
+        dir: Union[str, bytes] = os.path.dirname(path) if not os.path.isdir(path) else path
+        if isinstance(dir, bytes):
+            dir = dir.decode('utf-8')  # Ensure dir is a string
+        if not os.access(path, os.W_OK):
             return False
-        test.close()
     if mode & os.X_OK:
         return os.access(path, mode)
     return True
-
+        
 
 def which(executable: str, paths: Union[list[str], None] = None) -> str | None:
     """ Return the full path of executable """
@@ -933,13 +924,22 @@ def which(executable: str, paths: Union[list[str], None] = None) -> str | None:
     return None
 
 
-def whereis(names, bin=True, bin_paths=None, man=True, man_paths=None, src=True,
-            src_paths=None, unusual=False, list_paths=False):
+def whereis(
+    names: Union[str, List[str]],
+    bin: bool = True,
+    bin_paths: Union[List[str], None] = None,
+    man: bool = True,
+    man_paths: Union[List[str], None] = None,
+    src: bool = True,
+    src_paths: Union[List[str], None] = None,
+    unusual: bool = False,
+    list_paths: bool = False,
+) -> Dict[str, List[str]]:
     """
     Wrapper around whereis
     
     """
-    args = []
+    args: List[str] = []  # Explicitly define the type of args as List[str]
     if bin:
         args.append("-b")
     if bin_paths:
@@ -964,76 +964,59 @@ def whereis(names, bin=True, bin_paths=None, man=True, man_paths=None, src=True,
     if isinstance(names, str):
         names = [names]
     p = sp.Popen(["whereis"] + args + names, stdout=sp.PIPE)
-    stdout, stderr = p.communicate()
-    result = {}
+    stdout: bytes = p.communicate()[0]
+    result: Dict[str, List[str]] = {}  # Explicitly define the type of result as Dict[str, List[str]]
     for line in stdout.strip().splitlines():
         # $ whereis abc xyz
         # abc: /bin/abc
         # xyz: /bin/xyz /usr/bin/xyz
-        match = line.split(":", 1)
+        match: List[bytes] = line.split(b":", 1)  # Change ':' to b':'
         if match:
-            result[match[0]] = match[-1].split()
+            result[match[0].decode()] = [path.decode() for path in match[-1].split()]  # Decode bytes to strings
     return result
 
 
+class LockFlags:
+    LOCK_EX: int = 1
+    LOCK_SH: int = 2
+    LOCK_NB: int = 4
+
+
 class FileLock(object):
-
-    if sys.platform == "win32":
-        _exception_cls = pywintypes.error
-    else:
-        _exception_cls = IOError
-
-    def __init__(self, file_, exclusive=False, blocking=False):
-        self._file = file_
-        self.exclusive = exclusive
-        self.blocking = blocking
+    def __init__(
+            self,
+            file_: Union[io.TextIOWrapper, io.BufferedIOBase],
+            exclusive: bool = False,
+            blocking: bool = False,
+            ) -> None:
+        self._file: Union[io.TextIOWrapper, io.BufferedIOBase] = file_
+        self.exclusive: bool = exclusive
+        self.blocking: bool = blocking
         self.lock()
 
-    def __enter__(self):
+    def __enter__(self) -> 'FileLock':
         return self
 
-    def __exit__(self, etype, value, traceback):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType]
+        ) -> bool:
         self.unlock()
+        return False  # Propagate exceptions by default
 
-    def lock(self):
-        if sys.platform == "win32":
-            mode = 0
-            if self.exclusive:
-                mode |= win32con.LOCKFILE_EXCLUSIVE_LOCK
-            if not self.blocking:
-                mode |= win32con.LOCKFILE_FAIL_IMMEDIATELY
-            self._handle = win32file._get_osfhandle(self._file.fileno())
-            self._overlapped = pywintypes.OVERLAPPED()
-            fn = win32file.LockFileEx
-            args = (self._handle, mode, 0, -0x10000, self._overlapped)
-        else:
-            if self.exclusive:
-                op = fcntl.LOCK_EX
-            else:
-                op = fcntl.LOCK_SH
-            if not self.blocking:
-                op |= fcntl.LOCK_NB
-            fn = fcntl.flock
-            args = (self._file.fileno(), op)
-        self._call(fn, args, FileLock.LockingError)
+    def lock(self) -> None:
+        flags: int = LockFlags.LOCK_EX if self.exclusive else LockFlags.LOCK_SH
+        if not self.blocking:
+            flags |= LockFlags.LOCK_NB
+        # Pass the file descriptor of the file object to portalocker.lock
+        portalocker.lock(self._file.fileno(), flags)
 
-    def unlock(self):
+    def unlock(self) -> None:
         if self._file.closed:
             return
-        if sys.platform == "win32":
-            fn = win32file.UnlockFileEx
-            args = (self._handle, 0, -0x10000, self._overlapped)
-        else:
-            fn = fcntl.flock
-            args = (self._file.fileno(), fcntl.LOCK_UN)
-        self._call(fn, args, FileLock.UnlockingError)
-
-    @staticmethod
-    def _call(fn, args, exception_cls):
-        try:
-            fn(*args)
-        except FileLock._exception_cls as exception:
-            raise exception_cls(*exception.args)
+        portalocker.unlock(self._file.fileno())
 
     class Error(Exception):
         pass
@@ -1060,13 +1043,22 @@ if sys.platform == "win32" and sys.getwindowsversion() >= (6, ):
         
         """
 
-        _disable = ctypes.windll.kernel32.Wow64DisableWow64FsRedirection
-        _revert = ctypes.windll.kernel32.Wow64RevertWow64FsRedirection
+        _disable = ctypes.WINFUNCTYPE(
+            ctypes.c_bool,
+            ctypes.POINTER(ctypes.c_void_p),
+            )(ctypes.windll.kernel32.Wow64DisableWow64FsRedirection)
+        _revert = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p)(ctypes.windll.kernel32.Wow64RevertWow64FsRedirection)
 
-        def __enter__(self):
-            self.old_value = ctypes.c_long()
-            self.success = self._disable(ctypes.byref(self.old_value))
+        def __enter__(self) -> None:
+            self.old_value = ctypes.c_void_p()
+            self.success: bool = self._disable(ctypes.byref(self.old_value))
 
-        def __exit__(self, type, value, traceback):
+        def __exit__(
+            self,
+            exc_type: Optional[Type[BaseException]],
+            exc_value: Optional[BaseException],
+            traceback: Optional[TracebackType]
+            ) -> Optional[bool]:
             if self.success:
                 self._revert(self.old_value)
+            return None

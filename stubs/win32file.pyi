@@ -1,5 +1,5 @@
 from _typeshed import Incomplete
-from _win32typing import (
+from win32helper.win32typing import (
     COMMTIMEOUTS,
     WIN32_FIND_DATA,
     CopyProgressRoutine,
